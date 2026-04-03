@@ -4,6 +4,7 @@ import { MapPin, Phone, Mail, Clock, Send, CheckCircle } from "lucide-react";
 import Layout from "@/components/Layout";
 import PageHero from "@/components/PageHero";
 import { useToast } from "@/hooks/use-toast";
+import { supabase } from "@/integrations/supabase/client";
 
 const Contact = () => {
   const { toast } = useToast();
@@ -11,14 +12,22 @@ const Contact = () => {
   const [submitting, setSubmitting] = useState(false);
   const [submitted, setSubmitted] = useState(false);
 
-  const handleSubmit = (e: React.FormEvent) => {
+  const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     setSubmitting(true);
-    setTimeout(() => {
-      setSubmitting(false);
+    const { error } = await supabase.from("contact_submissions").insert({
+      name: form.name,
+      email: form.email,
+      subject: form.subject,
+      message: form.message,
+    });
+    setSubmitting(false);
+    if (error) {
+      toast({ title: "Error", description: "Something went wrong. Please try again.", variant: "destructive" });
+    } else {
       setSubmitted(true);
       toast({ title: "Message Sent!", description: "We'll get back to you as soon as possible." });
-    }, 1200);
+    }
   };
 
   const update = (field: string, value: string) => setForm((f) => ({ ...f, [field]: value }));
@@ -55,7 +64,6 @@ const Contact = () => {
               ))}
             </div>
 
-            {/* Map */}
             <div className="mt-8 overflow-hidden rounded-xl border border-border">
               <iframe
                 title="University location"
@@ -89,54 +97,22 @@ const Contact = () => {
                 <div className="grid gap-5 sm:grid-cols-2">
                   <div>
                     <label className="mb-1 block text-sm font-medium text-foreground">Name *</label>
-                    <input
-                      required
-                      type="text"
-                      value={form.name}
-                      onChange={(e) => update("name", e.target.value)}
-                      className="w-full rounded-md border border-input bg-background px-4 py-2.5 text-sm text-foreground placeholder:text-muted-foreground focus:outline-none focus:ring-2 focus:ring-ring"
-                      placeholder="Your name"
-                    />
+                    <input required type="text" value={form.name} onChange={(e) => update("name", e.target.value)} className="w-full rounded-md border border-input bg-background px-4 py-2.5 text-sm text-foreground placeholder:text-muted-foreground focus:outline-none focus:ring-2 focus:ring-ring" placeholder="Your name" />
                   </div>
                   <div>
                     <label className="mb-1 block text-sm font-medium text-foreground">Email *</label>
-                    <input
-                      required
-                      type="email"
-                      value={form.email}
-                      onChange={(e) => update("email", e.target.value)}
-                      className="w-full rounded-md border border-input bg-background px-4 py-2.5 text-sm text-foreground placeholder:text-muted-foreground focus:outline-none focus:ring-2 focus:ring-ring"
-                      placeholder="your@email.com"
-                    />
+                    <input required type="email" value={form.email} onChange={(e) => update("email", e.target.value)} className="w-full rounded-md border border-input bg-background px-4 py-2.5 text-sm text-foreground placeholder:text-muted-foreground focus:outline-none focus:ring-2 focus:ring-ring" placeholder="your@email.com" />
                   </div>
                 </div>
                 <div>
                   <label className="mb-1 block text-sm font-medium text-foreground">Subject *</label>
-                  <input
-                    required
-                    type="text"
-                    value={form.subject}
-                    onChange={(e) => update("subject", e.target.value)}
-                    className="w-full rounded-md border border-input bg-background px-4 py-2.5 text-sm text-foreground placeholder:text-muted-foreground focus:outline-none focus:ring-2 focus:ring-ring"
-                    placeholder="What is this regarding?"
-                  />
+                  <input required type="text" value={form.subject} onChange={(e) => update("subject", e.target.value)} className="w-full rounded-md border border-input bg-background px-4 py-2.5 text-sm text-foreground placeholder:text-muted-foreground focus:outline-none focus:ring-2 focus:ring-ring" placeholder="What is this regarding?" />
                 </div>
                 <div>
                   <label className="mb-1 block text-sm font-medium text-foreground">Message *</label>
-                  <textarea
-                    required
-                    rows={5}
-                    value={form.message}
-                    onChange={(e) => update("message", e.target.value)}
-                    className="w-full rounded-md border border-input bg-background px-4 py-2.5 text-sm text-foreground placeholder:text-muted-foreground focus:outline-none focus:ring-2 focus:ring-ring"
-                    placeholder="Your message..."
-                  />
+                  <textarea required rows={5} value={form.message} onChange={(e) => update("message", e.target.value)} className="w-full rounded-md border border-input bg-background px-4 py-2.5 text-sm text-foreground placeholder:text-muted-foreground focus:outline-none focus:ring-2 focus:ring-ring" placeholder="Your message..." />
                 </div>
-                <button
-                  type="submit"
-                  disabled={submitting}
-                  className="inline-flex items-center gap-2 rounded-md bg-primary px-6 py-3 font-semibold text-primary-foreground transition-transform hover:scale-[1.02] disabled:opacity-60"
-                >
+                <button type="submit" disabled={submitting} className="inline-flex items-center gap-2 rounded-md bg-primary px-6 py-3 font-semibold text-primary-foreground transition-transform hover:scale-[1.02] disabled:opacity-60">
                   <Send className="h-4 w-4" />
                   {submitting ? "Sending..." : "Send Message"}
                 </button>
