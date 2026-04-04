@@ -6,11 +6,17 @@ import Layout from "@/components/Layout";
 import PageHero from "@/components/PageHero";
 import { useQuery } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
-
-const categories = ["All", "News", "Event", "Announcement"] as const;
+import { useTranslation } from "react-i18next";
 
 const News = () => {
-  const [active, setActive] = useState<string>("All");
+  const { t } = useTranslation();
+  const categories = [
+    { value: "All", label: t("news.all") },
+    { value: "News", label: t("news.newsCategory") },
+    { value: "Event", label: t("news.event") },
+    { value: "Announcement", label: t("news.announcement") },
+  ];
+  const [active, setActive] = useState("All");
 
   const { data: articles = [], isLoading } = useQuery({
     queryKey: ["news"],
@@ -25,20 +31,20 @@ const News = () => {
 
   return (
     <Layout>
-      <PageHero title="News & Events" subtitle="Stay informed about the latest happenings at Akademia University" />
+      <PageHero title={t("news.title")} subtitle={t("news.subtitle")} />
 
       <section className="section-padding">
         <div className="container">
           <div className="mb-8 flex flex-wrap gap-2">
             {categories.map((c) => (
-              <button key={c} onClick={() => setActive(c)} className={`rounded-full px-4 py-2 text-sm font-medium transition-colors ${active === c ? "bg-primary text-primary-foreground" : "bg-secondary text-secondary-foreground hover:bg-secondary/80"}`}>
-                {c}
+              <button key={c.value} onClick={() => setActive(c.value)} className={`rounded-full px-4 py-2 text-sm font-medium transition-colors ${active === c.value ? "bg-primary text-primary-foreground" : "bg-secondary text-secondary-foreground hover:bg-secondary/80"}`}>
+                {c.label}
               </button>
             ))}
           </div>
 
           {isLoading ? (
-            <div className="py-20 text-center text-muted-foreground">Loading...</div>
+            <div className="py-20 text-center text-muted-foreground">{t("news.loading")}</div>
           ) : (
             <div className="grid gap-6 md:grid-cols-2 lg:grid-cols-3">
               {filtered.map((a, i) => (
@@ -57,7 +63,7 @@ const News = () => {
                       </div>
                       <h3 className="font-display text-lg font-semibold text-foreground group-hover:text-primary">{a.title}</h3>
                       <p className="mt-2 flex-1 text-sm leading-relaxed text-muted-foreground">{a.excerpt}</p>
-                      <span className="mt-3 inline-flex items-center gap-1 text-sm font-medium text-primary">Read more <ArrowRight className="h-3.5 w-3.5" /></span>
+                      <span className="mt-3 inline-flex items-center gap-1 text-sm font-medium text-primary">{t("news.readMore")} <ArrowRight className="h-3.5 w-3.5" /></span>
                     </div>
                   </Link>
                 </motion.div>

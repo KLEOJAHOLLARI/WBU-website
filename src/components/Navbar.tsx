@@ -2,19 +2,22 @@ import { useState } from "react";
 import { Link, useLocation } from "react-router-dom";
 import { Menu, X, GraduationCap } from "lucide-react";
 import { motion, AnimatePresence } from "framer-motion";
+import { useTranslation } from "react-i18next";
+import LanguageSwitcher from "./LanguageSwitcher";
 
-const navLinks = [
-  { to: "/", label: "Home" },
-  { to: "/about", label: "About" },
-  { to: "/programs", label: "Programs" },
-  { to: "/admissions", label: "Admissions" },
-  { to: "/news", label: "News & Events" },
-  { to: "/contact", label: "Contact" },
+const navKeys = [
+  { to: "/", key: "nav.home" },
+  { to: "/about", key: "nav.about" },
+  { to: "/programs", key: "nav.programs" },
+  { to: "/admissions", key: "nav.admissions" },
+  { to: "/news", key: "nav.news" },
+  { to: "/contact", key: "nav.contact" },
 ];
 
 const Navbar = () => {
   const [open, setOpen] = useState(false);
   const location = useLocation();
+  const { t } = useTranslation();
 
   return (
     <header className="sticky top-0 z-50 border-b border-border bg-card/95 backdrop-blur supports-[backdrop-filter]:bg-card/80">
@@ -28,7 +31,7 @@ const Navbar = () => {
 
         {/* Desktop */}
         <nav className="hidden items-center gap-1 lg:flex">
-          {navLinks.map((l) => (
+          {navKeys.map((l) => (
             <Link
               key={l.to}
               to={l.to}
@@ -38,14 +41,15 @@ const Navbar = () => {
                   : "text-muted-foreground"
               }`}
             >
-              {l.label}
+              {t(l.key)}
             </Link>
           ))}
+          <LanguageSwitcher />
           <Link
             to="/admissions"
             className="ml-3 rounded-md bg-accent px-4 py-2 text-sm font-semibold text-accent-foreground transition-colors hover:opacity-90"
           >
-            Apply Now
+            {t("nav.applyNow")}
           </Link>
         </nav>
 
@@ -69,7 +73,7 @@ const Navbar = () => {
             className="overflow-hidden border-t border-border bg-card lg:hidden"
           >
             <nav className="container flex flex-col gap-1 py-4">
-              {navLinks.map((l) => (
+              {navKeys.map((l) => (
                 <Link
                   key={l.to}
                   to={l.to}
@@ -80,15 +84,18 @@ const Navbar = () => {
                       : "text-muted-foreground"
                   }`}
                 >
-                  {l.label}
+                  {t(l.key)}
                 </Link>
               ))}
+              <div className="mt-2 flex items-center gap-3 px-3">
+                <LanguageSwitcher />
+              </div>
               <Link
                 to="/admissions"
                 onClick={() => setOpen(false)}
                 className="mt-2 rounded-md bg-accent px-4 py-2.5 text-center text-sm font-semibold text-accent-foreground"
               >
-                Apply Now
+                {t("nav.applyNow")}
               </Link>
             </nav>
           </motion.div>
