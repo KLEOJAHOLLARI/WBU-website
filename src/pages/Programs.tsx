@@ -6,6 +6,7 @@ import Layout from "@/components/Layout";
 import PageHero from "@/components/PageHero";
 import { useQuery } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
+import { useTranslation } from "react-i18next";
 
 const faculties = [
   "Faculty of Engineering",
@@ -17,6 +18,7 @@ const faculties = [
 const degrees = ["Bachelor", "Master", "PhD"];
 
 const Programs = () => {
+  const { t } = useTranslation();
   const [search, setSearch] = useState("");
   const [faculty, setFaculty] = useState("");
   const [degree, setDegree] = useState("");
@@ -31,9 +33,7 @@ const Programs = () => {
   });
 
   const filtered = programs.filter((p) => {
-    const matchesSearch =
-      p.title.toLowerCase().includes(search.toLowerCase()) ||
-      p.description.toLowerCase().includes(search.toLowerCase());
+    const matchesSearch = p.title.toLowerCase().includes(search.toLowerCase()) || p.description.toLowerCase().includes(search.toLowerCase());
     const matchesFaculty = !faculty || p.faculty === faculty;
     const matchesDegree = !degree || p.degree === degree;
     return matchesSearch && matchesFaculty && matchesDegree;
@@ -41,29 +41,29 @@ const Programs = () => {
 
   return (
     <Layout>
-      <PageHero title="Study Programs" subtitle="Explore over 45 undergraduate, master's, and doctoral programs across five faculties" />
+      <PageHero title={t("programs.title")} subtitle={t("programs.subtitle")} />
 
       <section className="section-padding">
         <div className="container">
           <div className="mb-10 flex flex-col gap-4 rounded-xl border border-border bg-card p-4 sm:flex-row sm:items-center sm:p-6">
             <div className="relative flex-1">
               <Search className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" />
-              <input type="text" placeholder="Search programs..." value={search} onChange={(e) => setSearch(e.target.value)} className="w-full rounded-md border border-input bg-background py-2.5 pl-10 pr-4 text-sm text-foreground placeholder:text-muted-foreground focus:outline-none focus:ring-2 focus:ring-ring" />
+              <input type="text" placeholder={t("programs.searchPlaceholder")} value={search} onChange={(e) => setSearch(e.target.value)} className="w-full rounded-md border border-input bg-background py-2.5 pl-10 pr-4 text-sm text-foreground placeholder:text-muted-foreground focus:outline-none focus:ring-2 focus:ring-ring" />
             </div>
             <select value={faculty} onChange={(e) => setFaculty(e.target.value)} className="rounded-md border border-input bg-background px-3 py-2.5 text-sm text-foreground focus:outline-none focus:ring-2 focus:ring-ring">
-              <option value="">All Faculties</option>
+              <option value="">{t("programs.allFaculties")}</option>
               {faculties.map((f) => (<option key={f} value={f}>{f}</option>))}
             </select>
             <select value={degree} onChange={(e) => setDegree(e.target.value)} className="rounded-md border border-input bg-background px-3 py-2.5 text-sm text-foreground focus:outline-none focus:ring-2 focus:ring-ring">
-              <option value="">All Degrees</option>
+              <option value="">{t("programs.allDegrees")}</option>
               {degrees.map((d) => (<option key={d} value={d}>{d}</option>))}
             </select>
           </div>
 
           {isLoading ? (
-            <div className="py-20 text-center text-muted-foreground">Loading programs...</div>
+            <div className="py-20 text-center text-muted-foreground">{t("programs.loading")}</div>
           ) : filtered.length === 0 ? (
-            <p className="py-20 text-center text-muted-foreground">No programs match your search.</p>
+            <p className="py-20 text-center text-muted-foreground">{t("programs.noResults")}</p>
           ) : (
             <div className="grid gap-6 sm:grid-cols-2 lg:grid-cols-3">
               {filtered.map((p, i) => (
@@ -76,7 +76,7 @@ const Programs = () => {
                     <h3 className="font-display text-xl font-semibold text-foreground group-hover:text-primary">{p.title}</h3>
                     <p className="mt-1 text-sm text-muted-foreground">{p.faculty}</p>
                     <p className="mt-3 flex-1 text-sm leading-relaxed text-muted-foreground">{p.description}</p>
-                    <span className="mt-4 inline-flex items-center gap-1 text-sm font-medium text-primary">Learn more <ArrowRight className="h-3.5 w-3.5" /></span>
+                    <span className="mt-4 inline-flex items-center gap-1 text-sm font-medium text-primary">{t("programs.learnMore")} <ArrowRight className="h-3.5 w-3.5" /></span>
                   </Link>
                 </motion.div>
               ))}
