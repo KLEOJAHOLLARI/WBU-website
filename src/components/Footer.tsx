@@ -13,7 +13,7 @@ const Footer = () => {
             <Link to="/" className="mb-4 flex items-center gap-2">
               <GraduationCap className="h-7 w-7" />
               <span className="font-display text-xl font-bold">
-                Akademia<span className="text-accent">.</span>
+                WBU<span className="text-accent">.</span>
               </span>
             </Link>
             <p className="text-sm leading-relaxed opacity-80">{t("footer.description")}</p>
@@ -52,22 +52,22 @@ const Footer = () => {
             <ul className="space-y-3 text-sm opacity-80">
               <li className="flex items-start gap-2">
                 <MapPin className="mt-0.5 h-4 w-4 shrink-0" />
-                <span>123 University Boulevard, Tirana, Albania</span>
+                <span>Highway Tiranë–Durrës, KM 7, Kashar, Tirana, Albania</span>
               </li>
               <li className="flex items-center gap-2">
                 <Phone className="h-4 w-4 shrink-0" />
-                <span>+355 4 123 4567</span>
+                <span>+355 67 60 20 600</span>
               </li>
               <li className="flex items-center gap-2">
                 <Mail className="h-4 w-4 shrink-0" />
-                <span>info@akademia.edu</span>
+                <span>info@wbu.edu.al</span>
               </li>
             </ul>
           </div>
         </div>
 
         <div className="mt-10 border-t border-primary-foreground/20 pt-6 text-center text-sm opacity-60">
-          © {new Date().getFullYear()} Akademia University. {t("footer.rights")}
+          © {new Date().getFullYear()} Western Balkan University. {t("footer.rights")}
         </div>
       </div>
     </footer>

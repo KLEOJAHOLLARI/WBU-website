@@ -102,7 +102,7 @@ const Index = () => {
       {/* Why Choose Us */}
       <section className="section-padding bg-secondary">
         <div className="container">
-          <SectionHeading title={t("home.whyAkademia")} subtitle={t("home.whyAkademiaSub")} />
+          <SectionHeading title={t("home.whyWBU")} subtitle={t("home.whyWBUSub")} />
           <div className="grid gap-8 md:grid-cols-3">
             {[
               { title: t("home.researchDriven"), desc: t("home.researchDrivenDesc") },
