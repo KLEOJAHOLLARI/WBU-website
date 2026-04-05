@@ -65,7 +65,7 @@ const Contact = () => {
             </div>
 
             <div className="mt-8 overflow-hidden rounded-xl border border-border">
-              <iframe title="University location" src="https://www.openstreetmap.org/export/embed.html?bbox=19.80%2C41.31%2C19.85%2C41.34&layer=mapnik" className="h-56 w-full" loading="lazy" />
+              <iframe title="University location" src="https://www.openstreetmap.org/export/embed.html?bbox=19.74%2C41.34%2C19.79%2C41.37&layer=mapnik" className="h-56 w-full" loading="lazy" />
             </div>
           </div>
 
