@@ -25,7 +25,7 @@ const Navbar = () => {
         <Link to="/" className="flex items-center gap-2">
           <GraduationCap className="h-8 w-8 text-primary" />
           <span className="font-display text-xl font-bold text-primary">
-            Akademia<span className="text-accent">.</span>
+            WBU<span className="text-accent">.</span>
           </span>
         </Link>
 

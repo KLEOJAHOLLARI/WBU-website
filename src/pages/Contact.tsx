@@ -36,8 +36,8 @@ const Contact = () => {
 
   const contactInfo = [
     { icon: MapPin, label: t("contact.address"), value: t("contact.addressValue") },
-    { icon: Phone, label: t("contact.phone"), value: "+355 4 123 4567" },
-    { icon: Mail, label: t("contact.email"), value: "info@akademia.edu" },
+    { icon: Phone, label: t("contact.phone"), value: "+355 67 60 20 600\n+355 67 40 20 600" },
+    { icon: Mail, label: t("contact.email"), value: "info@wbu.edu.al" },
     { icon: Clock, label: t("contact.officeHours"), value: t("contact.officeHoursValue") },
   ];
 
