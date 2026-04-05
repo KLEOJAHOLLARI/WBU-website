@@ -113,6 +113,42 @@ export type Database = {
         }
         Relationships: []
       }
+      professors: {
+        Row: {
+          bio: string
+          created_at: string
+          department: string
+          display_order: number
+          id: string
+          name: string
+          photo_url: string | null
+          title: string
+          updated_at: string
+        }
+        Insert: {
+          bio?: string
+          created_at?: string
+          department: string
+          display_order?: number
+          id?: string
+          name: string
+          photo_url?: string | null
+          title: string
+          updated_at?: string
+        }
+        Update: {
+          bio?: string
+          created_at?: string
+          department?: string
+          display_order?: number
+          id?: string
+          name?: string
+          photo_url?: string | null
+          title?: string
+          updated_at?: string
+        }
+        Relationships: []
+      }
       programs: {
         Row: {
           careers: string[]
