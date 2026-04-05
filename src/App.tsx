@@ -18,6 +18,8 @@ import AdminPrograms from "./pages/admin/AdminPrograms";
 import AdminNews from "./pages/admin/AdminNews";
 import AdminApplications from "./pages/admin/AdminApplications";
 import AdminContacts from "./pages/admin/AdminContacts";
+import AdminProfessors from "./pages/admin/AdminProfessors";
+import Faculty from "./pages/Faculty";
 import NotFound from "./pages/NotFound";
 
 const queryClient = new QueryClient();
@@ -38,12 +40,14 @@ const App = () => (
             <Route path="/news" element={<News />} />
             <Route path="/news/:id" element={<NewsDetail />} />
             <Route path="/contact" element={<Contact />} />
+            <Route path="/faculty" element={<Faculty />} />
             <Route path="/admin/login" element={<AdminLogin />} />
             <Route path="/admin" element={<AdminDashboard />} />
             <Route path="/admin/programs" element={<AdminPrograms />} />
             <Route path="/admin/news" element={<AdminNews />} />
             <Route path="/admin/applications" element={<AdminApplications />} />
             <Route path="/admin/contacts" element={<AdminContacts />} />
+            <Route path="/admin/professors" element={<AdminProfessors />} />
             <Route path="*" element={<NotFound />} />
           </Routes>
         </AuthProvider>
