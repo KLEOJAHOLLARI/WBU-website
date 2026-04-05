@@ -6,7 +6,14 @@
     "admissions": "Pranime",
     "news": "Lajme & Ngjarje",
     "contact": "Kontakt",
+    "faculty": "Stafi Akademik",
     "applyNow": "Apliko Tani"
+  },
+  "faculty": {
+    "title": "Stafi Ynë Akademik",
+    "subtitle": "Njihuni me akademikët dhe studiuesit e përkushtuar që formojnë gjeneratën e ardhshme të profesionistëve",
+    "loading": "Duke ngarkuar stafin...",
+    "empty": "Informacioni i stafit do të jetë i disponueshëm së shpejti."
   },
   "hero": {
     "tagline": "Ekselencë Përmes Dijes",

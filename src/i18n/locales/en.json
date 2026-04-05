@@ -6,7 +6,14 @@
     "admissions": "Admissions",
     "news": "News & Events",
     "contact": "Contact",
+    "faculty": "Faculty",
     "applyNow": "Apply Now"
+  },
+  "faculty": {
+    "title": "Our Faculty",
+    "subtitle": "Meet the dedicated academics and researchers shaping the next generation of professionals",
+    "loading": "Loading faculty...",
+    "empty": "Faculty information will be available soon."
   },
   "hero": {
     "tagline": "Excellence Through Knowledge",
