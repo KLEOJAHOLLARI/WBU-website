@@ -47,8 +47,14 @@ const Navbar = () => {
           ))}
           <LanguageSwitcher />
           <Link
+            to="/portal/login"
+            className="ml-2 rounded-md border border-primary px-4 py-2 text-sm font-semibold text-primary transition-colors hover:bg-primary hover:text-primary-foreground"
+          >
+            Student Portal
+          </Link>
+          <Link
             to="/admissions"
-            className="ml-3 rounded-md bg-accent px-4 py-2 text-sm font-semibold text-accent-foreground transition-colors hover:opacity-90"
+            className="rounded-md bg-accent px-4 py-2 text-sm font-semibold text-accent-foreground transition-colors hover:opacity-90"
           >
             {t("nav.applyNow")}
           </Link>
@@ -91,6 +97,13 @@ const Navbar = () => {
               <div className="mt-2 flex items-center gap-3 px-3">
                 <LanguageSwitcher />
               </div>
+              <Link
+                to="/portal/login"
+                onClick={() => setOpen(false)}
+                className="mt-2 rounded-md border border-primary px-4 py-2.5 text-center text-sm font-semibold text-primary"
+              >
+                Student Portal
+              </Link>
               <Link
                 to="/admissions"
                 onClick={() => setOpen(false)}
