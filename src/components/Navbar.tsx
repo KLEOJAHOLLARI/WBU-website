@@ -10,6 +10,7 @@ const navKeys = [
   { to: "/about", key: "nav.about" },
   { to: "/programs", key: "nav.programs" },
   { to: "/faculty", key: "nav.faculty" },
+  { to: "/timetable", key: "nav.timetable" },
   { to: "/admissions", key: "nav.admissions" },
   { to: "/news", key: "nav.news" },
   { to: "/contact", key: "nav.contact" },
