@@ -9,6 +9,7 @@ const navItems = [
   { to: "/admin/professors", label: "Professors", icon: Users },
   { to: "/admin/news", label: "News", icon: Newspaper },
   { to: "/admin/applications", label: "Applications", icon: FileText },
+  { to: "/admin/students", label: "Students", icon: Users },
   { to: "/admin/contacts", label: "Messages", icon: Mail },
 ];
 
