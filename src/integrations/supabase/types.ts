@@ -293,6 +293,51 @@ export type Database = {
         }
         Relationships: []
       }
+      timetable_entries: {
+        Row: {
+          course_name: string
+          created_at: string
+          day_of_week: string
+          end_time: string
+          id: string
+          professor_name: string
+          program: string
+          room: string
+          semester: number
+          start_time: string
+          updated_at: string
+          year: number
+        }
+        Insert: {
+          course_name: string
+          created_at?: string
+          day_of_week: string
+          end_time: string
+          id?: string
+          professor_name?: string
+          program: string
+          room?: string
+          semester?: number
+          start_time: string
+          updated_at?: string
+          year?: number
+        }
+        Update: {
+          course_name?: string
+          created_at?: string
+          day_of_week?: string
+          end_time?: string
+          id?: string
+          professor_name?: string
+          program?: string
+          room?: string
+          semester?: number
+          start_time?: string
+          updated_at?: string
+          year?: number
+        }
+        Relationships: []
+      }
       user_roles: {
         Row: {
           id: string
