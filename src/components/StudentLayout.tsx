@@ -1,32 +1,29 @@
 import { ReactNode } from "react";
 import { Navigate, Link, useLocation } from "react-router-dom";
 import { useAuth } from "@/hooks/useAuth";
-import { GraduationCap, LayoutDashboard, BookOpen, Newspaper, Mail, FileText, Users, LogOut } from "lucide-react";
+import { GraduationCap, LayoutDashboard, FileText, Upload, Mail, LogOut } from "lucide-react";
 
 const navItems = [
-  { to: "/admin", label: "Dashboard", icon: LayoutDashboard },
-  { to: "/admin/programs", label: "Programs", icon: BookOpen },
-  { to: "/admin/professors", label: "Professors", icon: Users },
-  { to: "/admin/news", label: "News", icon: Newspaper },
-  { to: "/admin/applications", label: "Applications", icon: FileText },
-  { to: "/admin/students", label: "Students", icon: Users },
-  { to: "/admin/contacts", label: "Messages", icon: Mail },
+  { to: "/portal", label: "Dashboard", icon: LayoutDashboard },
+  { to: "/portal/applications", label: "My Applications", icon: FileText },
+  { to: "/portal/documents", label: "Documents", icon: Upload },
+  { to: "/portal/messages", label: "Messages", icon: Mail },
 ];
 
-const AdminLayout = ({ children }: { children: ReactNode }) => {
+const StudentLayout = ({ children }: { children: ReactNode }) => {
   const { user, isAdmin, loading, signOut } = useAuth();
   const location = useLocation();
 
   if (loading) return <div className="flex min-h-screen items-center justify-center bg-background text-muted-foreground">Loading...</div>;
-  if (!user || !isAdmin) return <Navigate to="/admin/login" replace />;
+  if (!user) return <Navigate to="/portal/login" replace />;
+  if (isAdmin) return <Navigate to="/admin" replace />;
 
   return (
     <div className="flex min-h-screen bg-background">
-      {/* Sidebar */}
       <aside className="flex w-64 flex-col border-r border-border bg-card">
         <div className="flex h-16 items-center gap-2 border-b border-border px-4">
           <GraduationCap className="h-6 w-6 text-primary" />
-          <span className="font-display text-lg font-bold text-primary">Admin</span>
+          <span className="font-display text-lg font-bold text-primary">Student Portal</span>
         </div>
         <nav className="flex-1 space-y-1 p-3">
           {navItems.map((item) => (
@@ -54,8 +51,6 @@ const AdminLayout = ({ children }: { children: ReactNode }) => {
           </Link>
         </div>
       </aside>
-
-      {/* Main */}
       <main className="flex-1 overflow-auto">
         <div className="p-6 md:p-8">{children}</div>
       </main>
@@ -63,4 +58,4 @@ const AdminLayout = ({ children }: { children: ReactNode }) => {
   );
 };
 
-export default AdminLayout;
+export default StudentLayout;

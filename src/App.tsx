@@ -19,8 +19,15 @@ import AdminNews from "./pages/admin/AdminNews";
 import AdminApplications from "./pages/admin/AdminApplications";
 import AdminContacts from "./pages/admin/AdminContacts";
 import AdminProfessors from "./pages/admin/AdminProfessors";
+import AdminStudents from "./pages/admin/AdminStudents";
 import Faculty from "./pages/Faculty";
 import NotFound from "./pages/NotFound";
+import StudentLogin from "./pages/portal/StudentLogin";
+import StudentRegister from "./pages/portal/StudentRegister";
+import StudentDashboard from "./pages/portal/StudentDashboard";
+import StudentApplications from "./pages/portal/StudentApplications";
+import StudentDocuments from "./pages/portal/StudentDocuments";
+import StudentMessages from "./pages/portal/StudentMessages";
 
 const queryClient = new QueryClient();
 
@@ -48,6 +55,13 @@ const App = () => (
             <Route path="/admin/applications" element={<AdminApplications />} />
             <Route path="/admin/contacts" element={<AdminContacts />} />
             <Route path="/admin/professors" element={<AdminProfessors />} />
+            <Route path="/admin/students" element={<AdminStudents />} />
+            <Route path="/portal/login" element={<StudentLogin />} />
+            <Route path="/portal/register" element={<StudentRegister />} />
+            <Route path="/portal" element={<StudentDashboard />} />
+            <Route path="/portal/applications" element={<StudentApplications />} />
+            <Route path="/portal/documents" element={<StudentDocuments />} />
+            <Route path="/portal/messages" element={<StudentMessages />} />
             <Route path="*" element={<NotFound />} />
           </Routes>
         </AuthProvider>
