@@ -12,6 +12,7 @@ import Admissions from "./pages/Admissions";
 import News from "./pages/News";
 import NewsDetail from "./pages/NewsDetail";
 import Contact from "./pages/Contact";
+import Timetable from "./pages/Timetable";
 import AdminLogin from "./pages/admin/AdminLogin";
 import AdminDashboard from "./pages/admin/AdminDashboard";
 import AdminPrograms from "./pages/admin/AdminPrograms";
@@ -20,6 +21,7 @@ import AdminApplications from "./pages/admin/AdminApplications";
 import AdminContacts from "./pages/admin/AdminContacts";
 import AdminProfessors from "./pages/admin/AdminProfessors";
 import AdminStudents from "./pages/admin/AdminStudents";
+import AdminTimetable from "./pages/admin/AdminTimetable";
 import Faculty from "./pages/Faculty";
 import NotFound from "./pages/NotFound";
 import StudentLogin from "./pages/portal/StudentLogin";
@@ -28,6 +30,7 @@ import StudentDashboard from "./pages/portal/StudentDashboard";
 import StudentApplications from "./pages/portal/StudentApplications";
 import StudentDocuments from "./pages/portal/StudentDocuments";
 import StudentMessages from "./pages/portal/StudentMessages";
+import StudentTimetable from "./pages/portal/StudentTimetable";
 
 const queryClient = new QueryClient();
 
@@ -48,6 +51,7 @@ const App = () => (
             <Route path="/news/:id" element={<NewsDetail />} />
             <Route path="/contact" element={<Contact />} />
             <Route path="/faculty" element={<Faculty />} />
+            <Route path="/timetable" element={<Timetable />} />
             <Route path="/admin/login" element={<AdminLogin />} />
             <Route path="/admin" element={<AdminDashboard />} />
             <Route path="/admin/programs" element={<AdminPrograms />} />
@@ -56,12 +60,14 @@ const App = () => (
             <Route path="/admin/contacts" element={<AdminContacts />} />
             <Route path="/admin/professors" element={<AdminProfessors />} />
             <Route path="/admin/students" element={<AdminStudents />} />
+            <Route path="/admin/timetable" element={<AdminTimetable />} />
             <Route path="/portal/login" element={<StudentLogin />} />
             <Route path="/portal/register" element={<StudentRegister />} />
             <Route path="/portal" element={<StudentDashboard />} />
             <Route path="/portal/applications" element={<StudentApplications />} />
             <Route path="/portal/documents" element={<StudentDocuments />} />
             <Route path="/portal/messages" element={<StudentMessages />} />
+            <Route path="/portal/timetable" element={<StudentTimetable />} />
             <Route path="*" element={<NotFound />} />
           </Routes>
         </AuthProvider>
