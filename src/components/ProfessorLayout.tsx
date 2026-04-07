@@ -1,31 +1,27 @@
 import { ReactNode } from "react";
 import { Navigate, Link, useLocation } from "react-router-dom";
 import { useAuth } from "@/hooks/useAuth";
-import { GraduationCap, LayoutDashboard, FileText, Upload, Mail, LogOut, CalendarDays, BookOpen } from "lucide-react";
+import { GraduationCap, LayoutDashboard, BookOpen, LogOut } from "lucide-react";
 
 const navItems = [
-  { to: "/portal", label: "Dashboard", icon: LayoutDashboard },
-  { to: "/portal/courses", label: "My Courses", icon: BookOpen },
-  { to: "/portal/applications", label: "My Applications", icon: FileText },
-  { to: "/portal/documents", label: "Documents", icon: Upload },
-  { to: "/portal/timetable", label: "Timetable", icon: CalendarDays },
-  { to: "/portal/messages", label: "Messages", icon: Mail },
+  { to: "/professor", label: "Dashboard", icon: LayoutDashboard },
+  { to: "/professor/courses", label: "My Courses", icon: BookOpen },
 ];
 
-const StudentLayout = ({ children }: { children: ReactNode }) => {
-  const { user, isAdmin, loading, signOut } = useAuth();
+const ProfessorLayout = ({ children }: { children: ReactNode }) => {
+  const { user, isProfessor, isAdmin, loading, signOut } = useAuth();
   const location = useLocation();
 
   if (loading) return <div className="flex min-h-screen items-center justify-center bg-background text-muted-foreground">Loading...</div>;
   if (!user) return <Navigate to="/portal/login" replace />;
-  if (isAdmin) return <Navigate to="/admin" replace />;
+  if (!isProfessor && !isAdmin) return <Navigate to="/" replace />;
 
   return (
     <div className="flex min-h-screen bg-background">
-      <aside className="flex w-64 flex-col border-r border-border bg-card">
+      <aside className="hidden w-64 flex-col border-r border-border bg-card md:flex">
         <div className="flex h-16 items-center gap-2 border-b border-border px-4">
           <GraduationCap className="h-6 w-6 text-primary" />
-          <span className="font-display text-lg font-bold text-primary">Student Portal</span>
+          <span className="font-display text-lg font-bold text-primary">Professor</span>
         </div>
         <nav className="flex-1 space-y-1 p-3">
           {navItems.map((item) => (
@@ -54,10 +50,10 @@ const StudentLayout = ({ children }: { children: ReactNode }) => {
         </div>
       </aside>
       <main className="flex-1 overflow-auto">
-        <div className="p-6 md:p-8">{children}</div>
+        <div className="p-4 md:p-8">{children}</div>
       </main>
     </div>
   );
 };
 
-export default StudentLayout;
+export default ProfessorLayout;

@@ -49,9 +49,21 @@ const Navbar = () => {
           <LanguageSwitcher />
           <Link
             to="/portal/login"
-            className="ml-2 rounded-md border border-primary px-4 py-2 text-sm font-semibold text-primary transition-colors hover:bg-primary hover:text-primary-foreground"
+            className="ml-2 rounded-md border border-primary px-3 py-2 text-xs font-semibold text-primary transition-colors hover:bg-primary hover:text-primary-foreground"
           >
-            Student Portal
+            Student
+          </Link>
+          <Link
+            to="/professor"
+            className="rounded-md border border-accent px-3 py-2 text-xs font-semibold text-accent transition-colors hover:bg-accent hover:text-accent-foreground"
+          >
+            Professor
+          </Link>
+          <Link
+            to="/admin/login"
+            className="rounded-md border border-muted-foreground px-3 py-2 text-xs font-semibold text-muted-foreground transition-colors hover:bg-secondary"
+          >
+            Admin
           </Link>
           <Link
             to="/admissions"
@@ -104,6 +116,20 @@ const Navbar = () => {
                 className="mt-2 rounded-md border border-primary px-4 py-2.5 text-center text-sm font-semibold text-primary"
               >
                 Student Portal
+              </Link>
+              <Link
+                to="/professor"
+                onClick={() => setOpen(false)}
+                className="mt-2 rounded-md border border-accent px-4 py-2.5 text-center text-sm font-semibold text-accent"
+              >
+                Professor Portal
+              </Link>
+              <Link
+                to="/admin/login"
+                onClick={() => setOpen(false)}
+                className="mt-2 rounded-md border border-muted-foreground px-4 py-2.5 text-center text-sm font-semibold text-muted-foreground"
+              >
+                Admin Panel
               </Link>
               <Link
                 to="/admissions"

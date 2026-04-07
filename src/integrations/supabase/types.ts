@@ -50,6 +50,77 @@ export type Database = {
         }
         Relationships: []
       }
+      attendance_records: {
+        Row: {
+          created_at: string
+          enrollment_id: string
+          id: string
+          session_id: string
+          status: string
+        }
+        Insert: {
+          created_at?: string
+          enrollment_id: string
+          id?: string
+          session_id: string
+          status?: string
+        }
+        Update: {
+          created_at?: string
+          enrollment_id?: string
+          id?: string
+          session_id?: string
+          status?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "attendance_records_enrollment_id_fkey"
+            columns: ["enrollment_id"]
+            isOneToOne: false
+            referencedRelation: "enrollments"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "attendance_records_session_id_fkey"
+            columns: ["session_id"]
+            isOneToOne: false
+            referencedRelation: "attendance_sessions"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      attendance_sessions: {
+        Row: {
+          course_id: string
+          created_at: string
+          id: string
+          session_date: string
+          week_number: number
+        }
+        Insert: {
+          course_id: string
+          created_at?: string
+          id?: string
+          session_date: string
+          week_number?: number
+        }
+        Update: {
+          course_id?: string
+          created_at?: string
+          id?: string
+          session_date?: string
+          week_number?: number
+        }
+        Relationships: [
+          {
+            foreignKeyName: "attendance_sessions_course_id_fkey"
+            columns: ["course_id"]
+            isOneToOne: false
+            referencedRelation: "courses"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       contact_submissions: {
         Row: {
           created_at: string
@@ -76,6 +147,154 @@ export type Database = {
           subject?: string
         }
         Relationships: []
+      }
+      courses: {
+        Row: {
+          code: string
+          created_at: string
+          id: string
+          name: string
+          professor_id: string | null
+          program: string
+          semester: number
+          syllabus_url: string | null
+          updated_at: string
+          year: number
+        }
+        Insert: {
+          code?: string
+          created_at?: string
+          id?: string
+          name: string
+          professor_id?: string | null
+          program: string
+          semester?: number
+          syllabus_url?: string | null
+          updated_at?: string
+          year?: number
+        }
+        Update: {
+          code?: string
+          created_at?: string
+          id?: string
+          name?: string
+          professor_id?: string | null
+          program?: string
+          semester?: number
+          syllabus_url?: string | null
+          updated_at?: string
+          year?: number
+        }
+        Relationships: []
+      }
+      enrollments: {
+        Row: {
+          course_id: string
+          created_at: string
+          id: string
+          user_id: string
+        }
+        Insert: {
+          course_id: string
+          created_at?: string
+          id?: string
+          user_id: string
+        }
+        Update: {
+          course_id?: string
+          created_at?: string
+          id?: string
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "enrollments_course_id_fkey"
+            columns: ["course_id"]
+            isOneToOne: false
+            referencedRelation: "courses"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      grade_components: {
+        Row: {
+          count: number
+          course_id: string
+          created_at: string
+          id: string
+          name: string
+          weight: number
+        }
+        Insert: {
+          count?: number
+          course_id: string
+          created_at?: string
+          id?: string
+          name: string
+          weight?: number
+        }
+        Update: {
+          count?: number
+          course_id?: string
+          created_at?: string
+          id?: string
+          name?: string
+          weight?: number
+        }
+        Relationships: [
+          {
+            foreignKeyName: "grade_components_course_id_fkey"
+            columns: ["course_id"]
+            isOneToOne: false
+            referencedRelation: "courses"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      grades: {
+        Row: {
+          created_at: string
+          enrollment_id: string
+          grade_component_id: string
+          id: string
+          instance_number: number
+          max_score: number
+          score: number | null
+        }
+        Insert: {
+          created_at?: string
+          enrollment_id: string
+          grade_component_id: string
+          id?: string
+          instance_number?: number
+          max_score?: number
+          score?: number | null
+        }
+        Update: {
+          created_at?: string
+          enrollment_id?: string
+          grade_component_id?: string
+          id?: string
+          instance_number?: number
+          max_score?: number
+          score?: number | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "grades_enrollment_id_fkey"
+            columns: ["enrollment_id"]
+            isOneToOne: false
+            referencedRelation: "enrollments"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "grades_grade_component_id_fkey"
+            columns: ["grade_component_id"]
+            isOneToOne: false
+            referencedRelation: "grade_components"
+            referencedColumns: ["id"]
+          },
+        ]
       }
       news_articles: {
         Row: {
@@ -370,7 +589,7 @@ export type Database = {
       }
     }
     Enums: {
-      app_role: "admin" | "user"
+      app_role: "admin" | "user" | "professor"
     }
     CompositeTypes: {
       [_ in never]: never
@@ -498,7 +717,7 @@ export type CompositeTypes<
 export const Constants = {
   public: {
     Enums: {
-      app_role: ["admin", "user"],
+      app_role: ["admin", "user", "professor"],
     },
   },
 } as const

@@ -31,6 +31,11 @@ import StudentApplications from "./pages/portal/StudentApplications";
 import StudentDocuments from "./pages/portal/StudentDocuments";
 import StudentMessages from "./pages/portal/StudentMessages";
 import StudentTimetable from "./pages/portal/StudentTimetable";
+import StudentCourses from "./pages/portal/StudentCourses";
+import StudentCourseDetail from "./pages/portal/StudentCourseDetail";
+import ProfessorDashboard from "./pages/professor/ProfessorDashboard";
+import ProfessorCourses from "./pages/professor/ProfessorCourses";
+import ProfessorCourseDetail from "./pages/professor/ProfessorCourseDetail";
 
 const queryClient = new QueryClient();
 
@@ -68,6 +73,11 @@ const App = () => (
             <Route path="/portal/documents" element={<StudentDocuments />} />
             <Route path="/portal/messages" element={<StudentMessages />} />
             <Route path="/portal/timetable" element={<StudentTimetable />} />
+            <Route path="/portal/courses" element={<StudentCourses />} />
+            <Route path="/portal/courses/:id" element={<StudentCourseDetail />} />
+            <Route path="/professor" element={<ProfessorDashboard />} />
+            <Route path="/professor/courses" element={<ProfessorCourses />} />
+            <Route path="/professor/courses/:id" element={<ProfessorCourseDetail />} />
             <Route path="*" element={<NotFound />} />
           </Routes>
         </AuthProvider>
