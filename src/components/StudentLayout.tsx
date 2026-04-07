@@ -1,10 +1,11 @@
 import { ReactNode } from "react";
 import { Navigate, Link, useLocation } from "react-router-dom";
 import { useAuth } from "@/hooks/useAuth";
-import { GraduationCap, LayoutDashboard, FileText, Upload, Mail, LogOut, CalendarDays } from "lucide-react";
+import { GraduationCap, LayoutDashboard, FileText, Upload, Mail, LogOut, CalendarDays, BookOpen } from "lucide-react";
 
 const navItems = [
   { to: "/portal", label: "Dashboard", icon: LayoutDashboard },
+  { to: "/portal/courses", label: "My Courses", icon: BookOpen },
   { to: "/portal/applications", label: "My Applications", icon: FileText },
   { to: "/portal/documents", label: "Documents", icon: Upload },
   { to: "/portal/timetable", label: "Timetable", icon: CalendarDays },
