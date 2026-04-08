@@ -58,12 +58,13 @@ Deno.serve(async (req) => {
       return new Response(JSON.stringify({ error: createError.message }), { status: 400, headers: { ...corsHeaders, "Content-Type": "application/json" } });
     }
 
-    // Create profile
+    // Create profile (admin-created accounts are auto-approved)
     await adminClient.from("profiles").insert({
       user_id: newUser.user.id,
       full_name,
       email,
       phone: phone || null,
+      account_status: "approved",
     });
 
     // Assign role
