@@ -45,18 +45,27 @@ const StudentRegister = () => {
       return;
     }
 
-    // Create profile
+    // Create profile with pending status
     if (data.user) {
       await supabase.from("profiles").insert({
         user_id: data.user.id,
         full_name: fullName,
         email,
         phone: phone || null,
+        account_status: "pending",
+      });
+      // Assign student role
+      await supabase.from("user_roles").insert({
+        user_id: data.user.id,
+        role: "user" as const,
       });
     }
 
+    // Sign out immediately — account needs approval
+    await supabase.auth.signOut();
+
     setSubmitting(false);
-    toast({ title: "Registration successful!", description: "You can now sign in to the Student Portal." });
+    toast({ title: "Registration submitted!", description: "Your account is pending admin approval. You'll be able to sign in once approved." });
     navigate("/portal/login");
   };
 
@@ -66,7 +75,7 @@ const StudentRegister = () => {
         <div className="mb-6 text-center">
           <GraduationCap className="mx-auto mb-2 h-10 w-10 text-primary" />
           <h1 className="font-display text-2xl font-bold text-foreground">Create Account</h1>
-          <p className="mt-1 text-sm text-muted-foreground">Register for the WBU Student Portal</p>
+          <p className="mt-1 text-sm text-muted-foreground">Register for the WBU Student Portal. Your account will be reviewed by an admin before activation.</p>
         </div>
         <form onSubmit={handleSubmit} className="space-y-4">
           <div>
@@ -92,7 +101,7 @@ const StudentRegister = () => {
           {error && <p className="text-sm text-destructive">{error}</p>}
           <button type="submit" disabled={submitting} className="inline-flex w-full items-center justify-center gap-2 rounded-md bg-primary py-2.5 font-semibold text-primary-foreground disabled:opacity-60">
             <UserPlus className="h-4 w-4" />
-            {submitting ? "Creating account..." : "Create Account"}
+            {submitting ? "Submitting..." : "Request Account"}
           </button>
         </form>
         <p className="mt-4 text-center text-sm text-muted-foreground">

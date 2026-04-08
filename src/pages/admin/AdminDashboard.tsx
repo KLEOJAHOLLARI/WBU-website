@@ -1,7 +1,7 @@
 import AdminLayout from "@/components/AdminLayout";
 import { useQuery } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
-import { BookOpen, Newspaper, FileText, Mail } from "lucide-react";
+import { BookOpen, Newspaper, FileText, Mail, Users, GraduationCap, Clock } from "lucide-react";
 
 const AdminDashboard = () => {
   const { data: programCount = 0 } = useQuery({
@@ -36,8 +36,35 @@ const AdminDashboard = () => {
     },
   });
 
+  const { data: courseCount = 0 } = useQuery({
+    queryKey: ["admin-courses-count"],
+    queryFn: async () => {
+      const { count } = await supabase.from("courses").select("*", { count: "exact", head: true });
+      return count ?? 0;
+    },
+  });
+
+  const { data: professorCount = 0 } = useQuery({
+    queryKey: ["admin-professors-count"],
+    queryFn: async () => {
+      const { data } = await supabase.from("user_roles").select("*").eq("role", "professor");
+      return data?.length ?? 0;
+    },
+  });
+
+  const { data: pendingStudents = 0 } = useQuery({
+    queryKey: ["admin-pending-students"],
+    queryFn: async () => {
+      const { data } = await supabase.from("profiles").select("account_status").eq("account_status", "pending");
+      return data?.length ?? 0;
+    },
+  });
+
   const cards = [
     { label: "Programs", value: programCount, icon: BookOpen },
+    { label: "Courses", value: courseCount, icon: BookOpen },
+    { label: "Professors", value: professorCount, icon: Users },
+    { label: "Pending Students", value: pendingStudents, icon: Clock },
     { label: "News Articles", value: newsCount, icon: Newspaper },
     { label: "Applications", value: appCount, icon: FileText },
     { label: "Messages", value: contactCount, icon: Mail },

@@ -22,6 +22,8 @@ import AdminContacts from "./pages/admin/AdminContacts";
 import AdminProfessors from "./pages/admin/AdminProfessors";
 import AdminStudents from "./pages/admin/AdminStudents";
 import AdminTimetable from "./pages/admin/AdminTimetable";
+import AdminCourses from "./pages/admin/AdminCourses";
+import AdminAccounts from "./pages/admin/AdminAccounts";
 import Faculty from "./pages/Faculty";
 import NotFound from "./pages/NotFound";
 import StudentLogin from "./pages/portal/StudentLogin";
@@ -66,6 +68,8 @@ const App = () => (
             <Route path="/admin/professors" element={<AdminProfessors />} />
             <Route path="/admin/students" element={<AdminStudents />} />
             <Route path="/admin/timetable" element={<AdminTimetable />} />
+            <Route path="/admin/courses" element={<AdminCourses />} />
+            <Route path="/admin/accounts" element={<AdminAccounts />} />
             <Route path="/portal/login" element={<StudentLogin />} />
             <Route path="/portal/register" element={<StudentRegister />} />
             <Route path="/portal" element={<StudentDashboard />} />
