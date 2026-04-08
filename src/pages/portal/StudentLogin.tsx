@@ -3,25 +3,47 @@ import { Link, Navigate } from "react-router-dom";
 import { motion } from "framer-motion";
 import { GraduationCap, LogIn } from "lucide-react";
 import { useAuth } from "@/hooks/useAuth";
+import { supabase } from "@/integrations/supabase/client";
 
 const StudentLogin = () => {
-  const { user, isAdmin, loading, signIn } = useAuth();
+  const { user, isAdmin, isProfessor, loading, signIn } = useAuth();
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [error, setError] = useState("");
   const [submitting, setSubmitting] = useState(false);
 
   if (loading) return <div className="flex min-h-screen items-center justify-center bg-background text-muted-foreground">Loading...</div>;
-  if (user && !isAdmin) return <Navigate to="/portal" replace />;
+  if (user && isProfessor) return <Navigate to="/professor" replace />;
   if (user && isAdmin) return <Navigate to="/admin" replace />;
+  if (user) return <Navigate to="/portal" replace />;
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     setError("");
     setSubmitting(true);
     const { error: err } = await signIn(email, password);
+    if (err) {
+      setError("Invalid credentials. Please try again.");
+      setSubmitting(false);
+      return;
+    }
+
+    // Check account status
+    const { data: { user: currentUser } } = await supabase.auth.getUser();
+    if (currentUser) {
+      const { data: profile } = await supabase.from("profiles").select("account_status").eq("user_id", currentUser.id).maybeSingle();
+      if (profile && profile.account_status !== "approved") {
+        await supabase.auth.signOut();
+        if (profile.account_status === "pending") {
+          setError("Your account is pending admin approval. Please wait.");
+        } else {
+          setError("Your account has been rejected. Please contact administration.");
+        }
+        setSubmitting(false);
+        return;
+      }
+    }
     setSubmitting(false);
-    if (err) setError("Invalid credentials. Please try again.");
   };
 
   return (
