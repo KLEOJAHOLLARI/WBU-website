@@ -37,7 +37,7 @@ const AdminStudents = () => {
 
   const updateDocStatus = useMutation({
     mutationFn: async ({ id, status, note }: { id: string; status: string; note?: string }) => {
-      const update: Record<string, string> = { status };
+      const update: { status: string; admin_note?: string } = { status };
       if (note !== undefined) update.admin_note = note;
       const { error } = await supabase.from("student_documents").update(update).eq("id", id);
       if (error) throw error;
