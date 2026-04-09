@@ -61,14 +61,29 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
     if (!nextUser) {
       setIsAdmin(false);
       setIsProfessor(false);
+      setProfile(null);
       setLoading(false);
       resolveRoles!({ isAdmin: false, isProfessor: false });
       return;
     }
 
-    const result = await checkRoles(nextUser.id);
+    // Fetch roles and profile in parallel
+    const [result, profileResult] = await Promise.all([
+      checkRoles(nextUser.id),
+      supabase
+        .from("profiles")
+        .select("full_name, avatar_url, email")
+        .eq("user_id", nextUser.id)
+        .maybeSingle(),
+    ]);
+
     setIsAdmin(result.isAdmin);
     setIsProfessor(result.isProfessor);
+    setProfile(profileResult.data ? {
+      full_name: profileResult.data.full_name,
+      avatar_url: profileResult.data.avatar_url,
+      email: profileResult.data.email,
+    } : null);
     setLoading(false);
     resolveRoles!(result);
   }, []);
