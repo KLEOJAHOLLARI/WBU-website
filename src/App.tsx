@@ -40,9 +40,11 @@ import ProfessorCourses from "./pages/professor/ProfessorCourses";
 import ProfessorCourseDetail from "./pages/professor/ProfessorCourseDetail";
 import ProfessorAnnouncements from "./pages/professor/ProfessorAnnouncements";
 import AdminAnnouncements from "./pages/admin/AdminAnnouncements";
+import AdminAdvisors from "./pages/admin/AdminAdvisors";
 import AdminProfile from "./pages/admin/AdminProfile";
 import StudentProfile from "./pages/portal/StudentProfile";
 import ProfessorProfile from "./pages/professor/ProfessorProfile";
+import ProfessorAdvisor from "./pages/professor/ProfessorAdvisor";
 import DevToolbar from "./components/DevToolbar";
 
 const queryClient = new QueryClient();
