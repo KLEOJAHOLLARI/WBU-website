@@ -942,6 +942,77 @@ const ProfessorCourseDetail = () => {
             )}
           </div>
         )}
+
+        {/* ═══════ MATERIALS ═══════ */}
+        {tab === "materials" && (
+          <div className="space-y-6">
+            {/* Upload area */}
+            <div className="rounded-xl border border-dashed border-border bg-card p-6 text-center">
+              <input
+                ref={fileInputRef}
+                type="file"
+                multiple
+                onChange={handleFileUpload}
+                className="hidden"
+                accept=".pdf,.doc,.docx,.ppt,.pptx,.xls,.xlsx,.txt,.csv,.jpg,.jpeg,.png,.gif,.zip,.rar"
+              />
+              <Upload className="mx-auto mb-2 h-8 w-8 text-muted-foreground/50" />
+              <p className="text-sm font-medium text-foreground">Upload course materials</p>
+              <p className="mt-1 text-xs text-muted-foreground">PDF, Word, PowerPoint, Excel, images, and more</p>
+              <button
+                onClick={() => fileInputRef.current?.click()}
+                disabled={uploading}
+                className="mt-3 inline-flex items-center gap-2 rounded-md bg-primary px-4 py-2 text-sm font-semibold text-primary-foreground hover:bg-primary/90 disabled:opacity-50 transition-colors"
+              >
+                {uploading ? <Loader2 className="h-4 w-4 animate-spin" /> : <Plus className="h-4 w-4" />}
+                {uploading ? "Uploading..." : "Choose Files"}
+              </button>
+            </div>
+
+            {/* Files list */}
+            {loadingMaterials ? (
+              <div className="flex items-center gap-2 text-muted-foreground"><Loader2 className="h-4 w-4 animate-spin" /> Loading materials...</div>
+            ) : materials.length === 0 ? (
+              <div className="rounded-xl border border-dashed border-border bg-card/50 p-10 text-center">
+                <FileText className="mx-auto mb-2 h-8 w-8 text-muted-foreground/40" />
+                <p className="text-muted-foreground">No materials uploaded yet.</p>
+                <p className="mt-1 text-sm text-muted-foreground/70">Upload syllabi, lecture notes, assignments, and other course files.</p>
+              </div>
+            ) : (
+              <div className="space-y-2">
+                <p className="text-sm text-muted-foreground">{materials.length} file{materials.length !== 1 ? "s" : ""} uploaded</p>
+                {materials.map((m) => (
+                  <div
+                    key={m.id}
+                    className="group flex items-center gap-3 rounded-xl border border-border bg-card px-4 py-3 transition-colors hover:border-primary/30"
+                  >
+                    <span className="text-xl flex-shrink-0">{getFileIcon(m.content_type)}</span>
+                    <div className="min-w-0 flex-1">
+                      <p className="truncate text-sm font-medium text-foreground">{m.file_name}</p>
+                      <p className="text-xs text-muted-foreground">
+                        {formatFileSize(Number(m.file_size))} · {new Date(m.created_at).toLocaleDateString("en", { month: "short", day: "numeric", year: "numeric" })}
+                      </p>
+                    </div>
+                    <div className="flex items-center gap-1 opacity-0 transition-opacity group-hover:opacity-100">
+                      <button
+                        onClick={() => downloadMaterial(m.file_path, m.file_name)}
+                        className="rounded-md p-2 text-muted-foreground hover:bg-secondary hover:text-foreground transition-colors"
+                      >
+                        <Download className="h-4 w-4" />
+                      </button>
+                      <button
+                        onClick={() => { if (confirm(`Delete "${m.file_name}"?`)) deleteMaterial.mutate({ id: m.id, file_path: m.file_path }); }}
+                        className="rounded-md p-2 text-muted-foreground hover:bg-destructive/10 hover:text-destructive transition-colors"
+                      >
+                        <Trash2 className="h-4 w-4" />
+                      </button>
+                    </div>
+                  </div>
+                ))}
+              </div>
+            )}
+          </div>
+        )}
       </div>
     </ProfessorLayout>
   );
