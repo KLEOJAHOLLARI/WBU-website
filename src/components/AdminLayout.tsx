@@ -1,7 +1,7 @@
 import { ReactNode } from "react";
 import { Navigate, Link, useLocation } from "react-router-dom";
 import { useAuth } from "@/hooks/useAuth";
-import { GraduationCap, LayoutDashboard, BookOpen, Newspaper, Mail, FileText, Users, LogOut, CalendarDays, UserPlus, Megaphone } from "lucide-react";
+import { GraduationCap, LayoutDashboard, BookOpen, Newspaper, Mail, FileText, Users, LogOut, CalendarDays, UserPlus, Megaphone, UserCircle } from "lucide-react";
 
 const navItems = [
   { to: "/admin", label: "Dashboard", icon: LayoutDashboard },

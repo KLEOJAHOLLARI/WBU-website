@@ -76,6 +76,7 @@ const App = () => (
             <Route path="/admin/courses" element={<AdminCourses />} />
             <Route path="/admin/accounts" element={<AdminAccounts />} />
             <Route path="/admin/announcements" element={<AdminAnnouncements />} />
+            <Route path="/admin/profile" element={<AdminProfile />} />
             <Route path="/portal/login" element={<StudentLogin />} />
             <Route path="/portal/register" element={<StudentRegister />} />
             <Route path="/portal" element={<StudentDashboard />} />
@@ -85,10 +86,12 @@ const App = () => (
             <Route path="/portal/timetable" element={<StudentTimetable />} />
             <Route path="/portal/courses" element={<StudentCourses />} />
             <Route path="/portal/courses/:id" element={<StudentCourseDetail />} />
+            <Route path="/portal/profile" element={<StudentProfile />} />
             <Route path="/professor" element={<ProfessorDashboard />} />
             <Route path="/professor/courses" element={<ProfessorCourses />} />
             <Route path="/professor/courses/:id" element={<ProfessorCourseDetail />} />
             <Route path="/professor/announcements" element={<ProfessorAnnouncements />} />
+            <Route path="/professor/profile" element={<ProfessorProfile />} />
             <Route path="*" element={<NotFound />} />
           </Routes>
         </AuthProvider>

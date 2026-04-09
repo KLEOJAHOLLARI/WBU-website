@@ -1,12 +1,13 @@
 import { ReactNode } from "react";
 import { Navigate, Link, useLocation } from "react-router-dom";
 import { useAuth } from "@/hooks/useAuth";
-import { GraduationCap, LayoutDashboard, BookOpen, LogOut, Megaphone } from "lucide-react";
+import { GraduationCap, LayoutDashboard, BookOpen, LogOut, Megaphone, UserCircle } from "lucide-react";
 
 const navItems = [
   { to: "/professor", label: "Dashboard", icon: LayoutDashboard },
   { to: "/professor/courses", label: "My Courses", icon: BookOpen },
   { to: "/professor/announcements", label: "Announcements", icon: Megaphone },
+  { to: "/professor/profile", label: "My Profile", icon: UserCircle },
 ];
 
 const ProfessorLayout = ({ children }: { children: ReactNode }) => {
