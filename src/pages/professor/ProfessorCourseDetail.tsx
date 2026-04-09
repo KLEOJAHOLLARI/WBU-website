@@ -77,7 +77,7 @@ const GradeCell = ({ defaultValue, onSave, isSaving }: { defaultValue: string; o
 const ProfessorCourseDetail = () => {
   const { id: courseId } = useParams<{ id: string }>();
   const qc = useQueryClient();
-  const [tab, setTab] = useState<"scheme" | "attendance" | "grades">("scheme");
+  const [tab, setTab] = useState<"students" | "scheme" | "attendance" | "grades">("students");
   const [studentSearch, setStudentSearch] = useState("");
 
   /* ─── queries ─── */
