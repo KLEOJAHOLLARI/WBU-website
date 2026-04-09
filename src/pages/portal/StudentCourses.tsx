@@ -146,40 +146,39 @@ const StudentCourses = () => {
     onError: (e: any) => toast({ title: "Error", description: e.message, variant: "destructive" }),
   });
 
+  const enrollmentIds = enrollments.map((e) => e.id);
+
   const { data: attendanceData = [] } = useQuery({
-    queryKey: ["student-all-attendance", user?.id],
+    queryKey: ["student-all-attendance", user?.id, enrollmentIds],
     queryFn: async () => {
-      const enrollmentIds = enrollments.map((e) => e.id);
       if (enrollmentIds.length === 0) return [];
       const { data, error } = await supabase.from("attendance_records").select("*, attendance_sessions(*)").in("enrollment_id", enrollmentIds);
       if (error) throw error;
       return data as any[];
     },
-    enabled: enrollments.length > 0,
+    enabled: enrollmentIds.length > 0,
   });
 
   const { data: allSessions = [] } = useQuery({
-    queryKey: ["student-all-sessions", user?.id],
+    queryKey: ["student-all-sessions", user?.id, enrolledCourseIds],
     queryFn: async () => {
-      const courseIds = enrollments.map((e) => e.course_id);
-      if (courseIds.length === 0) return [];
-      const { data, error } = await supabase.from("attendance_sessions").select("*").in("course_id", courseIds);
+      if (enrolledCourseIds.length === 0) return [];
+      const { data, error } = await supabase.from("attendance_sessions").select("*").in("course_id", enrolledCourseIds);
       if (error) throw error;
       return data;
     },
-    enabled: enrollments.length > 0,
+    enabled: enrolledCourseIds.length > 0,
   });
 
   const { data: gradesData = [] } = useQuery({
-    queryKey: ["student-all-grades", user?.id],
+    queryKey: ["student-all-grades", user?.id, enrollmentIds],
     queryFn: async () => {
-      const enrollmentIds = enrollments.map((e) => e.id);
       if (enrollmentIds.length === 0) return [];
       const { data, error } = await supabase.from("grades").select("*, grade_components(*)").in("enrollment_id", enrollmentIds);
       if (error) throw error;
       return data as any[];
     },
-    enabled: enrollments.length > 0,
+    enabled: enrollmentIds.length > 0,
   });
 
   const enrolledCourseIds = enrollments.map((e) => e.course_id);
