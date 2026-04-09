@@ -300,6 +300,7 @@ const ProfessorCourseDetail = () => {
 
   /* ─── tab styling ─── */
   const tabItems = [
+    { key: "students", label: "Students", icon: Users },
     { key: "scheme", label: "Evaluation", icon: BarChart3 },
     { key: "attendance", label: "Attendance", icon: CalendarDays },
     { key: "grades", label: "Grades", icon: ClipboardCheck },
