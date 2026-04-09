@@ -111,7 +111,7 @@ const StudentDashboard = () => {
       </h1>
       <p className="mt-1 text-muted-foreground">Your student portal overview</p>
 
-      <div className="mt-8 grid gap-4 sm:grid-cols-3">
+      <div className="mt-8 grid gap-4 sm:grid-cols-2 lg:grid-cols-5">
         {cards.map((c) => (
           <div key={c.label} className="rounded-xl border border-border bg-card p-6">
             <c.icon className={`mb-2 h-6 w-6 ${c.color}`} />
