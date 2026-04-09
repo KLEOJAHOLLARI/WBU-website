@@ -17,6 +17,35 @@ const ProfessorLayout = ({ children }: { children: ReactNode }) => {
   const { user, isProfessor, isAdmin, loading, signOut } = useAuth();
   const location = useLocation();
 
+  const { data: pendingCount = 0 } = useQuery({
+    queryKey: ["pending-enrollment-count", user?.id],
+    queryFn: async () => {
+      // Get programs this professor advises
+      const { data: advisorPrograms } = await supabase
+        .from("program_advisors")
+        .select("program")
+        .eq("advisor_id", user!.id);
+      if (!advisorPrograms?.length) return 0;
+      const programs = advisorPrograms.map((a) => a.program);
+      // Get courses in those programs
+      const { data: courses } = await supabase
+        .from("courses")
+        .select("id")
+        .in("program", programs);
+      if (!courses?.length) return 0;
+      const courseIds = courses.map((c) => c.id);
+      // Count pending requests
+      const { count } = await supabase
+        .from("enrollment_requests")
+        .select("*", { count: "exact", head: true })
+        .in("course_id", courseIds)
+        .eq("status", "pending");
+      return count || 0;
+    },
+    enabled: !!user,
+    refetchInterval: 30000,
+  });
+
   if (loading) return <div className="flex min-h-screen items-center justify-center bg-background text-muted-foreground">Loading...</div>;
   if (!user) return <Navigate to="/portal/login" replace />;
   if (!isProfessor && !isAdmin) return <Navigate to="/" replace />;
