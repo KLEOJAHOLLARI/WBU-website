@@ -307,7 +307,7 @@ const AdminCourses = () => {
             <input
               placeholder="Search by name or code..."
               value={search}
-              onChange={(e) => setSearch(e.target.value)}
+              onChange={(e) => { setSearch(e.target.value); setCurrentPage(1); }}
               className={`${inputCls} w-full pl-9`}
             />
           </div>
@@ -319,19 +319,19 @@ const AdminCourses = () => {
         </div>
 
         <div className="flex flex-wrap gap-2">
-          <select value={filterFaculty} onChange={(e) => { setFilterFaculty(e.target.value); setFilterProgram(""); }} className={selectCls}>
+          <select value={filterFaculty} onChange={(e) => { setFilterFaculty(e.target.value); setFilterProgram(""); setCurrentPage(1); }} className={selectCls}>
             <option value="">All Faculties</option>
             {faculties.map(f => <option key={f} value={f}>{f}</option>)}
           </select>
-          <select value={filterProgram} onChange={(e) => setFilterProgram(e.target.value)} className={selectCls}>
+          <select value={filterProgram} onChange={(e) => { setFilterProgram(e.target.value); setCurrentPage(1); }} className={selectCls}>
             <option value="">All Programs</option>
             {programsByFaculty.map(p => <option key={p.slug} value={p.slug}>{p.title}</option>)}
           </select>
-          <select value={filterYear} onChange={(e) => setFilterYear(e.target.value)} className={selectCls}>
+          <select value={filterYear} onChange={(e) => { setFilterYear(e.target.value); setCurrentPage(1); }} className={selectCls}>
             <option value="">All Years</option>
             {uniqueYears.map(y => <option key={y} value={y}>Year {y}</option>)}
           </select>
-          <select value={filterSemester} onChange={(e) => setFilterSemester(e.target.value)} className={selectCls}>
+          <select value={filterSemester} onChange={(e) => { setFilterSemester(e.target.value); setCurrentPage(1); }} className={selectCls}>
             <option value="">All Semesters</option>
             {uniqueSemesters.map(s => <option key={s} value={s}>Semester {s}</option>)}
           </select>
