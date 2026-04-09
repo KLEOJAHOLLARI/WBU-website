@@ -1,5 +1,5 @@
 import { useState } from "react";
-import { Link, Navigate } from "react-router-dom";
+import { Link, Navigate, useNavigate } from "react-router-dom";
 import { motion } from "framer-motion";
 import { GraduationCap, LogIn } from "lucide-react";
 import { useAuth } from "@/hooks/useAuth";
@@ -7,6 +7,7 @@ import { supabase } from "@/integrations/supabase/client";
 
 const StudentLogin = () => {
   const { user, isAdmin, isProfessor, loading, signIn } = useAuth();
+  const navigate = useNavigate();
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [error, setError] = useState("");
@@ -28,8 +29,11 @@ const StudentLogin = () => {
       return;
     }
 
-    // Check account status
-    const { data: { user: currentUser } } = await supabase.auth.getUser();
+    const [{ data: { user: currentUser } }, { data: roleRows, error: roleError }] = await Promise.all([
+      supabase.auth.getUser(),
+      supabase.from("user_roles").select("role, user_id"),
+    ]);
+
     if (currentUser) {
       const { data: profile } = await supabase.from("profiles").select("account_status").eq("user_id", currentUser.id).maybeSingle();
       if (profile && profile.account_status !== "approved") {
@@ -42,7 +46,27 @@ const StudentLogin = () => {
         setSubmitting(false);
         return;
       }
+
+      const roles = roleError ? [] : (roleRows || [])
+        .filter((row) => row.user_id === currentUser.id)
+        .map((row) => row.role);
+
+      setSubmitting(false);
+
+      if (roles.includes("admin")) {
+        navigate("/admin", { replace: true });
+        return;
+      }
+
+      if (roles.includes("professor")) {
+        navigate("/professor", { replace: true });
+        return;
+      }
+
+      navigate("/portal", { replace: true });
+      return;
     }
+
     setSubmitting(false);
   };
 

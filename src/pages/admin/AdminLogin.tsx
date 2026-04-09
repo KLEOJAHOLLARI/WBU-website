@@ -1,11 +1,13 @@
 import { useState } from "react";
-import { Navigate } from "react-router-dom";
+import { Navigate, useNavigate } from "react-router-dom";
 import { motion } from "framer-motion";
 import { GraduationCap, LogIn } from "lucide-react";
 import { useAuth } from "@/hooks/useAuth";
+import { supabase } from "@/integrations/supabase/client";
 
 const AdminLogin = () => {
-  const { user, isAdmin, loading, signIn } = useAuth();
+  const { user, isAdmin, isProfessor, loading, signIn } = useAuth();
+  const navigate = useNavigate();
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [error, setError] = useState("");
@@ -13,16 +15,39 @@ const AdminLogin = () => {
 
   if (loading) return <div className="flex min-h-screen items-center justify-center bg-background text-muted-foreground">Loading...</div>;
   if (user && isAdmin) return <Navigate to="/admin" replace />;
+  if (user && isProfessor) return <Navigate to="/professor" replace />;
+  if (user) return <Navigate to="/portal" replace />;
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     setError("");
     setSubmitting(true);
     const { error: err } = await signIn(email, password);
-    setSubmitting(false);
     if (err) {
+      setSubmitting(false);
       setError("Invalid credentials. Please try again.");
+      return;
     }
+
+    const { data: { user: currentUser } } = await supabase.auth.getUser();
+    const { data: roleRows } = await supabase.from("user_roles").select("role, user_id");
+    const roles = currentUser
+      ? (roleRows || []).filter((row) => row.user_id === currentUser.id).map((row) => row.role)
+      : [];
+
+    setSubmitting(false);
+
+    if (roles.includes("admin")) {
+      navigate("/admin", { replace: true });
+      return;
+    }
+
+    if (roles.includes("professor")) {
+      navigate("/professor", { replace: true });
+      return;
+    }
+
+    navigate("/portal", { replace: true });
   };
 
   return (
@@ -37,12 +62,6 @@ const AdminLogin = () => {
           <h1 className="font-display text-2xl font-bold text-foreground">Admin Login</h1>
           <p className="mt-1 text-sm text-muted-foreground">Sign in to manage Akademia</p>
         </div>
-
-        {user && !isAdmin && (
-          <div className="mb-4 rounded-md bg-destructive/10 p-3 text-center text-sm text-destructive">
-            Your account does not have admin access.
-          </div>
-        )}
 
         <form onSubmit={handleSubmit} className="space-y-4">
           <div>

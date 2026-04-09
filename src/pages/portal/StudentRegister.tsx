@@ -7,7 +7,7 @@ import { supabase } from "@/integrations/supabase/client";
 import { toast } from "@/hooks/use-toast";
 
 const StudentRegister = () => {
-  const { user, loading } = useAuth();
+  const { user, isAdmin, isProfessor, loading } = useAuth();
   const navigate = useNavigate();
   const [fullName, setFullName] = useState("");
   const [email, setEmail] = useState("");
@@ -18,6 +18,8 @@ const StudentRegister = () => {
   const [submitting, setSubmitting] = useState(false);
 
   if (loading) return <div className="flex min-h-screen items-center justify-center bg-background text-muted-foreground">Loading...</div>;
+  if (user && isAdmin) return <Navigate to="/admin" replace />;
+  if (user && isProfessor) return <Navigate to="/professor" replace />;
   if (user) return <Navigate to="/portal" replace />;
 
   const handleSubmit = async (e: React.FormEvent) => {
