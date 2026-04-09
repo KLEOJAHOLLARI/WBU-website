@@ -14,37 +14,22 @@ const statusColor = (status: string) => {
 const StudentApplications = () => {
   const { user } = useAuth();
 
-  const { data: applications = [], isLoading } = useQuery({
+  // RLS policies filter by user_id OR email automatically - just fetch all accessible
+  const { data: applications = [], isLoading, isError } = useQuery({
     queryKey: ["student-applications", user?.id],
     queryFn: async () => {
       const { data, error } = await supabase
         .from("applications")
         .select("*")
-        .eq("user_id", user!.id)
         .order("created_at", { ascending: false });
-      if (error) throw error;
+      if (error) {
+        console.error("Error fetching applications:", error);
+        throw error;
+      }
       return data;
     },
     enabled: !!user,
   });
-
-  // Also fetch applications by email as fallback (for apps submitted before registration)
-  const { data: emailApps = [] } = useQuery({
-    queryKey: ["student-applications-email", user?.email],
-    queryFn: async () => {
-      const { data, error } = await supabase
-        .from("applications")
-        .select("*")
-        .eq("email", user!.email!)
-        .is("user_id", null)
-        .order("created_at", { ascending: false });
-      if (error) throw error;
-      return data;
-    },
-    enabled: !!user?.email,
-  });
-
-  const allApps = [...applications, ...emailApps];
 
   return (
     <StudentLayout>
@@ -54,13 +39,17 @@ const StudentApplications = () => {
       <div className="mt-6 space-y-4">
         {isLoading ? (
           <p className="text-muted-foreground">Loading...</p>
-        ) : allApps.length === 0 ? (
+        ) : isError ? (
+          <div className="rounded-xl border border-border bg-card p-8 text-center text-muted-foreground">
+            <p>Could not load applications. Please try again later.</p>
+          </div>
+        ) : applications.length === 0 ? (
           <div className="rounded-xl border border-border bg-card p-8 text-center text-muted-foreground">
             <p>No applications found.</p>
             <p className="mt-1 text-sm">Apply to a program from the <a href="/admissions" className="text-primary hover:underline">Admissions</a> page.</p>
           </div>
         ) : (
-          allApps.map((app) => (
+          applications.map((app) => (
             <div key={app.id} className="rounded-xl border border-border bg-card p-6">
               <div className="flex items-start justify-between">
                 <div>
