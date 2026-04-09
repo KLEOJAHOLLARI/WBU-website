@@ -2,6 +2,7 @@ import { ReactNode } from "react";
 import { Navigate, Link, useLocation } from "react-router-dom";
 import { useAuth } from "@/hooks/useAuth";
 import { GraduationCap, LayoutDashboard, FileText, Upload, Mail, LogOut, CalendarDays, BookOpen, UserCircle } from "lucide-react";
+import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 
 const navItems = [
   { to: "/portal", label: "Dashboard", icon: LayoutDashboard },
@@ -14,7 +15,7 @@ const navItems = [
 ];
 
 const StudentLayout = ({ children }: { children: ReactNode }) => {
-  const { user, isAdmin, isProfessor, loading, signOut } = useAuth();
+  const { user, isAdmin, isProfessor, loading, signOut, profile } = useAuth();
   const location = useLocation();
 
   if (loading) return <div className="flex min-h-screen items-center justify-center bg-background text-muted-foreground">Loading...</div>;
@@ -56,6 +57,20 @@ const StudentLayout = ({ children }: { children: ReactNode }) => {
         </div>
       </aside>
       <main className="flex-1 overflow-auto">
+        <div className="flex h-14 items-center justify-end border-b border-border bg-card px-6">
+          <div className="flex items-center gap-3">
+            <div className="text-right hidden sm:block">
+              <p className="text-sm font-medium text-foreground leading-tight">{profile?.full_name || "Student"}</p>
+              <p className="text-xs text-muted-foreground">Student</p>
+            </div>
+            <Avatar className="h-8 w-8">
+              {profile?.avatar_url && <AvatarImage src={profile.avatar_url} alt={profile.full_name} />}
+              <AvatarFallback className="bg-primary/10 text-primary text-xs font-semibold">
+                {(profile?.full_name || "S").split(" ").map(n => n[0]).join("").toUpperCase().slice(0, 2)}
+              </AvatarFallback>
+            </Avatar>
+          </div>
+        </div>
         <div className="p-6 md:p-8">{children}</div>
       </main>
     </div>

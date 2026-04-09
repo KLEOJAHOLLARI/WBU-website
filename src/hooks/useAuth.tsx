@@ -2,9 +2,16 @@ import { createContext, useContext, useEffect, useState, useRef, useCallback, Re
 import { Session, User } from "@supabase/supabase-js";
 import { supabase } from "@/integrations/supabase/client";
 
+interface UserProfile {
+  full_name: string;
+  avatar_url: string | null;
+  email: string;
+}
+
 interface AuthContextType {
   session: Session | null;
   user: User | null;
+  profile: UserProfile | null;
   isAdmin: boolean;
   isProfessor: boolean;
   loading: boolean;
@@ -19,6 +26,7 @@ const AuthContext = createContext<AuthContextType | undefined>(undefined);
 export const AuthProvider = ({ children }: { children: ReactNode }) => {
   const [session, setSession] = useState<Session | null>(null);
   const [user, setUser] = useState<User | null>(null);
+  const [profile, setProfile] = useState<UserProfile | null>(null);
   const [isAdmin, setIsAdmin] = useState(false);
   const [isProfessor, setIsProfessor] = useState(false);
   const [loading, setLoading] = useState(true);
@@ -53,14 +61,29 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
     if (!nextUser) {
       setIsAdmin(false);
       setIsProfessor(false);
+      setProfile(null);
       setLoading(false);
       resolveRoles!({ isAdmin: false, isProfessor: false });
       return;
     }
 
-    const result = await checkRoles(nextUser.id);
+    // Fetch roles and profile in parallel
+    const [result, profileResult] = await Promise.all([
+      checkRoles(nextUser.id),
+      supabase
+        .from("profiles")
+        .select("full_name, avatar_url, email")
+        .eq("user_id", nextUser.id)
+        .maybeSingle(),
+    ]);
+
     setIsAdmin(result.isAdmin);
     setIsProfessor(result.isProfessor);
+    setProfile(profileResult.data ? {
+      full_name: profileResult.data.full_name,
+      avatar_url: profileResult.data.avatar_url,
+      email: profileResult.data.email,
+    } : null);
     setLoading(false);
     resolveRoles!(result);
   }, []);
@@ -88,6 +111,7 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
     await supabase.auth.signOut();
     setIsAdmin(false);
     setIsProfessor(false);
+    setProfile(null);
   };
 
   const waitForRoles = useCallback(async () => {
@@ -98,7 +122,7 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
   }, [isAdmin, isProfessor]);
 
   return (
-    <AuthContext.Provider value={{ session, user, isAdmin, isProfessor, loading, signIn, signOut, waitForRoles }}>
+    <AuthContext.Provider value={{ session, user, profile, isAdmin, isProfessor, loading, signIn, signOut, waitForRoles }}>
       {children}
     </AuthContext.Provider>
   );
