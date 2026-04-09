@@ -1,8 +1,9 @@
-import { ReactNode } from "react";
+import { ReactNode, useState } from "react";
 import { Navigate, Link, useLocation } from "react-router-dom";
 import { useAuth } from "@/hooks/useAuth";
-import { GraduationCap, LayoutDashboard, FileText, Upload, Mail, LogOut, CalendarDays, BookOpen, UserCircle } from "lucide-react";
+import { GraduationCap, LayoutDashboard, FileText, Upload, Mail, LogOut, CalendarDays, BookOpen, UserCircle, Menu } from "lucide-react";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
+import { Sheet, SheetContent, SheetTrigger } from "@/components/ui/sheet";
 
 const navItems = [
   { to: "/portal", label: "Dashboard", icon: LayoutDashboard },
@@ -17,47 +18,71 @@ const navItems = [
 const StudentLayout = ({ children }: { children: ReactNode }) => {
   const { user, isAdmin, isProfessor, loading, signOut, profile } = useAuth();
   const location = useLocation();
+  const [mobileOpen, setMobileOpen] = useState(false);
 
   if (loading) return <div className="flex min-h-screen items-center justify-center bg-background text-muted-foreground">Loading...</div>;
   if (!user) return <Navigate to="/portal/login" replace />;
   if (isAdmin) return <Navigate to="/admin" replace />;
   if (isProfessor) return <Navigate to="/professor" replace />;
 
+  const initials = (profile?.full_name || "S").split(" ").map(n => n[0]).join("").toUpperCase().slice(0, 2);
+
+  const sidebarContent = (
+    <>
+      <div className="flex h-16 items-center gap-2 border-b border-border px-4">
+        <GraduationCap className="h-6 w-6 text-primary" />
+        <span className="font-display text-lg font-bold text-primary">Student Portal</span>
+      </div>
+      <nav className="flex-1 space-y-1 overflow-auto p-3">
+        {navItems.map((item) => (
+          <Link
+            key={item.to}
+            to={item.to}
+            onClick={() => setMobileOpen(false)}
+            className={`flex items-center gap-3 rounded-md px-3 py-2.5 text-sm font-medium transition-colors ${
+              location.pathname === item.to
+                ? "bg-secondary text-secondary-foreground"
+                : "text-muted-foreground hover:bg-secondary hover:text-secondary-foreground"
+            }`}
+          >
+            <item.icon className="h-4 w-4" />
+            {item.label}
+          </Link>
+        ))}
+      </nav>
+      <div className="border-t border-border p-3">
+        <button onClick={() => { signOut(); setMobileOpen(false); }} className="flex w-full items-center gap-3 rounded-md px-3 py-2.5 text-sm font-medium text-muted-foreground transition-colors hover:bg-secondary hover:text-destructive">
+          <LogOut className="h-4 w-4" />
+          Sign Out
+        </button>
+        <Link to="/" onClick={() => setMobileOpen(false)} className="mt-1 flex items-center gap-3 rounded-md px-3 py-2.5 text-sm font-medium text-muted-foreground hover:bg-secondary">
+          ← Back to Site
+        </Link>
+      </div>
+    </>
+  );
+
   return (
     <div className="flex min-h-screen bg-background">
-      <aside className="flex w-64 flex-col border-r border-border bg-card">
-        <div className="flex h-16 items-center gap-2 border-b border-border px-4">
-          <GraduationCap className="h-6 w-6 text-primary" />
-          <span className="font-display text-lg font-bold text-primary">Student Portal</span>
-        </div>
-        <nav className="flex-1 space-y-1 p-3">
-          {navItems.map((item) => (
-            <Link
-              key={item.to}
-              to={item.to}
-              className={`flex items-center gap-3 rounded-md px-3 py-2.5 text-sm font-medium transition-colors ${
-                location.pathname === item.to
-                  ? "bg-secondary text-secondary-foreground"
-                  : "text-muted-foreground hover:bg-secondary hover:text-secondary-foreground"
-              }`}
-            >
-              <item.icon className="h-4 w-4" />
-              {item.label}
-            </Link>
-          ))}
-        </nav>
-        <div className="border-t border-border p-3">
-          <button onClick={signOut} className="flex w-full items-center gap-3 rounded-md px-3 py-2.5 text-sm font-medium text-muted-foreground transition-colors hover:bg-secondary hover:text-destructive">
-            <LogOut className="h-4 w-4" />
-            Sign Out
-          </button>
-          <Link to="/" className="mt-1 flex items-center gap-3 rounded-md px-3 py-2.5 text-sm font-medium text-muted-foreground hover:bg-secondary">
-            ← Back to Site
-          </Link>
-        </div>
+      {/* Desktop sidebar */}
+      <aside className="hidden md:flex w-64 flex-col border-r border-border bg-card">
+        {sidebarContent}
       </aside>
+
       <main className="flex-1 overflow-auto">
-        <div className="flex h-14 items-center justify-end border-b border-border bg-card px-6">
+        <div className="flex h-14 items-center justify-between border-b border-border bg-card px-4 md:px-6">
+          <Sheet open={mobileOpen} onOpenChange={setMobileOpen}>
+            <SheetTrigger asChild>
+              <button className="md:hidden rounded-md p-2 text-muted-foreground hover:bg-secondary transition-colors">
+                <Menu className="h-5 w-5" />
+              </button>
+            </SheetTrigger>
+            <SheetContent side="left" className="w-64 p-0 flex flex-col">
+              {sidebarContent}
+            </SheetContent>
+          </Sheet>
+          <div className="hidden md:block" />
+
           <div className="flex items-center gap-3">
             <div className="text-right hidden sm:block">
               <p className="text-sm font-medium text-foreground leading-tight">{profile?.full_name || "Student"}</p>
@@ -65,13 +90,11 @@ const StudentLayout = ({ children }: { children: ReactNode }) => {
             </div>
             <Avatar className="h-8 w-8">
               {profile?.avatar_url && <AvatarImage src={profile.avatar_url} alt={profile.full_name} />}
-              <AvatarFallback className="bg-primary/10 text-primary text-xs font-semibold">
-                {(profile?.full_name || "S").split(" ").map(n => n[0]).join("").toUpperCase().slice(0, 2)}
-              </AvatarFallback>
+              <AvatarFallback className="bg-primary/10 text-primary text-xs font-semibold">{initials}</AvatarFallback>
             </Avatar>
           </div>
         </div>
-        <div className="p-6 md:p-8">{children}</div>
+        <div className="p-4 md:p-8">{children}</div>
       </main>
     </div>
   );
