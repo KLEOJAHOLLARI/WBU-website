@@ -32,7 +32,14 @@ const AdminStudents = () => {
     },
   });
 
-  const { data: documents = [] } = useQuery({
+  const { data: programs = [] } = useQuery({
+    queryKey: ["all-programs-list"],
+    queryFn: async () => {
+      const { data } = await supabase.from("programs").select("slug, title").order("title");
+      return data || [];
+    },
+  });
+
     queryKey: ["admin-student-documents", selectedUserId],
     queryFn: async () => {
       const { data, error } = await supabase
