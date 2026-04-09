@@ -142,28 +142,28 @@ const ProfessorCourseDetail = () => {
     enabled: !!courseId,
   });
 
+  const enrollmentIds = enrollments.map((e) => e.id);
+
   const { data: attendanceRecords = [] } = useQuery({
-    queryKey: ["attendance-records", courseId],
+    queryKey: ["attendance-records", courseId, enrollmentIds],
     queryFn: async () => {
-      const enrollmentIds = enrollments.map((e) => e.id);
       if (enrollmentIds.length === 0) return [];
       const { data, error } = await supabase.from("attendance_records").select("*").in("enrollment_id", enrollmentIds);
       if (error) throw error;
       return data;
     },
-    enabled: enrollments.length > 0,
+    enabled: enrollmentIds.length > 0,
   });
 
   const { data: grades = [] } = useQuery({
-    queryKey: ["grades", courseId],
+    queryKey: ["grades", courseId, enrollmentIds],
     queryFn: async () => {
-      const enrollmentIds = enrollments.map((e) => e.id);
       if (enrollmentIds.length === 0) return [];
       const { data, error } = await supabase.from("grades").select("*").in("enrollment_id", enrollmentIds);
       if (error) throw error;
       return data;
     },
-    enabled: enrollments.length > 0,
+    enabled: enrollmentIds.length > 0,
   });
 
   /* ─── mutations ─── */
