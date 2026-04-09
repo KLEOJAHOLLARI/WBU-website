@@ -46,6 +46,7 @@ import StudentProfile from "./pages/portal/StudentProfile";
 import ProfessorProfile from "./pages/professor/ProfessorProfile";
 import ProfessorAdvisor from "./pages/professor/ProfessorAdvisor";
 import DevToolbar from "./components/DevToolbar";
+import FacultyProfile from "./pages/FacultyProfile";
 
 const queryClient = new QueryClient();
 
@@ -66,6 +67,7 @@ const App = () => (
             <Route path="/news/:id" element={<NewsDetail />} />
             <Route path="/contact" element={<Contact />} />
             <Route path="/faculty" element={<Faculty />} />
+            <Route path="/faculty/:id" element={<FacultyProfile />} />
             <Route path="/timetable" element={<Timetable />} />
             <Route path="/admin/login" element={<AdminLogin />} />
             <Route path="/admin" element={<AdminDashboard />} />

@@ -5,7 +5,7 @@ import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/hooks/useAuth";
 import { useToast } from "@/hooks/use-toast";
 import { Link } from "react-router-dom";
-import { BookOpen, BarChart3, ClipboardCheck, Lock, Plus, Clock, CheckCircle, XCircle, X, GraduationCap, Building2, ChevronDown, ChevronRight } from "lucide-react";
+import { BookOpen, BarChart3, ClipboardCheck, Lock, Plus, Clock, CheckCircle, XCircle, X, GraduationCap, Building2, ChevronDown, ChevronRight, User } from "lucide-react";
 import { Badge } from "@/components/ui/badge";
 
 const StudentCourses = () => {
@@ -66,6 +66,28 @@ const StudentCourses = () => {
     },
     enabled: !!profile?.program,
   });
+
+  // Collect all professor_ids from enrolled + program courses
+  const allCourses = [...enrollments.map((e: any) => e.courses), ...programCourses].filter(Boolean);
+  const professorIds = [...new Set(allCourses.map((c: any) => c?.professor_id).filter(Boolean))] as string[];
+
+  const { data: professorProfiles = [] } = useQuery({
+    queryKey: ["professor-profiles-for-courses", professorIds],
+    queryFn: async () => {
+      const { data, error } = await supabase
+        .from("profiles")
+        .select("user_id, full_name, avatar_url")
+        .in("user_id", professorIds);
+      if (error) throw error;
+      return data;
+    },
+    enabled: professorIds.length > 0,
+  });
+
+  const getProfessorName = (professorId: string | null) => {
+    if (!professorId) return null;
+    return professorProfiles.find((p) => p.user_id === professorId)?.full_name || null;
+  };
 
   const { data: enrollmentRequests = [] } = useQuery({
     queryKey: ["student-enrollment-requests", user?.id],
@@ -188,6 +210,18 @@ const StudentCourses = () => {
           <div className="flex-1 min-w-0">
             <h3 className="font-display font-semibold text-foreground truncate group-hover:text-primary transition-colors">{course?.name || "Course"}</h3>
             <p className="text-xs text-muted-foreground mt-0.5">{course?.code} · Year {course?.year} · Sem {course?.semester}</p>
+            {course?.professor_id ? (
+              <Link
+                to={`/faculty/${course.professor_id}`}
+                onClick={(e) => e.stopPropagation()}
+                className="mt-1 inline-flex items-center gap-1 text-xs text-primary hover:underline"
+              >
+                <User className="h-3 w-3" />
+                {getProfessorName(course.professor_id) || "View Professor"}
+              </Link>
+            ) : (
+              <p className="mt-1 text-xs text-muted-foreground italic">No professor assigned</p>
+            )}
           </div>
         </div>
         <div className="mt-4 flex items-center gap-4 text-sm">
@@ -392,6 +426,17 @@ const StudentCourses = () => {
                             <div className="flex-1 min-w-0">
                               <h3 className="font-display font-semibold text-foreground text-sm truncate">{course.name}</h3>
                               <p className="text-xs text-muted-foreground">{course.code}</p>
+                              {course.professor_id ? (
+                                <Link
+                                  to={`/faculty/${course.professor_id}`}
+                                  className="mt-0.5 inline-flex items-center gap-1 text-xs text-primary hover:underline"
+                                >
+                                  <User className="h-3 w-3" />
+                                  {getProfessorName(course.professor_id) || "View Professor"}
+                                </Link>
+                              ) : (
+                                <p className="mt-0.5 text-xs text-muted-foreground italic">No professor assigned</p>
+                              )}
                             </div>
                           </div>
                           <div className="mt-3">
