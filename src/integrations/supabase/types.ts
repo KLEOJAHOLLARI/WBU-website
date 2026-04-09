@@ -14,6 +14,50 @@ export type Database = {
   }
   public: {
     Tables: {
+      announcements: {
+        Row: {
+          author_id: string
+          author_name: string
+          body: string
+          course_id: string | null
+          created_at: string
+          id: string
+          program: string | null
+          title: string
+          updated_at: string
+        }
+        Insert: {
+          author_id: string
+          author_name?: string
+          body: string
+          course_id?: string | null
+          created_at?: string
+          id?: string
+          program?: string | null
+          title: string
+          updated_at?: string
+        }
+        Update: {
+          author_id?: string
+          author_name?: string
+          body?: string
+          course_id?: string | null
+          created_at?: string
+          id?: string
+          program?: string | null
+          title?: string
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "announcements_course_id_fkey"
+            columns: ["course_id"]
+            isOneToOne: false
+            referencedRelation: "courses"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       applications: {
         Row: {
           created_at: string
