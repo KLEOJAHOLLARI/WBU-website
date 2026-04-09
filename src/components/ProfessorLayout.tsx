@@ -1,12 +1,14 @@
 import { ReactNode } from "react";
 import { Navigate, Link, useLocation } from "react-router-dom";
 import { useAuth } from "@/hooks/useAuth";
+import { useQuery } from "@tanstack/react-query";
+import { supabase } from "@/integrations/supabase/client";
 import { GraduationCap, LayoutDashboard, BookOpen, LogOut, Megaphone, UserCircle, UserCheck } from "lucide-react";
 
 const navItems = [
   { to: "/professor", label: "Dashboard", icon: LayoutDashboard },
   { to: "/professor/courses", label: "My Courses", icon: BookOpen },
-  { to: "/professor/advisor", label: "Advisor", icon: UserCheck },
+  { to: "/professor/advisor", label: "Advisor", icon: UserCheck, badgeKey: "advisor" as const },
   { to: "/professor/announcements", label: "Announcements", icon: Megaphone },
   { to: "/professor/profile", label: "My Profile", icon: UserCircle },
 ];
