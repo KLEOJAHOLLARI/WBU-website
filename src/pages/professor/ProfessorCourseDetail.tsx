@@ -104,12 +104,28 @@ const ProfessorCourseDetail = () => {
   const { data: enrollments = [], isLoading: loadingEnr } = useQuery({
     queryKey: ["course-enrollments", courseId],
     queryFn: async () => {
-      const { data, error } = await supabase
+      // 1. Fetch enrollments for this course
+      const { data: enrData, error: enrError } = await supabase
         .from("enrollments")
-        .select("*, profiles:user_id(full_name, email)")
+        .select("*")
         .eq("course_id", courseId!);
-      if (error) throw error;
-      return data as any[];
+      if (enrError) throw enrError;
+      if (!enrData?.length) return [];
+
+      // 2. Fetch profiles for enrolled students
+      const userIds = [...new Set(enrData.map((e) => e.user_id))];
+      const { data: profilesData, error: profError } = await supabase
+        .from("profiles")
+        .select("user_id, full_name, email")
+        .in("user_id", userIds);
+      if (profError) throw profError;
+
+      // 3. Merge profiles into enrollments
+      const profileMap = new Map((profilesData || []).map((p) => [p.user_id, p]));
+      return enrData.map((e) => ({
+        ...e,
+        profiles: profileMap.get(e.user_id) || { full_name: "Unknown", email: "" },
+      }));
     },
     enabled: !!courseId,
   });
