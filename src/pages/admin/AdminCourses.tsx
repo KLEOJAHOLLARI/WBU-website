@@ -142,16 +142,16 @@ const AdminCourses = () => {
   };
 
   const toggleSelectAll = () => {
-    if (allFilteredSelected) {
+    if (allPageSelected) {
       setSelected(prev => {
         const next = new Set(prev);
-        filteredCourses.forEach(c => next.delete(c.id));
+        paginatedCourses.forEach(c => next.delete(c.id));
         return next;
       });
     } else {
       setSelected(prev => {
         const next = new Set(prev);
-        filteredCourses.forEach(c => next.add(c.id));
+        paginatedCourses.forEach(c => next.add(c.id));
         return next;
       });
     }
