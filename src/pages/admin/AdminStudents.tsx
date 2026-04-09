@@ -244,6 +244,27 @@ const AdminStudents = () => {
                   </div>
                 )}
 
+                {/* Program assignment */}
+                <div className="rounded-xl border border-border bg-card p-4">
+                  <h2 className="mb-2 flex items-center gap-2 font-display text-sm font-semibold text-foreground">
+                    <BookOpen className="h-4 w-4" /> Assigned Program
+                  </h2>
+                  <select
+                    value={(selectedProfile as any)?.program || ""}
+                    onChange={async (e) => {
+                      const val = e.target.value || null;
+                      const { error } = await supabase.from("profiles").update({ program: val } as any).eq("user_id", selectedUserId);
+                      if (error) { toast({ title: "Error", variant: "destructive" }); return; }
+                      queryClient.invalidateQueries({ queryKey: ["admin-students"] });
+                      toast({ title: val ? "Program assigned!" : "Program removed" });
+                    }}
+                    className="w-full rounded-md border border-input bg-background px-3 py-2 text-sm text-foreground focus:outline-none focus:ring-2 focus:ring-ring"
+                  >
+                    <option value="">No program assigned</option>
+                    {programs.map((p: any) => <option key={p.slug} value={p.slug}>{p.title}</option>)}
+                  </select>
+                </div>
+
                 {/* Documents */}
                 <div>
                   <h2 className="mb-3 font-display text-lg font-semibold text-foreground">Documents</h2>
