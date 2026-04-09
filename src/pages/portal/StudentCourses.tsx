@@ -71,18 +71,31 @@ const StudentCourses = () => {
   // Collect all professor_ids from enrolled + program courses
   const allCourses = [...enrollments.map((e: any) => e.courses), ...programCourses].filter(Boolean);
   const professorIds = [...new Set(allCourses.map((c: any) => c?.professor_id).filter(Boolean))] as string[];
+  const sortedProfessorIds = [...professorIds].sort();
 
+  // Fetch from profiles (primary) and professors table (fallback) in parallel
   const { data: professorProfiles = [] } = useQuery({
-    queryKey: ["professor-profiles-for-courses", professorIds],
+    queryKey: ["professor-profiles-for-courses", sortedProfessorIds],
     queryFn: async () => {
-      const { data, error } = await supabase
-        .from("profiles")
-        .select("user_id, full_name, avatar_url")
-        .in("user_id", professorIds);
-      if (error) throw error;
-      return data;
+      // Fetch from both tables for robustness (profiles may be RLS-blocked for students)
+      const [profilesRes, professorsRes] = await Promise.all([
+        supabase.from("profiles").select("user_id, full_name, avatar_url").in("user_id", sortedProfessorIds),
+        supabase.from("professors").select("id, name, photo_url").in("id", sortedProfessorIds),
+      ]);
+      // Merge: prefer profiles data, fall back to professors table
+      const profileMap = new Map<string, { id: string; name: string }>();
+      (professorsRes.data || []).forEach((p) => {
+        if (p.name?.trim()) profileMap.set(p.id, { id: p.id, name: p.name.trim() });
+      });
+      (profilesRes.data || []).forEach((p) => {
+        if (p.full_name?.trim()) profileMap.set(p.user_id, { id: p.user_id, name: p.full_name.trim() });
+      });
+      return Array.from(profileMap.entries()).map(([userId, info]) => ({
+        user_id: userId,
+        full_name: info.name,
+      }));
     },
-    enabled: professorIds.length > 0,
+    enabled: sortedProfessorIds.length > 0,
   });
 
   const getProfessor = (professorId: string | null) => {
