@@ -4,7 +4,7 @@ import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/hooks/useAuth";
 import { useToast } from "@/hooks/use-toast";
-import { Link } from "react-router-dom";
+import { Link, useNavigate } from "react-router-dom";
 import { BookOpen, BarChart3, ClipboardCheck, Lock, Plus, Clock, CheckCircle, XCircle, X, GraduationCap, Building2, ChevronDown, ChevronRight, User } from "lucide-react";
 import { Badge } from "@/components/ui/badge";
 
@@ -12,6 +12,7 @@ const StudentCourses = () => {
   const { user } = useAuth();
   const { toast } = useToast();
   const qc = useQueryClient();
+  const navigate = useNavigate();
   const [showAddCourses, setShowAddCourses] = useState(false);
   const [collapsedFaculties, setCollapsedFaculties] = useState<Record<string, boolean>>({});
 
@@ -197,11 +198,13 @@ const StudentCourses = () => {
     const courseGrades = gradesData.filter((g) => g.enrollment_id === enr.id);
     const hasGrades = courseGrades.some((g) => g.score !== null);
 
+    
+
     return (
-      <Link
+      <div
         key={enr.id}
-        to={`/portal/courses/${enr.course_id}`}
-        className="group rounded-xl border border-border bg-card p-5 transition-all hover:border-primary/40 hover:shadow-md"
+        onClick={() => navigate(`/portal/courses/${enr.course_id}`)}
+        className="group cursor-pointer rounded-xl border border-border bg-card p-5 transition-all hover:border-primary/40 hover:shadow-md"
       >
         <div className="flex items-start gap-3">
           <div className="rounded-lg bg-primary/10 p-2">
@@ -241,7 +244,7 @@ const StudentCourses = () => {
             ⚠ Attendance below 75% — final exam blocked
           </p>
         )}
-      </Link>
+      </div>
     );
   };
 
