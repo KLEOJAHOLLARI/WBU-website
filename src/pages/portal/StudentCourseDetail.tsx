@@ -5,7 +5,8 @@ import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/hooks/useAuth";
 import {
   AlertTriangle, CheckCircle2, ExternalLink, ArrowLeft,
-  CalendarDays, BarChart3, Loader2, BookOpen, TrendingUp
+  CalendarDays, BarChart3, Loader2, BookOpen, TrendingUp,
+  FileText, Download
 } from "lucide-react";
 import { Badge } from "@/components/ui/badge";
 import { Progress } from "@/components/ui/progress";
@@ -98,6 +99,44 @@ const StudentCourseDetail = () => {
     },
     enabled: !!enrollment,
   });
+
+  const { data: materials = [] } = useQuery({
+    queryKey: ["course-materials", courseId],
+    queryFn: async () => {
+      const { data, error } = await supabase
+        .from("course_materials")
+        .select("*")
+        .eq("course_id", courseId!)
+        .order("created_at", { ascending: false });
+      if (error) throw error;
+      return data;
+    },
+    enabled: !!courseId,
+  });
+
+  const formatFileSize = (bytes: number) => {
+    if (bytes < 1024) return `${bytes} B`;
+    if (bytes < 1024 * 1024) return `${(bytes / 1024).toFixed(1)} KB`;
+    return `${(bytes / (1024 * 1024)).toFixed(1)} MB`;
+  };
+
+  const getFileIcon = (contentType: string) => {
+    if (contentType.startsWith("image/")) return "🖼️";
+    if (contentType.includes("pdf")) return "📄";
+    if (contentType.includes("word") || contentType.includes("document")) return "📝";
+    if (contentType.includes("spreadsheet") || contentType.includes("excel")) return "📊";
+    if (contentType.includes("presentation") || contentType.includes("powerpoint")) return "📽️";
+    return "📎";
+  };
+
+  const downloadMaterial = (filePath: string, fileName: string) => {
+    const { data } = supabase.storage.from("course-materials").getPublicUrl(filePath);
+    const a = document.createElement("a");
+    a.href = data.publicUrl;
+    a.download = fileName;
+    a.target = "_blank";
+    a.click();
+  };
 
   /* ─── derived ─── */
   const presentCount = attendanceRecords.filter((r) => r.status === "present").length;
@@ -376,6 +415,42 @@ const StudentCourseDetail = () => {
               </table>
             </div>
           </>
+        )}
+      </div>
+
+      {/* ─── MATERIALS ─── */}
+      <div className="mt-8">
+        <h2 className="mb-4 flex items-center gap-2 font-display text-lg font-semibold text-foreground">
+          <FileText className="h-5 w-5 text-primary" /> Course Materials
+        </h2>
+
+        {materials.length === 0 ? (
+          <div className="rounded-xl border border-dashed border-border bg-card/50 p-8 text-center text-muted-foreground">
+            No materials uploaded yet.
+          </div>
+        ) : (
+          <div className="space-y-2">
+            {materials.map((m) => (
+              <div
+                key={m.id}
+                className="group flex items-center gap-3 rounded-xl border border-border bg-card px-4 py-3 transition-colors hover:border-primary/30"
+              >
+                <span className="text-xl flex-shrink-0">{getFileIcon(m.content_type)}</span>
+                <div className="min-w-0 flex-1">
+                  <p className="truncate text-sm font-medium text-foreground">{m.file_name}</p>
+                  <p className="text-xs text-muted-foreground">
+                    {formatFileSize(Number(m.file_size))} · {new Date(m.created_at).toLocaleDateString("en", { month: "short", day: "numeric", year: "numeric" })}
+                  </p>
+                </div>
+                <button
+                  onClick={() => downloadMaterial(m.file_path, m.file_name)}
+                  className="inline-flex items-center gap-1.5 rounded-md px-3 py-1.5 text-xs font-medium text-primary hover:bg-primary/10 transition-colors"
+                >
+                  <Download className="h-3.5 w-3.5" /> Download
+                </button>
+              </div>
+            ))}
+          </div>
         )}
       </div>
     </StudentLayout>
