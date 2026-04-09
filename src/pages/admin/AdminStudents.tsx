@@ -3,7 +3,7 @@ import AdminLayout from "@/components/AdminLayout";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
 import { useToast } from "@/hooks/use-toast";
-import { Send, FileText, CheckCircle, XCircle, UserCheck, UserX, Clock } from "lucide-react";
+import { Send, FileText, CheckCircle, XCircle, UserCheck, UserX, Clock, Mail } from "lucide-react";
 
 const AdminStudents = () => {
   const { toast } = useToast();
@@ -181,8 +181,43 @@ const AdminStudents = () => {
           ) : (() => {
             const selectedProfile = profiles.find(p => p.user_id === selectedUserId);
             const status = (selectedProfile as any)?.account_status || "pending";
+            const pendingEmailVal = (selectedProfile as any)?.pending_email;
             return (
               <div className="space-y-6">
+                {/* Pending email change */}
+                {pendingEmailVal && (
+                  <div className="flex items-center justify-between rounded-xl border border-amber-300 bg-amber-50 p-4 dark:border-amber-700 dark:bg-amber-900/20">
+                    <div>
+                      <p className="text-sm font-medium text-foreground flex items-center gap-2"><Mail className="h-4 w-4" /> Email change request</p>
+                      <p className="text-xs text-muted-foreground mt-1">Current: {selectedProfile?.email} → New: {pendingEmailVal}</p>
+                    </div>
+                    <div className="flex gap-2">
+                      <button
+                        onClick={async () => {
+                          const { error } = await supabase.from("profiles").update({ email: pendingEmailVal, pending_email: null } as any).eq("user_id", selectedUserId);
+                          if (error) { toast({ title: "Error", variant: "destructive" }); return; }
+                          queryClient.invalidateQueries({ queryKey: ["admin-students"] });
+                          toast({ title: "Email updated!" });
+                        }}
+                        className="inline-flex items-center gap-1 rounded-md bg-emerald-600 px-3 py-1.5 text-xs font-semibold text-white"
+                      >
+                        <CheckCircle className="h-3.5 w-3.5" /> Approve
+                      </button>
+                      <button
+                        onClick={async () => {
+                          const { error } = await supabase.from("profiles").update({ pending_email: null } as any).eq("user_id", selectedUserId);
+                          if (error) { toast({ title: "Error", variant: "destructive" }); return; }
+                          queryClient.invalidateQueries({ queryKey: ["admin-students"] });
+                          toast({ title: "Email change rejected" });
+                        }}
+                        className="inline-flex items-center gap-1 rounded-md bg-destructive px-3 py-1.5 text-xs font-semibold text-destructive-foreground"
+                      >
+                        <XCircle className="h-3.5 w-3.5" /> Reject
+                      </button>
+                    </div>
+                  </div>
+                )}
+
                 {/* Approval actions */}
                 {status === "pending" && (
                   <div className="flex gap-3 rounded-xl border border-border bg-card p-4">
