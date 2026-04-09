@@ -85,9 +85,38 @@ const StudentCourses = () => {
     enabled: professorIds.length > 0,
   });
 
-  const getProfessorName = (professorId: string | null) => {
+  const getProfessor = (professorId: string | null) => {
     if (!professorId) return null;
-    return professorProfiles.find((p) => p.user_id === professorId)?.full_name || null;
+    const professor = professorProfiles.find((p) => p.user_id === professorId && p.full_name?.trim());
+    if (!professor) return null;
+    return {
+      id: professor.user_id,
+      name: professor.full_name.trim(),
+    };
+  };
+
+  const renderProfessorMeta = (professorId: string | null, stopCardNavigation = false) => {
+    const professor = getProfessor(professorId);
+
+    if (!professor) {
+      return <p className="mt-1 text-xs italic text-muted-foreground">No professor assigned</p>;
+    }
+
+    return (
+      <div className="mt-2 flex items-center justify-between gap-2">
+        <div className="flex min-w-0 items-center gap-1.5 text-xs text-muted-foreground">
+          <User className="h-3 w-3 flex-shrink-0 text-primary" />
+          <span className="truncate text-foreground">{professor.name}</span>
+        </div>
+        <Link
+          to={`/professors/${professor.id}`}
+          onClick={stopCardNavigation ? (e) => e.stopPropagation() : undefined}
+          className="shrink-0 text-xs font-medium text-primary underline-offset-4 transition-colors hover:text-primary/80 hover:underline"
+        >
+          View Profile
+        </Link>
+      </div>
+    );
   };
 
   const { data: enrollmentRequests = [] } = useQuery({
@@ -213,18 +242,7 @@ const StudentCourses = () => {
           <div className="flex-1 min-w-0">
             <h3 className="font-display font-semibold text-foreground truncate group-hover:text-primary transition-colors">{course?.name || "Course"}</h3>
             <p className="text-xs text-muted-foreground mt-0.5">{course?.code} · Year {course?.year} · Sem {course?.semester}</p>
-            {course?.professor_id ? (
-              <Link
-                to={`/faculty/${course.professor_id}`}
-                onClick={(e) => e.stopPropagation()}
-                className="mt-1 inline-flex items-center gap-1 text-xs text-primary hover:underline"
-              >
-                <User className="h-3 w-3" />
-                {getProfessorName(course.professor_id) || "View Professor"}
-              </Link>
-            ) : (
-              <p className="mt-1 text-xs text-muted-foreground italic">No professor assigned</p>
-            )}
+            {renderProfessorMeta(course?.professor_id ?? null, true)}
           </div>
         </div>
         <div className="mt-4 flex items-center gap-4 text-sm">
@@ -429,17 +447,7 @@ const StudentCourses = () => {
                             <div className="flex-1 min-w-0">
                               <h3 className="font-display font-semibold text-foreground text-sm truncate">{course.name}</h3>
                               <p className="text-xs text-muted-foreground">{course.code}</p>
-                              {course.professor_id ? (
-                                <Link
-                                  to={`/faculty/${course.professor_id}`}
-                                  className="mt-0.5 inline-flex items-center gap-1 text-xs text-primary hover:underline"
-                                >
-                                  <User className="h-3 w-3" />
-                                  {getProfessorName(course.professor_id) || "View Professor"}
-                                </Link>
-                              ) : (
-                                <p className="mt-0.5 text-xs text-muted-foreground italic">No professor assigned</p>
-                              )}
+                              {renderProfessorMeta(course.professor_id)}
                             </div>
                           </div>
                           <div className="mt-3">
