@@ -2,9 +2,16 @@ import { createContext, useContext, useEffect, useState, useRef, useCallback, Re
 import { Session, User } from "@supabase/supabase-js";
 import { supabase } from "@/integrations/supabase/client";
 
+interface UserProfile {
+  full_name: string;
+  avatar_url: string | null;
+  email: string;
+}
+
 interface AuthContextType {
   session: Session | null;
   user: User | null;
+  profile: UserProfile | null;
   isAdmin: boolean;
   isProfessor: boolean;
   loading: boolean;
