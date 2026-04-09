@@ -3,7 +3,7 @@ import AdminLayout from "@/components/AdminLayout";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
 import { useToast } from "@/hooks/use-toast";
-import { Plus, Pencil, Trash2, X, Search, Filter, RotateCcw, CheckSquare, Square, UserCog } from "lucide-react";
+import { Plus, Pencil, Trash2, X, Search, Filter, RotateCcw, CheckSquare, Square, UserCog, ChevronLeft, ChevronRight, ChevronsLeft, ChevronsRight } from "lucide-react";
 import { Badge } from "@/components/ui/badge";
 
 const emptyCourse = { name: "", code: "", program: "", semester: 1, year: 1, professor_id: "" };
@@ -25,6 +25,10 @@ const AdminCourses = () => {
   const [selected, setSelected] = useState<Set<string>>(new Set());
   const [bulkProfessorId, setBulkProfessorId] = useState("");
   const [showBulkReassign, setShowBulkReassign] = useState(false);
+
+  // Pagination state
+  const [currentPage, setCurrentPage] = useState(1);
+  const [pageSize, setPageSize] = useState(15);
 
   const { data: courses = [], isLoading } = useQuery({
     queryKey: ["admin-courses"],
@@ -109,10 +113,24 @@ const AdminCourses = () => {
     setFilterFaculty("");
     setFilterYear("");
     setFilterSemester("");
+    setCurrentPage(1);
   };
 
-  // Selection helpers
-  const allFilteredSelected = filteredCourses.length > 0 && filteredCourses.every(c => selected.has(c.id));
+  // Pagination
+  const totalPages = Math.max(1, Math.ceil(filteredCourses.length / pageSize));
+  const safeCurrentPage = Math.min(currentPage, totalPages);
+  const paginatedCourses = filteredCourses.slice((safeCurrentPage - 1) * pageSize, safeCurrentPage * pageSize);
+  const startItem = filteredCourses.length === 0 ? 0 : (safeCurrentPage - 1) * pageSize + 1;
+  const endItem = Math.min(safeCurrentPage * pageSize, filteredCourses.length);
+
+  // Reset page when filters change
+  const handleFilterChange = (setter: (v: string) => void, value: string) => {
+    setter(value);
+    setCurrentPage(1);
+  };
+
+  // Selection helpers — operate on current page
+  const allPageSelected = paginatedCourses.length > 0 && paginatedCourses.every(c => selected.has(c.id));
   const someSelected = selected.size > 0;
 
   const toggleSelect = (id: string) => {
@@ -124,16 +142,16 @@ const AdminCourses = () => {
   };
 
   const toggleSelectAll = () => {
-    if (allFilteredSelected) {
+    if (allPageSelected) {
       setSelected(prev => {
         const next = new Set(prev);
-        filteredCourses.forEach(c => next.delete(c.id));
+        paginatedCourses.forEach(c => next.delete(c.id));
         return next;
       });
     } else {
       setSelected(prev => {
         const next = new Set(prev);
-        filteredCourses.forEach(c => next.add(c.id));
+        paginatedCourses.forEach(c => next.add(c.id));
         return next;
       });
     }
@@ -289,7 +307,7 @@ const AdminCourses = () => {
             <input
               placeholder="Search by name or code..."
               value={search}
-              onChange={(e) => setSearch(e.target.value)}
+              onChange={(e) => { setSearch(e.target.value); setCurrentPage(1); }}
               className={`${inputCls} w-full pl-9`}
             />
           </div>
@@ -301,19 +319,19 @@ const AdminCourses = () => {
         </div>
 
         <div className="flex flex-wrap gap-2">
-          <select value={filterFaculty} onChange={(e) => { setFilterFaculty(e.target.value); setFilterProgram(""); }} className={selectCls}>
+          <select value={filterFaculty} onChange={(e) => { setFilterFaculty(e.target.value); setFilterProgram(""); setCurrentPage(1); }} className={selectCls}>
             <option value="">All Faculties</option>
             {faculties.map(f => <option key={f} value={f}>{f}</option>)}
           </select>
-          <select value={filterProgram} onChange={(e) => setFilterProgram(e.target.value)} className={selectCls}>
+          <select value={filterProgram} onChange={(e) => { setFilterProgram(e.target.value); setCurrentPage(1); }} className={selectCls}>
             <option value="">All Programs</option>
             {programsByFaculty.map(p => <option key={p.slug} value={p.slug}>{p.title}</option>)}
           </select>
-          <select value={filterYear} onChange={(e) => setFilterYear(e.target.value)} className={selectCls}>
+          <select value={filterYear} onChange={(e) => { setFilterYear(e.target.value); setCurrentPage(1); }} className={selectCls}>
             <option value="">All Years</option>
             {uniqueYears.map(y => <option key={y} value={y}>Year {y}</option>)}
           </select>
-          <select value={filterSemester} onChange={(e) => setFilterSemester(e.target.value)} className={selectCls}>
+          <select value={filterSemester} onChange={(e) => { setFilterSemester(e.target.value); setCurrentPage(1); }} className={selectCls}>
             <option value="">All Semesters</option>
             {uniqueSemesters.map(s => <option key={s} value={s}>Semester {s}</option>)}
           </select>
@@ -392,7 +410,7 @@ const AdminCourses = () => {
             <tr>
               <th className="w-10 px-3 py-3">
                 <button onClick={toggleSelectAll} className="text-muted-foreground hover:text-foreground">
-                  {allFilteredSelected && filteredCourses.length > 0
+                  {allPageSelected && paginatedCourses.length > 0
                     ? <CheckSquare className="h-4 w-4 text-primary" />
                     : <Square className="h-4 w-4" />}
                 </button>
@@ -409,11 +427,11 @@ const AdminCourses = () => {
           <tbody>
             {isLoading ? (
               <tr><td colSpan={8} className="px-4 py-8 text-center text-muted-foreground">Loading...</td></tr>
-            ) : filteredCourses.length === 0 ? (
+            ) : paginatedCourses.length === 0 ? (
               <tr><td colSpan={8} className="px-4 py-8 text-center text-muted-foreground">
                 {hasFilters ? "No courses match your filters." : "No courses yet."}
               </td></tr>
-            ) : filteredCourses.map((c) => (
+            ) : paginatedCourses.map((c) => (
               <tr key={c.id} className={`border-b border-border last:border-0 transition-colors ${selected.has(c.id) ? "bg-primary/5" : "hover:bg-secondary/50"}`}>
                 <td className="w-10 px-3 py-3">
                   <button onClick={() => toggleSelect(c.id)} className="text-muted-foreground hover:text-foreground">
@@ -439,6 +457,42 @@ const AdminCourses = () => {
           </tbody>
         </table>
       </div>
+
+      {/* Pagination */}
+      {filteredCourses.length > 0 && (
+        <div className="mt-3 flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
+          <div className="flex items-center gap-3 text-sm text-muted-foreground">
+            <span>{startItem}–{endItem} of {filteredCourses.length}</span>
+            <div className="flex items-center gap-1.5">
+              <span className="text-xs">Rows:</span>
+              <select
+                value={pageSize}
+                onChange={(e) => { setPageSize(Number(e.target.value)); setCurrentPage(1); }}
+                className="rounded-md border border-input bg-background px-2 py-1 text-xs text-foreground focus:outline-none focus:ring-2 focus:ring-ring"
+              >
+                {[10, 15, 25, 50, 100].map(n => <option key={n} value={n}>{n}</option>)}
+              </select>
+            </div>
+          </div>
+          <div className="flex items-center gap-1">
+            <button onClick={() => setCurrentPage(1)} disabled={safeCurrentPage <= 1} className="rounded-md border border-border p-1.5 text-muted-foreground hover:text-foreground disabled:opacity-40">
+              <ChevronsLeft className="h-4 w-4" />
+            </button>
+            <button onClick={() => setCurrentPage(p => Math.max(1, p - 1))} disabled={safeCurrentPage <= 1} className="rounded-md border border-border p-1.5 text-muted-foreground hover:text-foreground disabled:opacity-40">
+              <ChevronLeft className="h-4 w-4" />
+            </button>
+            <span className="px-3 text-sm text-foreground">
+              Page {safeCurrentPage} of {totalPages}
+            </span>
+            <button onClick={() => setCurrentPage(p => Math.min(totalPages, p + 1))} disabled={safeCurrentPage >= totalPages} className="rounded-md border border-border p-1.5 text-muted-foreground hover:text-foreground disabled:opacity-40">
+              <ChevronRight className="h-4 w-4" />
+            </button>
+            <button onClick={() => setCurrentPage(totalPages)} disabled={safeCurrentPage >= totalPages} className="rounded-md border border-border p-1.5 text-muted-foreground hover:text-foreground disabled:opacity-40">
+              <ChevronsRight className="h-4 w-4" />
+            </button>
+          </div>
+        </div>
+      )}
     </AdminLayout>
   );
 };
