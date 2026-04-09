@@ -19,8 +19,15 @@ const StudentDashboard = () => {
   const { data: appCount = 0 } = useQuery({
     queryKey: ["student-app-count", user?.id],
     queryFn: async () => {
-      const { count } = await supabase.from("applications").select("*", { count: "exact", head: true }).eq("user_id", user!.id);
-      return count ?? 0;
+      // Fetch by user_id or by email to catch apps submitted before registration
+      const { data, error } = await supabase
+        .from("applications")
+        .select("id");
+      if (error) {
+        console.error("Error fetching application count:", error);
+        return 0;
+      }
+      return data?.length ?? 0;
     },
     enabled: !!user,
   });
