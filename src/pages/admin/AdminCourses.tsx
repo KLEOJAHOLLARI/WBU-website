@@ -410,7 +410,7 @@ const AdminCourses = () => {
             <tr>
               <th className="w-10 px-3 py-3">
                 <button onClick={toggleSelectAll} className="text-muted-foreground hover:text-foreground">
-                  {allFilteredSelected && filteredCourses.length > 0
+                  {allPageSelected && paginatedCourses.length > 0
                     ? <CheckSquare className="h-4 w-4 text-primary" />
                     : <Square className="h-4 w-4" />}
                 </button>
