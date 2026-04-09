@@ -15,6 +15,7 @@ const navItems = [
   { to: "/admin/students", label: "Students", icon: Users },
   { to: "/admin/timetable", label: "Timetable", icon: CalendarDays },
   { to: "/admin/contacts", label: "Messages", icon: Mail },
+  { to: "/admin/profile", label: "My Profile", icon: UserCircle },
 ];
 
 const AdminLayout = ({ children }: { children: ReactNode }) => {
