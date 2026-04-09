@@ -38,6 +38,8 @@ import StudentCourseDetail from "./pages/portal/StudentCourseDetail";
 import ProfessorDashboard from "./pages/professor/ProfessorDashboard";
 import ProfessorCourses from "./pages/professor/ProfessorCourses";
 import ProfessorCourseDetail from "./pages/professor/ProfessorCourseDetail";
+import ProfessorAnnouncements from "./pages/professor/ProfessorAnnouncements";
+import AdminAnnouncements from "./pages/admin/AdminAnnouncements";
 
 const queryClient = new QueryClient();
 
@@ -70,6 +72,7 @@ const App = () => (
             <Route path="/admin/timetable" element={<AdminTimetable />} />
             <Route path="/admin/courses" element={<AdminCourses />} />
             <Route path="/admin/accounts" element={<AdminAccounts />} />
+            <Route path="/admin/announcements" element={<AdminAnnouncements />} />
             <Route path="/portal/login" element={<StudentLogin />} />
             <Route path="/portal/register" element={<StudentRegister />} />
             <Route path="/portal" element={<StudentDashboard />} />
@@ -82,6 +85,7 @@ const App = () => (
             <Route path="/professor" element={<ProfessorDashboard />} />
             <Route path="/professor/courses" element={<ProfessorCourses />} />
             <Route path="/professor/courses/:id" element={<ProfessorCourseDetail />} />
+            <Route path="/professor/announcements" element={<ProfessorAnnouncements />} />
             <Route path="*" element={<NotFound />} />
           </Routes>
         </AuthProvider>
