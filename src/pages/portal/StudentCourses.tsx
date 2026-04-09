@@ -12,6 +12,7 @@ const StudentCourses = () => {
   const { user } = useAuth();
   const { toast } = useToast();
   const qc = useQueryClient();
+  const navigate = useNavigate();
   const [showAddCourses, setShowAddCourses] = useState(false);
   const [collapsedFaculties, setCollapsedFaculties] = useState<Record<string, boolean>>({});
 
