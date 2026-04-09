@@ -13,12 +13,13 @@ const navItems = [
 ];
 
 const StudentLayout = ({ children }: { children: ReactNode }) => {
-  const { user, isAdmin, loading, signOut } = useAuth();
+  const { user, isAdmin, isProfessor, loading, signOut } = useAuth();
   const location = useLocation();
 
   if (loading) return <div className="flex min-h-screen items-center justify-center bg-background text-muted-foreground">Loading...</div>;
   if (!user) return <Navigate to="/portal/login" replace />;
   if (isAdmin) return <Navigate to="/admin" replace />;
+  if (isProfessor) return <Navigate to="/professor" replace />;
 
   return (
     <div className="flex min-h-screen bg-background">

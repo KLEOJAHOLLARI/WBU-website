@@ -22,15 +22,6 @@ const AdminCourses = () => {
     },
   });
 
-  const { data: professors = [] } = useQuery({
-    queryKey: ["admin-professors-list"],
-    queryFn: async () => {
-      const { data, error } = await supabase.from("professors").select("id, name").order("name");
-      if (error) throw error;
-      return data;
-    },
-  });
-
   const { data: programs = [] } = useQuery({
     queryKey: ["admin-programs-list"],
     queryFn: async () => {
@@ -40,14 +31,15 @@ const AdminCourses = () => {
     },
   });
 
-  // Also fetch profiles with professor role to map professor_id (auth user) to professor name
   const { data: profProfiles = [] } = useQuery({
     queryKey: ["admin-prof-profiles"],
     queryFn: async () => {
-      const { data: roles } = await supabase.from("user_roles").select("user_id").eq("role", "professor");
+      const { data: roles, error: roleError } = await supabase.from("user_roles").select("user_id").eq("role", "professor");
+      if (roleError) throw roleError;
       if (!roles || roles.length === 0) return [];
       const userIds = roles.map(r => r.user_id);
-      const { data } = await supabase.from("profiles").select("user_id, full_name, email").in("user_id", userIds);
+      const { data, error } = await supabase.from("profiles").select("user_id, full_name, email").in("user_id", userIds).order("full_name");
+      if (error) throw error;
       return data || [];
     },
   });
