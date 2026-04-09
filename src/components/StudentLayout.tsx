@@ -22,6 +22,20 @@ const StudentLayout = ({ children }: { children: ReactNode }) => {
   const location = useLocation();
   const [mobileOpen, setMobileOpen] = useState(false);
 
+  const { data: unreadCount = 0 } = useQuery({
+    queryKey: ["student-unread-messages", user?.id],
+    queryFn: async () => {
+      const { count } = await supabase
+        .from("student_messages")
+        .select("*", { count: "exact", head: true })
+        .eq("user_id", user!.id)
+        .eq("is_read", false);
+      return count || 0;
+    },
+    enabled: !!user,
+    refetchInterval: 30000,
+  });
+
   if (loading) return <div className="flex min-h-screen items-center justify-center bg-background text-muted-foreground">Loading...</div>;
   if (!user) return <Navigate to="/portal/login" replace />;
   if (isAdmin) return <Navigate to="/admin" replace />;
