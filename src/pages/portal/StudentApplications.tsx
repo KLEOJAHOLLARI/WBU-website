@@ -5,7 +5,7 @@ import { useAuth } from "@/hooks/useAuth";
 
 const statusColor = (status: string) => {
   switch (status) {
-    case "approved": return "bg-green-100 text-green-800";
+    case "accepted": return "bg-green-100 text-green-800";
     case "rejected": return "bg-red-100 text-red-800";
     default: return "bg-accent/20 text-accent-foreground";
   }
