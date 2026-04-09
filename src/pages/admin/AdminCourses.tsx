@@ -427,11 +427,11 @@ const AdminCourses = () => {
           <tbody>
             {isLoading ? (
               <tr><td colSpan={8} className="px-4 py-8 text-center text-muted-foreground">Loading...</td></tr>
-            ) : filteredCourses.length === 0 ? (
+            ) : paginatedCourses.length === 0 ? (
               <tr><td colSpan={8} className="px-4 py-8 text-center text-muted-foreground">
                 {hasFilters ? "No courses match your filters." : "No courses yet."}
               </td></tr>
-            ) : filteredCourses.map((c) => (
+            ) : paginatedCourses.map((c) => (
               <tr key={c.id} className={`border-b border-border last:border-0 transition-colors ${selected.has(c.id) ? "bg-primary/5" : "hover:bg-secondary/50"}`}>
                 <td className="w-10 px-3 py-3">
                   <button onClick={() => toggleSelect(c.id)} className="text-muted-foreground hover:text-foreground">
@@ -457,6 +457,42 @@ const AdminCourses = () => {
           </tbody>
         </table>
       </div>
+
+      {/* Pagination */}
+      {filteredCourses.length > 0 && (
+        <div className="mt-3 flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
+          <div className="flex items-center gap-3 text-sm text-muted-foreground">
+            <span>{startItem}–{endItem} of {filteredCourses.length}</span>
+            <div className="flex items-center gap-1.5">
+              <span className="text-xs">Rows:</span>
+              <select
+                value={pageSize}
+                onChange={(e) => { setPageSize(Number(e.target.value)); setCurrentPage(1); }}
+                className="rounded-md border border-input bg-background px-2 py-1 text-xs text-foreground focus:outline-none focus:ring-2 focus:ring-ring"
+              >
+                {[10, 15, 25, 50, 100].map(n => <option key={n} value={n}>{n}</option>)}
+              </select>
+            </div>
+          </div>
+          <div className="flex items-center gap-1">
+            <button onClick={() => setCurrentPage(1)} disabled={safeCurrentPage <= 1} className="rounded-md border border-border p-1.5 text-muted-foreground hover:text-foreground disabled:opacity-40">
+              <ChevronsLeft className="h-4 w-4" />
+            </button>
+            <button onClick={() => setCurrentPage(p => Math.max(1, p - 1))} disabled={safeCurrentPage <= 1} className="rounded-md border border-border p-1.5 text-muted-foreground hover:text-foreground disabled:opacity-40">
+              <ChevronLeft className="h-4 w-4" />
+            </button>
+            <span className="px-3 text-sm text-foreground">
+              Page {safeCurrentPage} of {totalPages}
+            </span>
+            <button onClick={() => setCurrentPage(p => Math.min(totalPages, p + 1))} disabled={safeCurrentPage >= totalPages} className="rounded-md border border-border p-1.5 text-muted-foreground hover:text-foreground disabled:opacity-40">
+              <ChevronRight className="h-4 w-4" />
+            </button>
+            <button onClick={() => setCurrentPage(totalPages)} disabled={safeCurrentPage >= totalPages} className="rounded-md border border-border p-1.5 text-muted-foreground hover:text-foreground disabled:opacity-40">
+              <ChevronsRight className="h-4 w-4" />
+            </button>
+          </div>
+        </div>
+      )}
     </AdminLayout>
   );
 };
