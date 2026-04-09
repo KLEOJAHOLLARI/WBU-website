@@ -2,7 +2,7 @@ import StudentLayout from "@/components/StudentLayout";
 import { useQuery } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/hooks/useAuth";
-import { FileText, Upload, Mail, Clock, Megaphone } from "lucide-react";
+import { FileText, Upload, Mail, Clock, Megaphone, BookOpen, GraduationCap } from "lucide-react";
 
 const StudentDashboard = () => {
   const { user } = useAuth();
@@ -19,7 +19,6 @@ const StudentDashboard = () => {
   const { data: appCount = 0 } = useQuery({
     queryKey: ["student-app-count", user?.id],
     queryFn: async () => {
-      // Fetch by user_id or by email to catch apps submitted before registration
       const { data, error } = await supabase
         .from("applications")
         .select("id");
@@ -28,6 +27,24 @@ const StudentDashboard = () => {
         return 0;
       }
       return data?.length ?? 0;
+    },
+    enabled: !!user,
+  });
+
+  const { data: enrolledCount = 0 } = useQuery({
+    queryKey: ["student-enrolled-count", user?.id],
+    queryFn: async () => {
+      const { count } = await supabase.from("enrollments").select("*", { count: "exact", head: true }).eq("user_id", user!.id);
+      return count ?? 0;
+    },
+    enabled: !!user,
+  });
+
+  const { data: pendingRequestCount = 0 } = useQuery({
+    queryKey: ["student-pending-requests-count", user?.id],
+    queryFn: async () => {
+      const { count } = await supabase.from("enrollment_requests").select("*", { count: "exact", head: true }).eq("user_id", user!.id).eq("status", "pending");
+      return count ?? 0;
     },
     enabled: !!user,
   });
@@ -80,6 +97,8 @@ const StudentDashboard = () => {
   });
 
   const cards = [
+    { label: "Enrolled Courses", value: enrolledCount, icon: BookOpen, color: "text-primary" },
+    { label: "Pending Requests", value: pendingRequestCount, icon: Clock, color: "text-amber-600" },
     { label: "Applications", value: appCount, icon: FileText, color: "text-primary" },
     { label: "Documents", value: docCount, icon: Upload, color: "text-accent" },
     { label: "Unread Messages", value: unreadCount, icon: Mail, color: "text-destructive" },
@@ -92,7 +111,7 @@ const StudentDashboard = () => {
       </h1>
       <p className="mt-1 text-muted-foreground">Your student portal overview</p>
 
-      <div className="mt-8 grid gap-4 sm:grid-cols-3">
+      <div className="mt-8 grid gap-4 sm:grid-cols-2 lg:grid-cols-5">
         {cards.map((c) => (
           <div key={c.label} className="rounded-xl border border-border bg-card p-6">
             <c.icon className={`mb-2 h-6 w-6 ${c.color}`} />
