@@ -4,6 +4,7 @@ import { useAuth } from "@/hooks/useAuth";
 import { useQuery } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
 import { GraduationCap, LayoutDashboard, BookOpen, LogOut, Megaphone, UserCircle, UserCheck } from "lucide-react";
+import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 
 const navItems = [
   { to: "/professor", label: "Dashboard", icon: LayoutDashboard },
@@ -14,7 +15,7 @@ const navItems = [
 ];
 
 const ProfessorLayout = ({ children }: { children: ReactNode }) => {
-  const { user, isProfessor, isAdmin, loading, signOut } = useAuth();
+  const { user, isProfessor, isAdmin, loading, signOut, profile } = useAuth();
   const location = useLocation();
 
   const { data: pendingCount = 0 } = useQuery({
@@ -89,6 +90,20 @@ const ProfessorLayout = ({ children }: { children: ReactNode }) => {
         </div>
       </aside>
       <main className="flex-1 overflow-auto">
+        <div className="flex h-14 items-center justify-end border-b border-border bg-card px-6">
+          <div className="flex items-center gap-3">
+            <div className="text-right hidden sm:block">
+              <p className="text-sm font-medium text-foreground leading-tight">{profile?.full_name || "Professor"}</p>
+              <p className="text-xs text-muted-foreground">Professor</p>
+            </div>
+            <Avatar className="h-8 w-8">
+              {profile?.avatar_url && <AvatarImage src={profile.avatar_url} alt={profile.full_name} />}
+              <AvatarFallback className="bg-primary/10 text-primary text-xs font-semibold">
+                {(profile?.full_name || "P").split(" ").map(n => n[0]).join("").toUpperCase().slice(0, 2)}
+              </AvatarFallback>
+            </Avatar>
+          </div>
+        </div>
         <div className="p-4 md:p-8">{children}</div>
       </main>
     </div>
