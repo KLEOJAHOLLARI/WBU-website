@@ -147,6 +147,7 @@ const StudentCourses = () => {
   });
 
   const enrollmentIds = enrollments.map((e) => e.id);
+  const enrolledCourseIds = enrollments.map((e) => e.course_id);
 
   const { data: attendanceData = [] } = useQuery({
     queryKey: ["student-all-attendance", user?.id, enrollmentIds],
@@ -180,8 +181,6 @@ const StudentCourses = () => {
     },
     enabled: enrollmentIds.length > 0,
   });
-
-  const enrolledCourseIds = enrollments.map((e) => e.course_id);
 
   const getAttendancePct = (enrollmentId: string, courseId: string) => {
     const courseSessions = allSessions.filter((s) => s.course_id === courseId);
