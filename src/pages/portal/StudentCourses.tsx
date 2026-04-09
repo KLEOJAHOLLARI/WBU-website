@@ -197,11 +197,13 @@ const StudentCourses = () => {
     const courseGrades = gradesData.filter((g) => g.enrollment_id === enr.id);
     const hasGrades = courseGrades.some((g) => g.score !== null);
 
+    const navigate = useNavigate();
+
     return (
-      <Link
+      <div
         key={enr.id}
-        to={`/portal/courses/${enr.course_id}`}
-        className="group rounded-xl border border-border bg-card p-5 transition-all hover:border-primary/40 hover:shadow-md"
+        onClick={() => navigate(`/portal/courses/${enr.course_id}`)}
+        className="group cursor-pointer rounded-xl border border-border bg-card p-5 transition-all hover:border-primary/40 hover:shadow-md"
       >
         <div className="flex items-start gap-3">
           <div className="rounded-lg bg-primary/10 p-2">
