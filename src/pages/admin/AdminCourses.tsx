@@ -26,6 +26,10 @@ const AdminCourses = () => {
   const [bulkProfessorId, setBulkProfessorId] = useState("");
   const [showBulkReassign, setShowBulkReassign] = useState(false);
 
+  // Pagination state
+  const [currentPage, setCurrentPage] = useState(1);
+  const [pageSize, setPageSize] = useState(15);
+
   const { data: courses = [], isLoading } = useQuery({
     queryKey: ["admin-courses"],
     queryFn: async () => {
