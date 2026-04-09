@@ -36,7 +36,10 @@ const ProfileSettings = () => {
 
   const updateProfile = useMutation({
     mutationFn: async () => {
-      const updates: Record<string, any> = { full_name: fullName, phone: phone || null };
+      const updates: { full_name: string; phone: string | null; pending_email?: string } = {
+        full_name: fullName,
+        phone: phone || null,
+      };
       if (pendingEmail && pendingEmail !== profile?.email) {
         updates.pending_email = pendingEmail;
       }
@@ -119,7 +122,7 @@ const ProfileSettings = () => {
           <p className="font-display text-lg font-semibold text-foreground">{profile?.full_name || "User"}</p>
           <p className="text-sm text-muted-foreground">{profile?.email}</p>
           {profile?.pending_email && (
-            <p className="mt-1 text-xs text-amber-500">Pending email change: {profile.pending_email}</p>
+            <p className="mt-1 text-xs text-warning">Pending email change: {profile.pending_email}</p>
           )}
         </div>
       </div>
