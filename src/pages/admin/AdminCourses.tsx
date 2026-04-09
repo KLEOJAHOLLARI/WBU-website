@@ -113,10 +113,24 @@ const AdminCourses = () => {
     setFilterFaculty("");
     setFilterYear("");
     setFilterSemester("");
+    setCurrentPage(1);
   };
 
-  // Selection helpers
-  const allFilteredSelected = filteredCourses.length > 0 && filteredCourses.every(c => selected.has(c.id));
+  // Pagination
+  const totalPages = Math.max(1, Math.ceil(filteredCourses.length / pageSize));
+  const safeCurrentPage = Math.min(currentPage, totalPages);
+  const paginatedCourses = filteredCourses.slice((safeCurrentPage - 1) * pageSize, safeCurrentPage * pageSize);
+  const startItem = filteredCourses.length === 0 ? 0 : (safeCurrentPage - 1) * pageSize + 1;
+  const endItem = Math.min(safeCurrentPage * pageSize, filteredCourses.length);
+
+  // Reset page when filters change
+  const handleFilterChange = (setter: (v: string) => void, value: string) => {
+    setter(value);
+    setCurrentPage(1);
+  };
+
+  // Selection helpers — operate on current page
+  const allPageSelected = paginatedCourses.length > 0 && paginatedCourses.every(c => selected.has(c.id));
   const someSelected = selected.size > 0;
 
   const toggleSelect = (id: string) => {
