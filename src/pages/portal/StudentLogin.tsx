@@ -6,7 +6,7 @@ import { useAuth } from "@/hooks/useAuth";
 import { supabase } from "@/integrations/supabase/client";
 
 const StudentLogin = () => {
-  const { user, isAdmin, isProfessor, loading, signIn } = useAuth();
+  const { user, isAdmin, isProfessor, loading, signIn, waitForRoles } = useAuth();
   const navigate = useNavigate();
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
@@ -22,6 +22,7 @@ const StudentLogin = () => {
     e.preventDefault();
     setError("");
     setSubmitting(true);
+
     const { error: err } = await signIn(email, password);
     if (err) {
       setError("Invalid credentials. Please try again.");
@@ -29,45 +30,36 @@ const StudentLogin = () => {
       return;
     }
 
-    const [{ data: { user: currentUser } }, { data: roleRows, error: roleError }] = await Promise.all([
-      supabase.auth.getUser(),
-      supabase.from("user_roles").select("role, user_id"),
-    ]);
+    // Wait for onAuthStateChange to finish resolving roles
+    const roles = await waitForRoles();
 
-    if (currentUser) {
-      const { data: profile } = await supabase.from("profiles").select("account_status").eq("user_id", currentUser.id).maybeSingle();
-      if (profile && profile.account_status !== "approved") {
-        await supabase.auth.signOut();
-        if (profile.account_status === "pending") {
-          setError("Your account is pending admin approval. Please wait.");
-        } else {
-          setError("Your account has been rejected. Please contact administration.");
+    // Check account status for non-admin/non-professor users
+    if (!roles.isAdmin && !roles.isProfessor) {
+      const { data: { user: currentUser } } = await supabase.auth.getUser();
+      if (currentUser) {
+        const { data: profile } = await supabase.from("profiles").select("account_status").eq("user_id", currentUser.id).maybeSingle();
+        if (profile && profile.account_status !== "approved") {
+          await supabase.auth.signOut();
+          setError(
+            profile.account_status === "pending"
+              ? "Your account is pending admin approval. Please wait."
+              : "Your account has been rejected. Please contact administration."
+          );
+          setSubmitting(false);
+          return;
         }
-        setSubmitting(false);
-        return;
       }
-
-      const roles = roleError ? [] : (roleRows || [])
-        .filter((row) => row.user_id === currentUser.id)
-        .map((row) => row.role);
-
-      setSubmitting(false);
-
-      if (roles.includes("admin")) {
-        navigate("/admin", { replace: true });
-        return;
-      }
-
-      if (roles.includes("professor")) {
-        navigate("/professor", { replace: true });
-        return;
-      }
-
-      navigate("/portal", { replace: true });
-      return;
     }
 
     setSubmitting(false);
+
+    if (roles.isAdmin) {
+      navigate("/admin", { replace: true });
+    } else if (roles.isProfessor) {
+      navigate("/professor", { replace: true });
+    } else {
+      navigate("/portal", { replace: true });
+    }
   };
 
   return (
