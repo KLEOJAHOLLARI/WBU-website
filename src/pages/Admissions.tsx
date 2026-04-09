@@ -53,6 +53,9 @@ const Admissions = () => {
       document_url = path;
     }
 
+    // Get current user if logged in, to link application to their account
+    const { data: { user: currentUser } } = await supabase.auth.getUser();
+
     const { error } = await supabase.from("applications").insert({
       full_name: form.fullName,
       email: form.email,
@@ -60,6 +63,7 @@ const Admissions = () => {
       program: form.program,
       motivation: form.motivation,
       document_url,
+      user_id: currentUser?.id || null,
     });
     setSubmitting(false);
     if (error) {

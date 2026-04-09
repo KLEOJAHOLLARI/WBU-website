@@ -27,10 +27,30 @@ const AdminApplications = () => {
     mutationFn: async ({ id, status }: { id: string; status: string }) => {
       const { error } = await supabase.from("applications").update({ status }).eq("id", id);
       if (error) throw error;
+
+      // When accepting, activate the student's account if they have one
+      if (status === "accepted") {
+        const app = applications.find((a) => a.id === id);
+        if (app) {
+          // Try to find and approve the student profile by email
+          const { data: profile } = await supabase
+            .from("profiles")
+            .select("id, user_id, account_status")
+            .eq("email", app.email)
+            .maybeSingle();
+
+          if (profile && profile.account_status !== "approved" && profile.account_status !== "active") {
+            await supabase
+              .from("profiles")
+              .update({ account_status: "approved", program: app.program })
+              .eq("id", profile.id);
+          }
+        }
+      }
     },
     onSuccess: (_d, vars) => {
       qc.invalidateQueries({ queryKey: ["admin-applications"] });
-      toast({ title: `Application ${vars.status}` });
+      toast({ title: `Application ${vars.status}`, description: vars.status === "accepted" ? "Student account has been activated if registered." : undefined });
     },
     onError: (e: any) => toast({ title: "Error", description: e.message, variant: "destructive" }),
   });
