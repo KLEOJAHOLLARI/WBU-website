@@ -3,7 +3,7 @@ import AdminLayout from "@/components/AdminLayout";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
 import { useToast } from "@/hooks/use-toast";
-import { Plus, Pencil, Trash2, X, Search, Filter, RotateCcw, CheckSquare, Square, UserCog } from "lucide-react";
+import { Plus, Pencil, Trash2, X, Search, Filter, RotateCcw, CheckSquare, Square, UserCog, ChevronLeft, ChevronRight, ChevronsLeft, ChevronsRight } from "lucide-react";
 import { Badge } from "@/components/ui/badge";
 
 const emptyCourse = { name: "", code: "", program: "", semester: 1, year: 1, professor_id: "" };
