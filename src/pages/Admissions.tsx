@@ -1,6 +1,6 @@
 import { useState } from "react";
 import { motion } from "framer-motion";
-import { CheckCircle, FileText, ClipboardCheck, Send } from "lucide-react";
+import { CheckCircle, FileText, ClipboardCheck, Send, Upload } from "lucide-react";
 import Layout from "@/components/Layout";
 import PageHero from "@/components/PageHero";
 import SectionHeading from "@/components/SectionHeading";
@@ -12,7 +12,7 @@ import { useTranslation } from "react-i18next";
 const Admissions = () => {
   const { t } = useTranslation();
   const { toast } = useToast();
-  const [form, setForm] = useState({ fullName: "", email: "", phone: "", program: "", motivation: "" });
+  const [form, setForm] = useState({ fullName: "", email: "", phone: "", program: "", motivation: "", document: null as File | null });
   const [submitting, setSubmitting] = useState(false);
   const [submitted, setSubmitted] = useState(false);
 
@@ -37,12 +37,29 @@ const Admissions = () => {
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     setSubmitting(true);
+
+    let document_url: string | null = null;
+
+    // Upload document if provided
+    if (form.document) {
+      const ext = form.document.name.split(".").pop();
+      const path = `${Date.now()}_${Math.random().toString(36).slice(2)}.${ext}`;
+      const { error: uploadErr } = await supabase.storage.from("application-documents").upload(path, form.document);
+      if (uploadErr) {
+        toast({ title: "Upload failed", description: uploadErr.message, variant: "destructive" });
+        setSubmitting(false);
+        return;
+      }
+      document_url = path;
+    }
+
     const { error } = await supabase.from("applications").insert({
       full_name: form.fullName,
       email: form.email,
       phone: form.phone || null,
       program: form.program,
       motivation: form.motivation,
+      document_url,
     });
     setSubmitting(false);
     if (error) {
@@ -132,6 +149,29 @@ const Admissions = () => {
               <div>
                 <label className="mb-1 block text-sm font-medium text-foreground">{t("admissions.motivationLetter")} *</label>
                 <textarea required rows={5} value={form.motivation} onChange={(e) => update("motivation", e.target.value)} className="w-full rounded-md border border-input bg-background px-4 py-2.5 text-sm text-foreground placeholder:text-muted-foreground focus:outline-none focus:ring-2 focus:ring-ring" placeholder={t("admissions.motivationPlaceholder")} />
+              </div>
+              <div>
+                <label className="mb-1 block text-sm font-medium text-foreground">Upload Document (PDF, optional)</label>
+                <div className="relative flex items-center gap-3">
+                  <label className="flex cursor-pointer items-center gap-2 rounded-md border border-input bg-background px-4 py-2.5 text-sm text-muted-foreground transition-colors hover:bg-secondary">
+                    <Upload className="h-4 w-4" />
+                    {form.document ? form.document.name : "Choose file..."}
+                    <input
+                      type="file"
+                      accept=".pdf,.doc,.docx"
+                      className="hidden"
+                      onChange={(e) => {
+                        const file = e.target.files?.[0] || null;
+                        setForm((f) => ({ ...f, document: file }));
+                      }}
+                    />
+                  </label>
+                  {form.document && (
+                    <button type="button" onClick={() => setForm((f) => ({ ...f, document: null }))} className="text-xs text-destructive hover:underline">
+                      Remove
+                    </button>
+                  )}
+                </div>
               </div>
               <button type="submit" disabled={submitting} className="w-full rounded-md bg-primary py-3 font-semibold text-primary-foreground transition-transform hover:scale-[1.02] disabled:opacity-60">
                 {submitting ? t("admissions.submitting") : t("admissions.submitApplication")}
