@@ -19,7 +19,6 @@ const StudentDashboard = () => {
   const { data: appCount = 0 } = useQuery({
     queryKey: ["student-app-count", user?.id],
     queryFn: async () => {
-      // Fetch by user_id or by email to catch apps submitted before registration
       const { data, error } = await supabase
         .from("applications")
         .select("id");
@@ -28,6 +27,24 @@ const StudentDashboard = () => {
         return 0;
       }
       return data?.length ?? 0;
+    },
+    enabled: !!user,
+  });
+
+  const { data: enrolledCount = 0 } = useQuery({
+    queryKey: ["student-enrolled-count", user?.id],
+    queryFn: async () => {
+      const { count } = await supabase.from("enrollments").select("*", { count: "exact", head: true }).eq("user_id", user!.id);
+      return count ?? 0;
+    },
+    enabled: !!user,
+  });
+
+  const { data: pendingRequestCount = 0 } = useQuery({
+    queryKey: ["student-pending-requests-count", user?.id],
+    queryFn: async () => {
+      const { count } = await supabase.from("enrollment_requests").select("*", { count: "exact", head: true }).eq("user_id", user!.id).eq("status", "pending");
+      return count ?? 0;
     },
     enabled: !!user,
   });
