@@ -67,6 +67,28 @@ const StudentCourses = () => {
     enabled: !!profile?.program,
   });
 
+  // Collect all professor_ids from enrolled + program courses
+  const allCourses = [...enrollments.map((e: any) => e.courses), ...programCourses].filter(Boolean);
+  const professorIds = [...new Set(allCourses.map((c: any) => c?.professor_id).filter(Boolean))] as string[];
+
+  const { data: professorProfiles = [] } = useQuery({
+    queryKey: ["professor-profiles-for-courses", professorIds],
+    queryFn: async () => {
+      const { data, error } = await supabase
+        .from("profiles")
+        .select("user_id, full_name, avatar_url")
+        .in("user_id", professorIds);
+      if (error) throw error;
+      return data;
+    },
+    enabled: professorIds.length > 0,
+  });
+
+  const getProfessorName = (professorId: string | null) => {
+    if (!professorId) return null;
+    return professorProfiles.find((p) => p.user_id === professorId)?.full_name || null;
+  };
+
   const { data: enrollmentRequests = [] } = useQuery({
     queryKey: ["student-enrollment-requests", user?.id],
     queryFn: async () => {
