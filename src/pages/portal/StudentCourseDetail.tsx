@@ -100,6 +100,44 @@ const StudentCourseDetail = () => {
     enabled: !!enrollment,
   });
 
+  const { data: materials = [] } = useQuery({
+    queryKey: ["course-materials", courseId],
+    queryFn: async () => {
+      const { data, error } = await supabase
+        .from("course_materials")
+        .select("*")
+        .eq("course_id", courseId!)
+        .order("created_at", { ascending: false });
+      if (error) throw error;
+      return data;
+    },
+    enabled: !!courseId,
+  });
+
+  const formatFileSize = (bytes: number) => {
+    if (bytes < 1024) return `${bytes} B`;
+    if (bytes < 1024 * 1024) return `${(bytes / 1024).toFixed(1)} KB`;
+    return `${(bytes / (1024 * 1024)).toFixed(1)} MB`;
+  };
+
+  const getFileIcon = (contentType: string) => {
+    if (contentType.startsWith("image/")) return "🖼️";
+    if (contentType.includes("pdf")) return "📄";
+    if (contentType.includes("word") || contentType.includes("document")) return "📝";
+    if (contentType.includes("spreadsheet") || contentType.includes("excel")) return "📊";
+    if (contentType.includes("presentation") || contentType.includes("powerpoint")) return "📽️";
+    return "📎";
+  };
+
+  const downloadMaterial = (filePath: string, fileName: string) => {
+    const { data } = supabase.storage.from("course-materials").getPublicUrl(filePath);
+    const a = document.createElement("a");
+    a.href = data.publicUrl;
+    a.download = fileName;
+    a.target = "_blank";
+    a.click();
+  };
+
   /* ─── derived ─── */
   const presentCount = attendanceRecords.filter((r) => r.status === "present").length;
   const excusedCount = attendanceRecords.filter((r) => r.status === "excused").length;
