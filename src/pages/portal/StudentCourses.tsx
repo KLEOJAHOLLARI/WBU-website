@@ -4,7 +4,7 @@ import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/hooks/useAuth";
 import { useToast } from "@/hooks/use-toast";
-import { Link } from "react-router-dom";
+import { Link, useNavigate } from "react-router-dom";
 import { BookOpen, BarChart3, ClipboardCheck, Lock, Plus, Clock, CheckCircle, XCircle, X, GraduationCap, Building2, ChevronDown, ChevronRight, User } from "lucide-react";
 import { Badge } from "@/components/ui/badge";
 
@@ -197,7 +197,7 @@ const StudentCourses = () => {
     const courseGrades = gradesData.filter((g) => g.enrollment_id === enr.id);
     const hasGrades = courseGrades.some((g) => g.score !== null);
 
-    const navigate = useNavigate();
+    
 
     return (
       <div
@@ -243,7 +243,7 @@ const StudentCourses = () => {
             ⚠ Attendance below 75% — final exam blocked
           </p>
         )}
-      </Link>
+      </div>
     );
   };
 
