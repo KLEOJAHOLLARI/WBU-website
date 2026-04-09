@@ -1,6 +1,8 @@
 import { ReactNode, useState } from "react";
 import { Navigate, Link, useLocation } from "react-router-dom";
 import { useAuth } from "@/hooks/useAuth";
+import { useQuery } from "@tanstack/react-query";
+import { supabase } from "@/integrations/supabase/client";
 import { GraduationCap, LayoutDashboard, FileText, Upload, Mail, LogOut, CalendarDays, BookOpen, UserCircle, Menu } from "lucide-react";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Sheet, SheetContent, SheetTrigger } from "@/components/ui/sheet";
@@ -19,6 +21,20 @@ const StudentLayout = ({ children }: { children: ReactNode }) => {
   const { user, isAdmin, isProfessor, loading, signOut, profile } = useAuth();
   const location = useLocation();
   const [mobileOpen, setMobileOpen] = useState(false);
+
+  const { data: unreadCount = 0 } = useQuery({
+    queryKey: ["student-unread-messages", user?.id],
+    queryFn: async () => {
+      const { count } = await supabase
+        .from("student_messages")
+        .select("*", { count: "exact", head: true })
+        .eq("user_id", user!.id)
+        .eq("is_read", false);
+      return count || 0;
+    },
+    enabled: !!user,
+    refetchInterval: 30000,
+  });
 
   if (loading) return <div className="flex min-h-screen items-center justify-center bg-background text-muted-foreground">Loading...</div>;
   if (!user) return <Navigate to="/portal/login" replace />;
@@ -47,6 +63,11 @@ const StudentLayout = ({ children }: { children: ReactNode }) => {
           >
             <item.icon className="h-4 w-4" />
             {item.label}
+            {item.to === "/portal/messages" && unreadCount > 0 && (
+              <span className="ml-auto inline-flex h-5 min-w-5 items-center justify-center rounded-full bg-primary px-1.5 text-[11px] font-bold text-primary-foreground">
+                {unreadCount}
+              </span>
+            )}
           </Link>
         ))}
       </nav>
