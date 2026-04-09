@@ -417,6 +417,42 @@ const StudentCourseDetail = () => {
           </>
         )}
       </div>
+
+      {/* ─── MATERIALS ─── */}
+      <div className="mt-8">
+        <h2 className="mb-4 flex items-center gap-2 font-display text-lg font-semibold text-foreground">
+          <FileText className="h-5 w-5 text-primary" /> Course Materials
+        </h2>
+
+        {materials.length === 0 ? (
+          <div className="rounded-xl border border-dashed border-border bg-card/50 p-8 text-center text-muted-foreground">
+            No materials uploaded yet.
+          </div>
+        ) : (
+          <div className="space-y-2">
+            {materials.map((m) => (
+              <div
+                key={m.id}
+                className="group flex items-center gap-3 rounded-xl border border-border bg-card px-4 py-3 transition-colors hover:border-primary/30"
+              >
+                <span className="text-xl flex-shrink-0">{getFileIcon(m.content_type)}</span>
+                <div className="min-w-0 flex-1">
+                  <p className="truncate text-sm font-medium text-foreground">{m.file_name}</p>
+                  <p className="text-xs text-muted-foreground">
+                    {formatFileSize(Number(m.file_size))} · {new Date(m.created_at).toLocaleDateString("en", { month: "short", day: "numeric", year: "numeric" })}
+                  </p>
+                </div>
+                <button
+                  onClick={() => downloadMaterial(m.file_path, m.file_name)}
+                  className="inline-flex items-center gap-1.5 rounded-md px-3 py-1.5 text-xs font-medium text-primary hover:bg-primary/10 transition-colors"
+                >
+                  <Download className="h-3.5 w-3.5" /> Download
+                </button>
+              </div>
+            ))}
+          </div>
+        )}
+      </div>
     </StudentLayout>
   );
 };
