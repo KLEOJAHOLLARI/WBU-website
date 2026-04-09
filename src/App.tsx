@@ -79,6 +79,7 @@ const App = () => (
             <Route path="/admin/courses" element={<AdminCourses />} />
             <Route path="/admin/accounts" element={<AdminAccounts />} />
             <Route path="/admin/announcements" element={<AdminAnnouncements />} />
+            <Route path="/admin/advisors" element={<AdminAdvisors />} />
             <Route path="/admin/profile" element={<AdminProfile />} />
             <Route path="/portal/login" element={<StudentLogin />} />
             <Route path="/portal/register" element={<StudentRegister />} />
@@ -94,6 +95,7 @@ const App = () => (
             <Route path="/professor/courses" element={<ProfessorCourses />} />
             <Route path="/professor/courses/:id" element={<ProfessorCourseDetail />} />
             <Route path="/professor/announcements" element={<ProfessorAnnouncements />} />
+            <Route path="/professor/advisor" element={<ProfessorAdvisor />} />
             <Route path="/professor/profile" element={<ProfessorProfile />} />
             <Route path="*" element={<NotFound />} />
           </Routes>
