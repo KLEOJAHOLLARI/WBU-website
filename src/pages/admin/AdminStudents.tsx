@@ -40,6 +40,7 @@ const AdminStudents = () => {
     },
   });
 
+  const { data: documents = [] } = useQuery({
     queryKey: ["admin-student-documents", selectedUserId],
     queryFn: async () => {
       const { data, error } = await supabase
