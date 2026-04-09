@@ -3,7 +3,7 @@ import AdminLayout from "@/components/AdminLayout";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
 import { useToast } from "@/hooks/use-toast";
-import { Plus, Pencil, Trash2, X, Search, Filter, RotateCcw } from "lucide-react";
+import { Plus, Pencil, Trash2, X, Search, Filter, RotateCcw, CheckSquare, Square, UserCog } from "lucide-react";
 import { Badge } from "@/components/ui/badge";
 
 const emptyCourse = { name: "", code: "", program: "", semester: 1, year: 1, professor_id: "" };
@@ -20,6 +20,11 @@ const AdminCourses = () => {
   const [filterFaculty, setFilterFaculty] = useState("");
   const [filterYear, setFilterYear] = useState("");
   const [filterSemester, setFilterSemester] = useState("");
+
+  // Bulk selection state
+  const [selected, setSelected] = useState<Set<string>>(new Set());
+  const [bulkProfessorId, setBulkProfessorId] = useState("");
+  const [showBulkReassign, setShowBulkReassign] = useState(false);
 
   const { data: courses = [], isLoading } = useQuery({
     queryKey: ["admin-courses"],
@@ -106,6 +111,84 @@ const AdminCourses = () => {
     setFilterSemester("");
   };
 
+  // Selection helpers
+  const allFilteredSelected = filteredCourses.length > 0 && filteredCourses.every(c => selected.has(c.id));
+  const someSelected = selected.size > 0;
+
+  const toggleSelect = (id: string) => {
+    setSelected(prev => {
+      const next = new Set(prev);
+      if (next.has(id)) next.delete(id); else next.add(id);
+      return next;
+    });
+  };
+
+  const toggleSelectAll = () => {
+    if (allFilteredSelected) {
+      setSelected(prev => {
+        const next = new Set(prev);
+        filteredCourses.forEach(c => next.delete(c.id));
+        return next;
+      });
+    } else {
+      setSelected(prev => {
+        const next = new Set(prev);
+        filteredCourses.forEach(c => next.add(c.id));
+        return next;
+      });
+    }
+  };
+
+  const clearSelection = () => {
+    setSelected(new Set());
+    setShowBulkReassign(false);
+    setBulkProfessorId("");
+  };
+
+  // Bulk mutations
+  const bulkDeleteMutation = useMutation({
+    mutationFn: async (ids: string[]) => {
+      for (const id of ids) {
+        const { error } = await supabase.from("courses").delete().eq("id", id);
+        if (error) throw error;
+      }
+    },
+    onSuccess: () => {
+      qc.invalidateQueries({ queryKey: ["admin-courses"] });
+      toast({ title: `${selected.size} course(s) deleted` });
+      clearSelection();
+    },
+    onError: (e: any) => toast({ title: "Error deleting courses", description: e.message, variant: "destructive" }),
+  });
+
+  const bulkReassignMutation = useMutation({
+    mutationFn: async ({ ids, professorId }: { ids: string[]; professorId: string | null }) => {
+      for (const id of ids) {
+        const { error } = await supabase.from("courses").update({ professor_id: professorId }).eq("id", id);
+        if (error) throw error;
+      }
+    },
+    onSuccess: () => {
+      qc.invalidateQueries({ queryKey: ["admin-courses"] });
+      const profName = bulkProfessorId ? getProfName(bulkProfessorId) : "None";
+      toast({ title: `${selected.size} course(s) reassigned to ${profName}` });
+      clearSelection();
+    },
+    onError: (e: any) => toast({ title: "Error reassigning", description: e.message, variant: "destructive" }),
+  });
+
+  const handleBulkDelete = () => {
+    if (!confirm(`Delete ${selected.size} course(s)? This cannot be undone.`)) return;
+    bulkDeleteMutation.mutate([...selected]);
+  };
+
+  const handleBulkReassign = () => {
+    bulkReassignMutation.mutate({
+      ids: [...selected],
+      professorId: bulkProfessorId || null,
+    });
+  };
+
   const saveMutation = useMutation({
     mutationFn: async (form: any) => {
       const payload = {
@@ -156,6 +239,7 @@ const AdminCourses = () => {
 
   const inputCls = "rounded-md border border-input bg-background px-3 py-2 text-sm text-foreground focus:outline-none focus:ring-2 focus:ring-ring";
   const selectCls = "rounded-md border border-input bg-background px-3 py-2 text-sm text-foreground focus:outline-none focus:ring-2 focus:ring-ring h-9";
+  const isBulkBusy = bulkDeleteMutation.isPending || bulkReassignMutation.isPending;
 
   return (
     <AdminLayout>
@@ -244,11 +328,75 @@ const AdminCourses = () => {
         )}
       </div>
 
+      {/* Bulk Actions Bar */}
+      {someSelected && (
+        <div className="mt-4 flex flex-col gap-3 rounded-xl border border-primary/20 bg-primary/5 p-4 sm:flex-row sm:items-center sm:justify-between">
+          <div className="flex items-center gap-2">
+            <CheckSquare className="h-4 w-4 text-primary" />
+            <span className="text-sm font-medium text-foreground">{selected.size} course(s) selected</span>
+            <button onClick={clearSelection} className="text-xs text-muted-foreground hover:text-foreground underline ml-1">
+              Clear
+            </button>
+          </div>
+          <div className="flex flex-wrap items-center gap-2">
+            <button
+              onClick={() => setShowBulkReassign(!showBulkReassign)}
+              disabled={isBulkBusy}
+              className="inline-flex items-center gap-1.5 rounded-lg border border-border bg-card px-3 py-2 text-xs font-medium text-foreground transition-colors hover:bg-secondary disabled:opacity-60"
+            >
+              <UserCog className="h-3.5 w-3.5" /> Reassign Professor
+            </button>
+            <button
+              onClick={handleBulkDelete}
+              disabled={isBulkBusy}
+              className="inline-flex items-center gap-1.5 rounded-lg border border-destructive/30 bg-destructive/5 px-3 py-2 text-xs font-medium text-destructive transition-colors hover:bg-destructive/10 disabled:opacity-60"
+            >
+              <Trash2 className="h-3.5 w-3.5" /> Delete Selected
+            </button>
+          </div>
+        </div>
+      )}
+
+      {/* Bulk Reassign Panel */}
+      {showBulkReassign && someSelected && (
+        <div className="mt-2 flex flex-col gap-3 rounded-xl border border-border bg-card p-4 sm:flex-row sm:items-end">
+          <div className="flex-1">
+            <label className="mb-1 block text-xs font-medium text-muted-foreground">Assign professor to {selected.size} course(s)</label>
+            <select value={bulkProfessorId} onChange={(e) => setBulkProfessorId(e.target.value)} className={`${selectCls} w-full`}>
+              <option value="">No Professor (unassign)</option>
+              {profProfiles.map(p => <option key={p.user_id} value={p.user_id}>{p.full_name} ({p.email})</option>)}
+            </select>
+          </div>
+          <div className="flex gap-2">
+            <button
+              onClick={handleBulkReassign}
+              disabled={bulkReassignMutation.isPending}
+              className="rounded-lg bg-primary px-4 py-2 text-xs font-semibold text-primary-foreground disabled:opacity-60"
+            >
+              {bulkReassignMutation.isPending ? "Saving..." : "Apply"}
+            </button>
+            <button
+              onClick={() => { setShowBulkReassign(false); setBulkProfessorId(""); }}
+              className="rounded-lg border border-border px-4 py-2 text-xs font-medium text-muted-foreground hover:text-foreground"
+            >
+              Cancel
+            </button>
+          </div>
+        </div>
+      )}
+
       {/* Table */}
       <div className="mt-4 overflow-auto rounded-xl border border-border">
         <table className="w-full text-sm">
           <thead className="border-b border-border bg-secondary">
             <tr>
+              <th className="w-10 px-3 py-3">
+                <button onClick={toggleSelectAll} className="text-muted-foreground hover:text-foreground">
+                  {allFilteredSelected && filteredCourses.length > 0
+                    ? <CheckSquare className="h-4 w-4 text-primary" />
+                    : <Square className="h-4 w-4" />}
+                </button>
+              </th>
               <th className="px-4 py-3 text-left font-medium text-foreground">Code</th>
               <th className="px-4 py-3 text-left font-medium text-foreground">Name</th>
               <th className="px-4 py-3 text-left font-medium text-foreground">Faculty</th>
@@ -260,13 +408,20 @@ const AdminCourses = () => {
           </thead>
           <tbody>
             {isLoading ? (
-              <tr><td colSpan={7} className="px-4 py-8 text-center text-muted-foreground">Loading...</td></tr>
+              <tr><td colSpan={8} className="px-4 py-8 text-center text-muted-foreground">Loading...</td></tr>
             ) : filteredCourses.length === 0 ? (
-              <tr><td colSpan={7} className="px-4 py-8 text-center text-muted-foreground">
+              <tr><td colSpan={8} className="px-4 py-8 text-center text-muted-foreground">
                 {hasFilters ? "No courses match your filters." : "No courses yet."}
               </td></tr>
             ) : filteredCourses.map((c) => (
-              <tr key={c.id} className="border-b border-border last:border-0 hover:bg-secondary/50 transition-colors">
+              <tr key={c.id} className={`border-b border-border last:border-0 transition-colors ${selected.has(c.id) ? "bg-primary/5" : "hover:bg-secondary/50"}`}>
+                <td className="w-10 px-3 py-3">
+                  <button onClick={() => toggleSelect(c.id)} className="text-muted-foreground hover:text-foreground">
+                    {selected.has(c.id)
+                      ? <CheckSquare className="h-4 w-4 text-primary" />
+                      : <Square className="h-4 w-4" />}
+                  </button>
+                </td>
                 <td className="px-4 py-3 font-mono text-xs text-muted-foreground">{c.code || "—"}</td>
                 <td className="px-4 py-3 font-medium text-foreground">{c.name}</td>
                 <td className="px-4 py-3">
