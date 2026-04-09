@@ -40,6 +40,9 @@ import ProfessorCourses from "./pages/professor/ProfessorCourses";
 import ProfessorCourseDetail from "./pages/professor/ProfessorCourseDetail";
 import ProfessorAnnouncements from "./pages/professor/ProfessorAnnouncements";
 import AdminAnnouncements from "./pages/admin/AdminAnnouncements";
+import AdminProfile from "./pages/admin/AdminProfile";
+import StudentProfile from "./pages/portal/StudentProfile";
+import ProfessorProfile from "./pages/professor/ProfessorProfile";
 
 const queryClient = new QueryClient();
 
