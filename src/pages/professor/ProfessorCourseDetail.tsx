@@ -7,7 +7,7 @@ import { toast } from "@/hooks/use-toast";
 import {
   Plus, Trash2, Save, ArrowLeft, Users, CalendarDays,
   BarChart3, ClipboardCheck, AlertTriangle, CheckCircle2, Loader2,
-  Search, TrendingUp, Award
+  Search, TrendingUp, Award, FileText, Upload, Download, File, X
 } from "lucide-react";
 import { Badge } from "@/components/ui/badge";
 import { Progress } from "@/components/ui/progress";
@@ -77,8 +77,10 @@ const GradeCell = ({ defaultValue, onSave, isSaving }: { defaultValue: string; o
 const ProfessorCourseDetail = () => {
   const { id: courseId } = useParams<{ id: string }>();
   const qc = useQueryClient();
-  const [tab, setTab] = useState<"students" | "scheme" | "attendance" | "grades">("students");
+  const [tab, setTab] = useState<"students" | "scheme" | "attendance" | "grades" | "materials">("students");
   const [studentSearch, setStudentSearch] = useState("");
+  const fileInputRef = useRef<HTMLInputElement>(null);
+  const [uploading, setUploading] = useState(false);
 
   /* ─── queries ─── */
   const { data: course, isLoading: loadingCourse } = useQuery({
@@ -299,11 +301,96 @@ const ProfessorCourseDetail = () => {
   const lowAttCount = enrollments.filter((e) => { const p = getAttPct(e.id); return p !== null && p < 75; }).length;
 
   /* ─── tab styling ─── */
+  /* ─── materials queries ─── */
+  const { data: materials = [], isLoading: loadingMaterials } = useQuery({
+    queryKey: ["course-materials", courseId],
+    queryFn: async () => {
+      const { data, error } = await supabase
+        .from("course_materials")
+        .select("*")
+        .eq("course_id", courseId!)
+        .order("created_at", { ascending: false });
+      if (error) throw error;
+      return data;
+    },
+    enabled: !!courseId,
+  });
+
+  const handleFileUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
+    const files = e.target.files;
+    if (!files?.length || !courseId) return;
+    setUploading(true);
+    try {
+      for (const file of Array.from(files)) {
+        const filePath = `${courseId}/${Date.now()}-${file.name}`;
+        const { error: uploadError } = await supabase.storage
+          .from("course-materials")
+          .upload(filePath, file);
+        if (uploadError) throw uploadError;
+
+        const { error: dbError } = await supabase.from("course_materials").insert({
+          course_id: courseId,
+          file_name: file.name,
+          file_path: filePath,
+          file_size: file.size,
+          content_type: file.type || "application/octet-stream",
+          uploaded_by: (await supabase.auth.getUser()).data.user!.id,
+        });
+        if (dbError) throw dbError;
+      }
+      qc.invalidateQueries({ queryKey: ["course-materials", courseId] });
+      toast({ title: "Files uploaded successfully" });
+    } catch (err: any) {
+      toast({ title: "Upload failed", description: err.message, variant: "destructive" });
+    } finally {
+      setUploading(false);
+      if (fileInputRef.current) fileInputRef.current.value = "";
+    }
+  };
+
+  const deleteMaterial = useMutation({
+    mutationFn: async (material: { id: string; file_path: string }) => {
+      await supabase.storage.from("course-materials").remove([material.file_path]);
+      const { error } = await supabase.from("course_materials").delete().eq("id", material.id);
+      if (error) throw error;
+    },
+    onSuccess: () => {
+      qc.invalidateQueries({ queryKey: ["course-materials", courseId] });
+      toast({ title: "File deleted" });
+    },
+    onError: (e: any) => toast({ title: "Error", description: e.message, variant: "destructive" }),
+  });
+
+  const downloadMaterial = async (filePath: string, fileName: string) => {
+    const { data } = supabase.storage.from("course-materials").getPublicUrl(filePath);
+    const a = document.createElement("a");
+    a.href = data.publicUrl;
+    a.download = fileName;
+    a.target = "_blank";
+    a.click();
+  };
+
+  const formatFileSize = (bytes: number) => {
+    if (bytes < 1024) return `${bytes} B`;
+    if (bytes < 1024 * 1024) return `${(bytes / 1024).toFixed(1)} KB`;
+    return `${(bytes / (1024 * 1024)).toFixed(1)} MB`;
+  };
+
+  const getFileIcon = (contentType: string) => {
+    if (contentType.startsWith("image/")) return "🖼️";
+    if (contentType.includes("pdf")) return "📄";
+    if (contentType.includes("word") || contentType.includes("document")) return "📝";
+    if (contentType.includes("spreadsheet") || contentType.includes("excel")) return "📊";
+    if (contentType.includes("presentation") || contentType.includes("powerpoint")) return "📽️";
+    return "📎";
+  };
+
   const tabItems = [
     { key: "students", label: "Students", icon: Users },
     { key: "scheme", label: "Evaluation", icon: BarChart3 },
     { key: "attendance", label: "Attendance", icon: CalendarDays },
     { key: "grades", label: "Grades", icon: ClipboardCheck },
+    { key: "materials", label: "Materials", icon: FileText },
   ] as const;
 
   if (loadingCourse) {
