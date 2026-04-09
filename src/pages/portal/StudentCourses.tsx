@@ -210,6 +210,18 @@ const StudentCourses = () => {
           <div className="flex-1 min-w-0">
             <h3 className="font-display font-semibold text-foreground truncate group-hover:text-primary transition-colors">{course?.name || "Course"}</h3>
             <p className="text-xs text-muted-foreground mt-0.5">{course?.code} · Year {course?.year} · Sem {course?.semester}</p>
+            {course?.professor_id ? (
+              <Link
+                to={`/faculty/${course.professor_id}`}
+                onClick={(e) => e.stopPropagation()}
+                className="mt-1 inline-flex items-center gap-1 text-xs text-primary hover:underline"
+              >
+                <User className="h-3 w-3" />
+                {getProfessorName(course.professor_id) || "View Professor"}
+              </Link>
+            ) : (
+              <p className="mt-1 text-xs text-muted-foreground italic">No professor assigned</p>
+            )}
           </div>
         </div>
         <div className="mt-4 flex items-center gap-4 text-sm">
@@ -414,6 +426,17 @@ const StudentCourses = () => {
                             <div className="flex-1 min-w-0">
                               <h3 className="font-display font-semibold text-foreground text-sm truncate">{course.name}</h3>
                               <p className="text-xs text-muted-foreground">{course.code}</p>
+                              {course.professor_id ? (
+                                <Link
+                                  to={`/faculty/${course.professor_id}`}
+                                  className="mt-0.5 inline-flex items-center gap-1 text-xs text-primary hover:underline"
+                                >
+                                  <User className="h-3 w-3" />
+                                  {getProfessorName(course.professor_id) || "View Professor"}
+                                </Link>
+                              ) : (
+                                <p className="mt-0.5 text-xs text-muted-foreground italic">No professor assigned</p>
+                              )}
                             </div>
                           </div>
                           <div className="mt-3">
