@@ -1,12 +1,17 @@
+import { useState } from "react";
 import StudentLayout from "@/components/StudentLayout";
-import { useQuery } from "@tanstack/react-query";
+import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/hooks/useAuth";
+import { useToast } from "@/hooks/use-toast";
 import { Link } from "react-router-dom";
-import { BookOpen, BarChart3, ClipboardCheck, Lock } from "lucide-react";
+import { BookOpen, BarChart3, ClipboardCheck, Lock, Plus, Clock, CheckCircle, XCircle, X } from "lucide-react";
 
 const StudentCourses = () => {
   const { user } = useAuth();
+  const { toast } = useToast();
+  const qc = useQueryClient();
+  const [showAddCourses, setShowAddCourses] = useState(false);
 
   const { data: profile } = useQuery({
     queryKey: ["student-profile-program", user?.id],
@@ -30,7 +35,6 @@ const StudentCourses = () => {
     enabled: !!user,
   });
 
-  // Fetch all courses in the student's program
   const { data: programCourses = [] } = useQuery({
     queryKey: ["program-courses", profile?.program],
     queryFn: async () => {
@@ -45,6 +49,34 @@ const StudentCourses = () => {
       return data;
     },
     enabled: !!profile?.program,
+  });
+
+  // Fetch enrollment requests
+  const { data: enrollmentRequests = [] } = useQuery({
+    queryKey: ["student-enrollment-requests", user?.id],
+    queryFn: async () => {
+      const { data, error } = await supabase
+        .from("enrollment_requests")
+        .select("*")
+        .eq("user_id", user!.id);
+      if (error) throw error;
+      return data;
+    },
+    enabled: !!user,
+  });
+
+  const requestMutation = useMutation({
+    mutationFn: async (courseId: string) => {
+      const { error } = await supabase
+        .from("enrollment_requests")
+        .insert({ user_id: user!.id, course_id: courseId } as any);
+      if (error) throw error;
+    },
+    onSuccess: () => {
+      qc.invalidateQueries({ queryKey: ["student-enrollment-requests"] });
+      toast({ title: "Enrollment request submitted!", description: "Your academic advisor will review it." });
+    },
+    onError: (e: any) => toast({ title: "Error", description: e.message, variant: "destructive" }),
   });
 
   const { data: attendanceData = [] } = useQuery({
@@ -92,6 +124,21 @@ const StudentCourses = () => {
     return Math.round((present / courseSessions.length) * 100);
   };
 
+  const getRequestStatus = (courseId: string) => {
+    return enrollmentRequests.find((r) => r.course_id === courseId);
+  };
+
+  const requestStatusBadge = (status: string) => {
+    switch (status) {
+      case "accepted":
+        return <span className="inline-flex items-center gap-1 text-xs text-emerald-600"><CheckCircle className="h-3 w-3" />Accepted</span>;
+      case "rejected":
+        return <span className="inline-flex items-center gap-1 text-xs text-destructive"><XCircle className="h-3 w-3" />Rejected</span>;
+      default:
+        return <span className="inline-flex items-center gap-1 text-xs text-amber-600"><Clock className="h-3 w-3" />Pending</span>;
+    }
+  };
+
   const renderEnrolledCard = (enr: any) => {
     const course = enr.courses;
     const attPct = getAttendancePct(enr.id, enr.course_id);
@@ -128,17 +175,86 @@ const StudentCourses = () => {
             ⚠ Attendance below 75% — final exam blocked
           </p>
         )}
-        {course?.syllabus_url && (
-          <p className="mt-2 text-xs text-primary">📄 Syllabus available</p>
-        )}
       </Link>
     );
   };
 
+  // Available courses = program courses not already enrolled and not already requested
+  const availableCourses = programCourses.filter(
+    (c) => !enrolledCourseIds.includes(c.id)
+  );
+
   return (
     <StudentLayout>
-      <h1 className="font-display text-2xl font-bold text-foreground">My Courses</h1>
-      <p className="text-sm text-muted-foreground">View your enrolled courses, grades, and attendance</p>
+      <div className="flex items-center justify-between">
+        <div>
+          <h1 className="font-display text-2xl font-bold text-foreground">My Courses</h1>
+          <p className="text-sm text-muted-foreground">View your enrolled courses, grades, and attendance</p>
+        </div>
+        {profile?.program && availableCourses.length > 0 && (
+          <button
+            onClick={() => setShowAddCourses(!showAddCourses)}
+            className="inline-flex items-center gap-2 rounded-md bg-primary px-4 py-2 text-sm font-semibold text-primary-foreground"
+          >
+            {showAddCourses ? <X className="h-4 w-4" /> : <Plus className="h-4 w-4" />}
+            {showAddCourses ? "Close" : "Add Courses"}
+          </button>
+        )}
+      </div>
+
+      {/* Add Courses Panel */}
+      {showAddCourses && (
+        <div className="mt-4 rounded-xl border border-primary/20 bg-primary/5 p-6">
+          <h2 className="mb-3 font-display text-lg font-semibold text-foreground">Available Courses</h2>
+          <p className="mb-4 text-sm text-muted-foreground">
+            Request enrollment in courses from your program. Your academic advisor will review and approve.
+          </p>
+          <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-3">
+            {availableCourses.map((course) => {
+              const request = getRequestStatus(course.id);
+              return (
+                <div key={course.id} className="rounded-lg border border-border bg-card p-4">
+                  <h3 className="font-display font-semibold text-foreground text-sm">{course.name}</h3>
+                  <p className="text-xs text-muted-foreground">{course.code} · Y{course.year}/S{course.semester}</p>
+                  <div className="mt-3">
+                    {request ? (
+                      <div className="flex items-center gap-2">
+                        {requestStatusBadge(request.status)}
+                      </div>
+                    ) : (
+                      <button
+                        onClick={() => requestMutation.mutate(course.id)}
+                        disabled={requestMutation.isPending}
+                        className="inline-flex items-center gap-1.5 rounded-md bg-primary px-3 py-1.5 text-xs font-medium text-primary-foreground disabled:opacity-60"
+                      >
+                        <Plus className="h-3 w-3" /> Request Enrollment
+                      </button>
+                    )}
+                  </div>
+                </div>
+              );
+            })}
+          </div>
+        </div>
+      )}
+
+      {/* Enrollment Requests Status */}
+      {enrollmentRequests.length > 0 && (
+        <div className="mt-6">
+          <h2 className="mb-3 font-display text-sm font-semibold text-foreground">Enrollment Requests</h2>
+          <div className="flex flex-wrap gap-2">
+            {enrollmentRequests.map((r) => {
+              const course = programCourses.find((c) => c.id === r.course_id);
+              return (
+                <div key={r.id} className="inline-flex items-center gap-2 rounded-full border border-border bg-card px-3 py-1.5 text-xs">
+                  <span className="font-medium text-foreground">{course?.name || "Course"}</span>
+                  {requestStatusBadge(r.status)}
+                </div>
+              );
+            })}
+          </div>
+        </div>
+      )}
 
       {/* Enrolled courses */}
       <h2 className="mt-6 mb-3 font-display text-lg font-semibold text-foreground">Enrolled Courses</h2>
@@ -154,7 +270,7 @@ const StudentCourses = () => {
         )}
       </div>
 
-      {/* Program courses */}
+      {/* All Program Courses */}
       {profile?.program && programCourses.length > 0 && (
         <>
           <h2 className="mt-8 mb-3 font-display text-lg font-semibold text-foreground">
@@ -164,6 +280,7 @@ const StudentCourses = () => {
           <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
             {programCourses.map((course) => {
               const isEnrolled = enrolledCourseIds.includes(course.id);
+              const request = getRequestStatus(course.id);
               return (
                 <div
                   key={course.id}
@@ -185,13 +302,8 @@ const StudentCourses = () => {
                     </div>
                   </div>
                   <p className="mt-3 text-xs text-muted-foreground">
-                    {isEnrolled ? "✓ Enrolled" : "Not enrolled"}
+                    {isEnrolled ? "✓ Enrolled" : request ? requestStatusBadge(request.status) : "Not enrolled"}
                   </p>
-                  {course.syllabus_url && (
-                    <a href={course.syllabus_url} target="_blank" rel="noopener noreferrer" className="mt-1 block text-xs text-primary hover:underline">
-                      📄 View Syllabus
-                    </a>
-                  )}
                 </div>
               );
             })}
