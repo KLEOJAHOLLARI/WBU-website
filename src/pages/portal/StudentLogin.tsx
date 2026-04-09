@@ -31,7 +31,7 @@ const StudentLogin = () => {
 
     const [{ data: { user: currentUser } }, { data: roleRows, error: roleError }] = await Promise.all([
       supabase.auth.getUser(),
-      supabase.from("user_roles").select("role"),
+      supabase.from("user_roles").select("role, user_id"),
     ]);
 
     if (currentUser) {
