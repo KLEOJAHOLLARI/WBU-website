@@ -234,6 +234,39 @@ export type Database = {
         }
         Relationships: []
       }
+      enrollment_requests: {
+        Row: {
+          course_id: string
+          created_at: string
+          id: string
+          review_note: string | null
+          reviewed_by: string | null
+          status: Database["public"]["Enums"]["enrollment_request_status"]
+          updated_at: string
+          user_id: string
+        }
+        Insert: {
+          course_id: string
+          created_at?: string
+          id?: string
+          review_note?: string | null
+          reviewed_by?: string | null
+          status?: Database["public"]["Enums"]["enrollment_request_status"]
+          updated_at?: string
+          user_id: string
+        }
+        Update: {
+          course_id?: string
+          created_at?: string
+          id?: string
+          review_note?: string | null
+          reviewed_by?: string | null
+          status?: Database["public"]["Enums"]["enrollment_request_status"]
+          updated_at?: string
+          user_id?: string
+        }
+        Relationships: []
+      }
       enrollments: {
         Row: {
           course_id: string
@@ -460,6 +493,30 @@ export type Database = {
         }
         Relationships: []
       }
+      program_advisors: {
+        Row: {
+          advisor_id: string
+          created_at: string
+          id: string
+          program: string
+          updated_at: string
+        }
+        Insert: {
+          advisor_id: string
+          created_at?: string
+          id?: string
+          program: string
+          updated_at?: string
+        }
+        Update: {
+          advisor_id?: string
+          created_at?: string
+          id?: string
+          program?: string
+          updated_at?: string
+        }
+        Relationships: []
+      }
       programs: {
         Row: {
           careers: string[]
@@ -649,6 +706,7 @@ export type Database = {
     }
     Enums: {
       app_role: "admin" | "user" | "professor"
+      enrollment_request_status: "pending" | "accepted" | "rejected"
     }
     CompositeTypes: {
       [_ in never]: never
@@ -777,6 +835,7 @@ export const Constants = {
   public: {
     Enums: {
       app_role: ["admin", "user", "professor"],
+      enrollment_request_status: ["pending", "accepted", "rejected"],
     },
   },
 } as const
