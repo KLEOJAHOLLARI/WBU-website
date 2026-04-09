@@ -111,6 +111,7 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
     await supabase.auth.signOut();
     setIsAdmin(false);
     setIsProfessor(false);
+    setProfile(null);
   };
 
   const waitForRoles = useCallback(async () => {
