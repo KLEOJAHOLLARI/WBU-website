@@ -95,6 +95,7 @@ const App = () => (
             <Route path="/professor/profile" element={<ProfessorProfile />} />
             <Route path="*" element={<NotFound />} />
           </Routes>
+          <DevToolbar />
         </AuthProvider>
       </BrowserRouter>
     </TooltipProvider>
