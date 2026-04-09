@@ -373,6 +373,102 @@ const ProfessorCourseDetail = () => {
       </div>
 
       <div className="mt-6">
+        {/* ═══════ STUDENTS ═══════ */}
+        {tab === "students" && (
+          <div className="space-y-4">
+            <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
+              <div>
+                <h2 className="font-display text-lg font-semibold text-foreground">Enrolled Students</h2>
+                <p className="text-sm text-muted-foreground">{enrollments.length} student{enrollments.length !== 1 ? "s" : ""} enrolled</p>
+              </div>
+              {enrollments.length > 0 && (
+                <div className="relative w-full sm:w-64">
+                  <Search className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" />
+                  <input
+                    value={studentSearch}
+                    onChange={(e) => setStudentSearch(e.target.value)}
+                    placeholder="Search students..."
+                    className={`${inputBase} w-full pl-9`}
+                  />
+                </div>
+              )}
+            </div>
+
+            {loadingEnr ? (
+              <div className="flex items-center gap-2 text-muted-foreground"><Loader2 className="h-4 w-4 animate-spin" /> Loading students...</div>
+            ) : enrollments.length === 0 ? (
+              <div className="rounded-xl border border-dashed border-border bg-card/50 p-10 text-center">
+                <Users className="mx-auto mb-2 h-8 w-8 text-muted-foreground/40" />
+                <p className="text-muted-foreground">No students enrolled in this course yet.</p>
+                <p className="mt-1 text-sm text-muted-foreground/70">Students will appear here once they enroll and are accepted.</p>
+              </div>
+            ) : (
+              <div className="overflow-x-auto rounded-xl border border-border shadow-sm">
+                <table className="w-full text-sm">
+                  <thead>
+                    <tr className="border-b border-border bg-secondary/80">
+                      <th className="px-4 py-3 text-left text-xs font-semibold uppercase tracking-wider text-muted-foreground">#</th>
+                      <th className="px-4 py-3 text-left text-xs font-semibold uppercase tracking-wider text-muted-foreground">Student Name</th>
+                      <th className="px-4 py-3 text-left text-xs font-semibold uppercase tracking-wider text-muted-foreground">Email</th>
+                      <th className="px-4 py-3 text-center text-xs font-semibold uppercase tracking-wider text-muted-foreground">Attendance</th>
+                      <th className="px-4 py-3 text-center text-xs font-semibold uppercase tracking-wider text-muted-foreground">Grade</th>
+                      <th className="px-4 py-3 text-center text-xs font-semibold uppercase tracking-wider text-muted-foreground">Status</th>
+                    </tr>
+                  </thead>
+                  <tbody>
+                    {filteredEnrollments.map((enr, idx) => {
+                      const attPct = getAttPct(enr.id);
+                      const total = getStudentTotal(enr.id);
+                      const isLowAtt = attPct !== null && attPct < 75;
+                      const isFailing = total > 0 && total < 50;
+                      return (
+                        <tr key={enr.id} className={`border-b border-border last:border-0 ${idx % 2 === 0 ? "bg-card" : "bg-secondary/30"}`}>
+                          <td className="px-4 py-3 text-muted-foreground">{idx + 1}</td>
+                          <td className="px-4 py-3 font-medium text-foreground">
+                            <div className="flex items-center gap-2">
+                              <span className="truncate max-w-[200px]">{getStudentName(enr)}</span>
+                              {isLowAtt && <AlertTriangle className="h-3.5 w-3.5 flex-shrink-0 text-amber-500" title="Low attendance" />}
+                            </div>
+                          </td>
+                          <td className="px-4 py-3 text-muted-foreground">{enr.profiles?.email || "—"}</td>
+                          <td className="px-4 py-3 text-center">
+                            <span className={`inline-block min-w-[48px] rounded-full px-2.5 py-0.5 text-xs font-bold ${
+                              isLowAtt ? "bg-destructive/15 text-destructive" : attPct !== null ? "bg-emerald-500/15 text-emerald-700" : "bg-secondary text-muted-foreground"
+                            }`}>
+                              {attPct !== null ? `${attPct}%` : "—"}
+                            </span>
+                          </td>
+                          <td className="px-4 py-3 text-center">
+                            <span className={`inline-block min-w-[48px] rounded-full px-2.5 py-0.5 text-xs font-bold ${gradeBg(total)}`}>
+                              {total > 0 ? `${total}%` : "—"}
+                            </span>
+                          </td>
+                          <td className="px-4 py-3 text-center">
+                            {isLowAtt || isFailing ? (
+                              <Badge variant="destructive" className="text-[10px]">At Risk</Badge>
+                            ) : total >= 50 ? (
+                              <Badge className="bg-emerald-500/15 text-emerald-700 border-emerald-500/25 hover:bg-emerald-500/15 text-[10px]">Passing</Badge>
+                            ) : (
+                              <Badge variant="secondary" className="text-[10px]">Pending</Badge>
+                            )}
+                          </td>
+                        </tr>
+                      );
+                    })}
+                    {filteredEnrollments.length === 0 && studentSearch && (
+                      <tr>
+                        <td colSpan={6} className="px-4 py-8 text-center text-muted-foreground">
+                          No students match "{studentSearch}"
+                        </td>
+                      </tr>
+                    )}
+                  </tbody>
+                </table>
+              </div>
+            )}
+          </div>
+        )}
+
         {/* ═══════ EVALUATION SCHEME ═══════ */}
         {tab === "scheme" && (
           <div className="space-y-6">
