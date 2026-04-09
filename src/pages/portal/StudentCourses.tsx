@@ -74,22 +74,30 @@ const StudentCourses = () => {
   const sortedProfessorIds = [...professorIds].sort();
 
   // Fetch from profiles (primary) and professors table (fallback) in parallel
-  const { data: professorProfiles = [] } = useQuery({
+  const {
+    data: professorProfiles = [],
+    isLoading: isProfessorProfilesLoading,
+  } = useQuery({
     queryKey: ["professor-profiles-for-courses", sortedProfessorIds],
     queryFn: async () => {
-      // Fetch from both tables for robustness (profiles may be RLS-blocked for students)
       const [profilesRes, professorsRes] = await Promise.all([
         supabase.from("profiles").select("user_id, full_name, avatar_url").in("user_id", sortedProfessorIds),
         supabase.from("professors").select("id, name, photo_url").in("id", sortedProfessorIds),
       ]);
-      // Merge: prefer profiles data, fall back to professors table
+
+      if (profilesRes.error) throw profilesRes.error;
+      if (professorsRes.error) throw professorsRes.error;
+
       const profileMap = new Map<string, { id: string; name: string }>();
+
       (professorsRes.data || []).forEach((p) => {
         if (p.name?.trim()) profileMap.set(p.id, { id: p.id, name: p.name.trim() });
       });
+
       (profilesRes.data || []).forEach((p) => {
         if (p.full_name?.trim()) profileMap.set(p.user_id, { id: p.user_id, name: p.full_name.trim() });
       });
+
       return Array.from(profileMap.entries()).map(([userId, info]) => ({
         user_id: userId,
         full_name: info.name,
@@ -109,10 +117,18 @@ const StudentCourses = () => {
   };
 
   const renderProfessorMeta = (professorId: string | null, stopCardNavigation = false) => {
+    if (!professorId) {
+      return <p className="mt-1 text-xs italic text-muted-foreground">No professor assigned</p>;
+    }
+
+    if (isProfessorProfilesLoading) {
+      return <p className="mt-1 text-xs text-muted-foreground">Loading professor...</p>;
+    }
+
     const professor = getProfessor(professorId);
 
     if (!professor) {
-      return <p className="mt-1 text-xs italic text-muted-foreground">No professor assigned</p>;
+      return <p className="mt-1 text-xs italic text-muted-foreground">Professor profile unavailable</p>;
     }
 
     return (
