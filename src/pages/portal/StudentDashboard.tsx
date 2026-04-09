@@ -97,6 +97,8 @@ const StudentDashboard = () => {
   });
 
   const cards = [
+    { label: "Enrolled Courses", value: enrolledCount, icon: BookOpen, color: "text-primary" },
+    { label: "Pending Requests", value: pendingRequestCount, icon: Clock, color: "text-amber-600" },
     { label: "Applications", value: appCount, icon: FileText, color: "text-primary" },
     { label: "Documents", value: docCount, icon: Upload, color: "text-accent" },
     { label: "Unread Messages", value: unreadCount, icon: Mail, color: "text-destructive" },
