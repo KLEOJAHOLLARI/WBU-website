@@ -3,10 +3,10 @@ import Layout from "@/components/Layout";
 import { useQuery } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
 import { useTranslation } from "react-i18next";
-import { motion } from "framer-motion";
-import { Calendar, Clock, MapPin, User } from "lucide-react";
+import { Calendar } from "lucide-react";
 
 const DAYS = ["Monday", "Tuesday", "Wednesday", "Thursday", "Friday", "Saturday"];
+const TIME_SLOTS = ["08:00","09:00","10:00","11:00","12:00","13:00","14:00","15:00","16:00","17:00","18:00"];
 
 const Timetable = () => {
   const { t } = useTranslation();
@@ -37,20 +37,13 @@ const Timetable = () => {
     });
   }, [entries, filterProgram, filterYear, filterSemester]);
 
-  const byDay = useMemo(() => {
-    const map: Record<string, typeof filtered> = {};
-    DAYS.forEach((d) => { map[d] = []; });
-    filtered.forEach((e) => {
-      if (map[e.day_of_week]) map[e.day_of_week].push(e);
-    });
-    return map;
-  }, [filtered]);
-
   const selectClass = "rounded-md border border-input bg-background px-3 py-2 text-sm text-foreground focus:outline-none focus:ring-2 focus:ring-ring";
+
+  const getEntriesForSlot = (day: string, time: string) =>
+    filtered.filter((e) => e.day_of_week === day && e.start_time <= time && e.end_time > time);
 
   return (
     <Layout>
-      {/* Hero */}
       <section className="bg-secondary py-16 text-center">
         <div className="container">
           <h1 className="font-display text-4xl font-bold text-foreground md:text-5xl">
@@ -63,7 +56,6 @@ const Timetable = () => {
       </section>
 
       <section className="container py-12">
-        {/* Filters */}
         <div className="mb-8 flex flex-wrap gap-4">
           <select value={filterProgram} onChange={(e) => setFilterProgram(e.target.value)} className={selectClass}>
             <option value="">All Programs</option>
@@ -86,51 +78,39 @@ const Timetable = () => {
             No timetable entries found for the selected filters.
           </div>
         ) : (
-          <div className="space-y-8">
-            {DAYS.map((day) => {
-              const dayEntries = byDay[day];
-              if (!dayEntries || dayEntries.length === 0) return null;
-              return (
-                <div key={day}>
-                  <h2 className="mb-4 flex items-center gap-2 font-display text-xl font-bold text-foreground">
-                    <Calendar className="h-5 w-5 text-primary" />
-                    {day}
-                  </h2>
-                  <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-3">
-                    {dayEntries.map((entry, i) => (
-                      <motion.div
-                        key={entry.id}
-                        initial={{ opacity: 0, y: 10 }}
-                        animate={{ opacity: 1, y: 0 }}
-                        transition={{ delay: i * 0.05 }}
-                        className="rounded-xl border border-border bg-card p-5"
-                      >
-                        <h3 className="font-display text-base font-semibold text-foreground">{entry.course_name}</h3>
-                        <p className="mt-1 text-xs font-medium text-primary">{entry.program} · Year {entry.year}</p>
-                        <div className="mt-3 space-y-1.5 text-sm text-muted-foreground">
-                          <div className="flex items-center gap-2">
-                            <Clock className="h-3.5 w-3.5" />
-                            {entry.start_time} – {entry.end_time}
-                          </div>
-                          {entry.professor_name && (
-                            <div className="flex items-center gap-2">
-                              <User className="h-3.5 w-3.5" />
-                              {entry.professor_name}
+          <div className="overflow-auto rounded-xl border border-border">
+            <table className="w-full text-sm">
+              <thead className="border-b border-border bg-secondary">
+                <tr>
+                  <th className="sticky left-0 z-10 bg-secondary px-3 py-3 text-left font-medium text-foreground">Time</th>
+                  {DAYS.map((d) => (
+                    <th key={d} className="px-3 py-3 text-center font-medium text-foreground min-w-[140px]">{d}</th>
+                  ))}
+                </tr>
+              </thead>
+              <tbody>
+                {TIME_SLOTS.map((time) => (
+                  <tr key={time} className="border-b border-border last:border-0">
+                    <td className="sticky left-0 z-10 bg-card px-3 py-2 font-mono text-xs text-muted-foreground whitespace-nowrap">{time}</td>
+                    {DAYS.map((day) => {
+                      const hits = getEntriesForSlot(day, time);
+                      return (
+                        <td key={day} className="px-1 py-1 align-top">
+                          {hits.map((entry) => (
+                            <div key={entry.id} className="mb-1 rounded-md bg-primary/10 px-2 py-1.5 text-xs">
+                              <p className="font-semibold text-foreground leading-tight">{entry.course_name}</p>
+                              <p className="text-muted-foreground">{entry.start_time}–{entry.end_time}</p>
+                              {entry.professor_name && <p className="text-muted-foreground">{entry.professor_name}</p>}
+                              {entry.room && <p className="text-muted-foreground">Room: {entry.room}</p>}
                             </div>
-                          )}
-                          {entry.room && (
-                            <div className="flex items-center gap-2">
-                              <MapPin className="h-3.5 w-3.5" />
-                              {entry.room}
-                            </div>
-                          )}
-                        </div>
-                      </motion.div>
-                    ))}
-                  </div>
-                </div>
-              );
-            })}
+                          ))}
+                        </td>
+                      );
+                    })}
+                  </tr>
+                ))}
+              </tbody>
+            </table>
           </div>
         )}
       </section>

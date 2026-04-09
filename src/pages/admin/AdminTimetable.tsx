@@ -3,7 +3,8 @@ import AdminLayout from "@/components/AdminLayout";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "@/hooks/use-toast";
-import { Plus, Pencil, Trash2, X } from "lucide-react";
+import { Plus, Pencil, Trash2, X, Upload, FileSpreadsheet } from "lucide-react";
+import * as XLSX from "xlsx";
 
 const DAYS = ["Monday", "Tuesday", "Wednesday", "Thursday", "Friday", "Saturday"];
 
@@ -37,6 +38,8 @@ const AdminTimetable = () => {
   const [showForm, setShowForm] = useState(false);
   const [editingId, setEditingId] = useState<string | null>(null);
   const [form, setForm] = useState(emptyForm);
+  const [uploading, setUploading] = useState(false);
+  const [dragOver, setDragOver] = useState(false);
 
   const { data: entries = [], isLoading } = useQuery({
     queryKey: ["admin-timetable"],
@@ -108,6 +111,70 @@ const AdminTimetable = () => {
 
   const inputClass = "w-full rounded-md border border-input bg-background px-3 py-2 text-sm text-foreground focus:outline-none focus:ring-2 focus:ring-ring";
 
+  const parseExcelAndUpload = async (file: File) => {
+    setUploading(true);
+    try {
+      const buffer = await file.arrayBuffer();
+      const wb = XLSX.read(buffer, { type: "array" });
+      const sheet = wb.Sheets[wb.SheetNames[0]];
+      const rows: any[] = XLSX.utils.sheet_to_json(sheet);
+
+      if (rows.length === 0) {
+        toast({ title: "Empty spreadsheet", variant: "destructive" });
+        setUploading(false);
+        return;
+      }
+
+      const normalize = (key: string) => key.toLowerCase().replace(/[\s_-]+/g, "");
+      const findCol = (row: any, candidates: string[]) => {
+        for (const k of Object.keys(row)) {
+          if (candidates.includes(normalize(k))) return row[k];
+        }
+        return "";
+      };
+
+      const entries = rows.map((row) => ({
+        program: String(findCol(row, ["program"]) || ""),
+        year: parseInt(findCol(row, ["year"]) || "1") || 1,
+        semester: parseInt(findCol(row, ["semester"]) || "1") || 1,
+        day_of_week: String(findCol(row, ["day", "dayofweek"]) || "Monday"),
+        start_time: String(findCol(row, ["starttime", "start"]) || "09:00"),
+        end_time: String(findCol(row, ["endtime", "end"]) || "10:30"),
+        course_name: String(findCol(row, ["course", "coursename", "subject"]) || ""),
+        professor_name: String(findCol(row, ["professor", "professorname", "teacher", "instructor"]) || ""),
+        room: String(findCol(row, ["room", "classroom", "hall"]) || ""),
+      })).filter((e) => e.course_name && e.program);
+
+      if (entries.length === 0) {
+        toast({ title: "No valid rows found", description: "Ensure columns: program, course, day, start_time, end_time", variant: "destructive" });
+        setUploading(false);
+        return;
+      }
+
+      const { error } = await supabase.from("timetable_entries").insert(entries);
+      if (error) throw error;
+
+      queryClient.invalidateQueries({ queryKey: ["admin-timetable"] });
+      toast({ title: `${entries.length} entries imported from Excel!` });
+    } catch (err: any) {
+      toast({ title: "Import failed", description: err.message, variant: "destructive" });
+    }
+    setUploading(false);
+  };
+
+  const handleDrop = (e: React.DragEvent) => {
+    e.preventDefault();
+    setDragOver(false);
+    const file = e.dataTransfer.files?.[0];
+    if (file) parseExcelAndUpload(file);
+  };
+
+  const handleFileInput = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (file) parseExcelAndUpload(file);
+    e.target.value = "";
+  };
+
   return (
     <AdminLayout>
       <div className="flex items-center justify-between">
@@ -115,12 +182,36 @@ const AdminTimetable = () => {
           <h1 className="font-display text-2xl font-bold text-foreground">Timetable</h1>
           <p className="text-sm text-muted-foreground">Manage class schedules</p>
         </div>
-        <button
-          onClick={() => { setForm(emptyForm); setEditingId(null); setShowForm(true); }}
-          className="inline-flex items-center gap-2 rounded-md bg-primary px-4 py-2.5 text-sm font-semibold text-primary-foreground"
-        >
-          <Plus className="h-4 w-4" /> Add Entry
-        </button>
+        <div className="flex gap-2">
+          <label className="inline-flex cursor-pointer items-center gap-2 rounded-md border border-input bg-background px-4 py-2.5 text-sm font-semibold text-foreground transition-colors hover:bg-secondary">
+            <Upload className="h-4 w-4" /> Import Excel
+            <input type="file" accept=".xlsx,.xls,.csv" className="hidden" onChange={handleFileInput} />
+          </label>
+          <button
+            onClick={() => { setForm(emptyForm); setEditingId(null); setShowForm(true); }}
+            className="inline-flex items-center gap-2 rounded-md bg-primary px-4 py-2.5 text-sm font-semibold text-primary-foreground"
+          >
+            <Plus className="h-4 w-4" /> Add Entry
+          </button>
+        </div>
+      </div>
+
+      {/* Drag-and-drop zone */}
+      <div
+        onDragOver={(e) => { e.preventDefault(); setDragOver(true); }}
+        onDragLeave={() => setDragOver(false)}
+        onDrop={handleDrop}
+        className={`mt-4 flex flex-col items-center justify-center rounded-xl border-2 border-dashed p-8 transition-colors ${
+          dragOver ? "border-primary bg-primary/5" : "border-border"
+        }`}
+      >
+        <FileSpreadsheet className={`mb-2 h-8 w-8 ${dragOver ? "text-primary" : "text-muted-foreground"}`} />
+        <p className="text-sm text-muted-foreground">
+          {uploading ? "Importing..." : "Drag & drop an Excel file here to bulk-import timetable entries"}
+        </p>
+        <p className="mt-1 text-xs text-muted-foreground">
+          Required columns: program, course, day, start_time, end_time. Optional: professor, room, year, semester
+        </p>
       </div>
 
       {showForm && (
