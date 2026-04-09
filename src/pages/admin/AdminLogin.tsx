@@ -3,10 +3,9 @@ import { Navigate, useNavigate } from "react-router-dom";
 import { motion } from "framer-motion";
 import { GraduationCap, LogIn } from "lucide-react";
 import { useAuth } from "@/hooks/useAuth";
-import { supabase } from "@/integrations/supabase/client";
 
 const AdminLogin = () => {
-  const { user, isAdmin, isProfessor, loading, signIn } = useAuth();
+  const { user, isAdmin, isProfessor, loading, signIn, waitForRoles } = useAuth();
   const navigate = useNavigate();
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
@@ -22,6 +21,7 @@ const AdminLogin = () => {
     e.preventDefault();
     setError("");
     setSubmitting(true);
+
     const { error: err } = await signIn(email, password);
     if (err) {
       setSubmitting(false);
@@ -29,40 +29,27 @@ const AdminLogin = () => {
       return;
     }
 
-    const { data: { user: currentUser } } = await supabase.auth.getUser();
-    const { data: roleRows } = await supabase.from("user_roles").select("role, user_id");
-    const roles = currentUser
-      ? (roleRows || []).filter((row) => row.user_id === currentUser.id).map((row) => row.role)
-      : [];
-
+    // Wait for onAuthStateChange to finish resolving roles
+    const roles = await waitForRoles();
     setSubmitting(false);
 
-    if (roles.includes("admin")) {
+    if (roles.isAdmin) {
       navigate("/admin", { replace: true });
-      return;
-    }
-
-    if (roles.includes("professor")) {
+    } else if (roles.isProfessor) {
       navigate("/professor", { replace: true });
-      return;
+    } else {
+      navigate("/portal", { replace: true });
     }
-
-    navigate("/portal", { replace: true });
   };
 
   return (
     <div className="flex min-h-screen items-center justify-center bg-secondary px-4">
-      <motion.div
-        initial={{ opacity: 0, y: 20 }}
-        animate={{ opacity: 1, y: 0 }}
-        className="w-full max-w-md rounded-xl border border-border bg-card p-8 shadow-lg"
-      >
+      <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} className="w-full max-w-md rounded-xl border border-border bg-card p-8 shadow-lg">
         <div className="mb-6 text-center">
           <GraduationCap className="mx-auto mb-2 h-10 w-10 text-primary" />
           <h1 className="font-display text-2xl font-bold text-foreground">Admin Login</h1>
           <p className="mt-1 text-sm text-muted-foreground">Sign in to manage Akademia</p>
         </div>
-
         <form onSubmit={handleSubmit} className="space-y-4">
           <div>
             <label className="mb-1 block text-sm font-medium text-foreground">Email</label>
