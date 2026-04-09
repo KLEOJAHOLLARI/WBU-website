@@ -43,6 +43,7 @@ import AdminAnnouncements from "./pages/admin/AdminAnnouncements";
 import AdminProfile from "./pages/admin/AdminProfile";
 import StudentProfile from "./pages/portal/StudentProfile";
 import ProfessorProfile from "./pages/professor/ProfessorProfile";
+import DevToolbar from "./components/DevToolbar";
 
 const queryClient = new QueryClient();
 
@@ -94,6 +95,7 @@ const App = () => (
             <Route path="/professor/profile" element={<ProfessorProfile />} />
             <Route path="*" element={<NotFound />} />
           </Routes>
+          <DevToolbar />
         </AuthProvider>
       </BrowserRouter>
     </TooltipProvider>
