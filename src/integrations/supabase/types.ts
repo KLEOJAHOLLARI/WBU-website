@@ -499,39 +499,54 @@ export type Database = {
         Row: {
           account_status: string
           avatar_url: string | null
+          birthplace: string | null
           created_at: string
           email: string
           full_name: string
+          gender: string | null
           id: string
           pending_email: string | null
+          personal_id: string | null
           phone: string | null
           program: string | null
+          student_exam_code: string | null
+          student_id: string | null
           updated_at: string
           user_id: string
         }
         Insert: {
           account_status?: string
           avatar_url?: string | null
+          birthplace?: string | null
           created_at?: string
           email?: string
           full_name?: string
+          gender?: string | null
           id?: string
           pending_email?: string | null
+          personal_id?: string | null
           phone?: string | null
           program?: string | null
+          student_exam_code?: string | null
+          student_id?: string | null
           updated_at?: string
           user_id: string
         }
         Update: {
           account_status?: string
           avatar_url?: string | null
+          birthplace?: string | null
           created_at?: string
           email?: string
           full_name?: string
+          gender?: string | null
           id?: string
           pending_email?: string | null
+          personal_id?: string | null
           phone?: string | null
           program?: string | null
+          student_exam_code?: string | null
+          student_id?: string | null
           updated_at?: string
           user_id?: string
         }
