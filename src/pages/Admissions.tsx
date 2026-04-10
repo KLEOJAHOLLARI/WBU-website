@@ -9,6 +9,12 @@ import { supabase } from "@/integrations/supabase/client";
 import { useQuery } from "@tanstack/react-query";
 import { useTranslation } from "react-i18next";
 
+const stagger = {
+  initial: { opacity: 0, y: 20 },
+  whileInView: { opacity: 1, y: 0 },
+  viewport: { once: true },
+};
+
 const Admissions = () => {
   const { t } = useTranslation();
   const { toast } = useToast();
@@ -40,7 +46,6 @@ const Admissions = () => {
 
     let document_url: string | null = null;
 
-    // Upload document if provided
     if (form.document) {
       const ext = form.document.name.split(".").pop();
       const path = `${Date.now()}_${Math.random().toString(36).slice(2)}.${ext}`;
@@ -53,7 +58,6 @@ const Admissions = () => {
       document_url = path;
     }
 
-    // Get current user if logged in, to link application to their account
     const { data: { user: currentUser } } = await supabase.auth.getUser();
 
     const { error } = await supabase.from("applications").insert({
@@ -75,6 +79,7 @@ const Admissions = () => {
   };
 
   const update = (field: string, value: string) => setForm((f) => ({ ...f, [field]: value }));
+  const inputClass = "w-full rounded-xl border border-input bg-background px-4 py-3 text-sm text-foreground placeholder:text-muted-foreground focus:outline-none focus:ring-2 focus:ring-ring transition-shadow";
 
   return (
     <Layout>
@@ -83,7 +88,7 @@ const Admissions = () => {
       <section className="section-padding">
         <div className="container">
           <SectionHeading title={t("admissions.requirements")} />
-          <div className="mx-auto max-w-3xl rounded-xl border border-border bg-card p-6 md:p-8">
+          <div className="glass-card mx-auto max-w-3xl p-7 md:p-9">
             <ul className="space-y-4 text-muted-foreground">
               {requirements.map((r) => (
                 <li key={r} className="flex items-start gap-3">
@@ -96,18 +101,18 @@ const Admissions = () => {
         </div>
       </section>
 
-      <section className="section-padding bg-secondary">
+      <section className="section-padding bg-secondary/50">
         <div className="container">
           <SectionHeading title={t("admissions.howToApply")} subtitle={t("admissions.howToApplySub")} />
           <div className="grid gap-6 sm:grid-cols-2 lg:grid-cols-4">
             {steps.map((s, i) => (
-              <motion.div key={i} initial={{ opacity: 0, y: 20 }} whileInView={{ opacity: 1, y: 0 }} viewport={{ once: true }} transition={{ duration: 0.4, delay: i * 0.1 }} className="rounded-xl bg-card p-6 text-center shadow-sm">
-                <div className="mx-auto mb-3 flex h-12 w-12 items-center justify-center rounded-full bg-primary text-primary-foreground">
-                  <s.icon className="h-5 w-5" />
+              <motion.div key={i} {...stagger} transition={{ duration: 0.5, delay: i * 0.1 }} className="glass-card p-7 text-center">
+                <div className="mx-auto mb-4 flex h-14 w-14 items-center justify-center rounded-2xl bg-primary text-primary-foreground">
+                  <s.icon className="h-6 w-6" />
                 </div>
-                <p className="mb-1 text-xs font-semibold uppercase tracking-wider text-muted-foreground">Step {i + 1}</p>
+                <p className="mb-1.5 text-xs font-semibold uppercase tracking-wider text-muted-foreground">Step {i + 1}</p>
                 <h3 className="font-display text-base font-semibold text-foreground">{s.title}</h3>
-                <p className="mt-2 text-sm text-muted-foreground">{s.desc}</p>
+                <p className="mt-2 text-sm leading-relaxed text-muted-foreground">{s.desc}</p>
               </motion.div>
             ))}
           </div>
@@ -118,31 +123,31 @@ const Admissions = () => {
         <div className="container">
           <SectionHeading title={t("admissions.onlineApplication")} subtitle={t("admissions.onlineApplicationSub")} />
           {submitted ? (
-            <motion.div initial={{ opacity: 0, scale: 0.95 }} animate={{ opacity: 1, scale: 1 }} className="mx-auto max-w-lg rounded-xl border border-border bg-card p-10 text-center">
+            <motion.div initial={{ opacity: 0, scale: 0.95 }} animate={{ opacity: 1, scale: 1 }} className="glass-card mx-auto max-w-lg p-12 text-center">
               <CheckCircle className="mx-auto mb-4 h-16 w-16 text-accent" />
               <h3 className="font-display text-2xl font-semibold text-foreground">{t("admissions.applicationReceived")}</h3>
               <p className="mt-2 text-muted-foreground">{t("admissions.applicationReceivedDesc")}</p>
             </motion.div>
           ) : (
-            <form onSubmit={handleSubmit} className="mx-auto max-w-2xl space-y-5 rounded-xl border border-border bg-card p-6 md:p-8">
+            <form onSubmit={handleSubmit} className="glass-card mx-auto max-w-2xl space-y-5 p-7 md:p-9">
               <div className="grid gap-5 sm:grid-cols-2">
                 <div>
-                  <label className="mb-1 block text-sm font-medium text-foreground">{t("admissions.fullName")} *</label>
-                  <input required type="text" value={form.fullName} onChange={(e) => update("fullName", e.target.value)} className="w-full rounded-md border border-input bg-background px-4 py-2.5 text-sm text-foreground placeholder:text-muted-foreground focus:outline-none focus:ring-2 focus:ring-ring" placeholder={t("admissions.fullName")} />
+                  <label className="mb-1.5 block text-sm font-medium text-foreground">{t("admissions.fullName")} *</label>
+                  <input required type="text" value={form.fullName} onChange={(e) => update("fullName", e.target.value)} className={inputClass} placeholder={t("admissions.fullName")} />
                 </div>
                 <div>
-                  <label className="mb-1 block text-sm font-medium text-foreground">{t("admissions.email")} *</label>
-                  <input required type="email" value={form.email} onChange={(e) => update("email", e.target.value)} className="w-full rounded-md border border-input bg-background px-4 py-2.5 text-sm text-foreground placeholder:text-muted-foreground focus:outline-none focus:ring-2 focus:ring-ring" placeholder="your@email.com" />
+                  <label className="mb-1.5 block text-sm font-medium text-foreground">{t("admissions.email")} *</label>
+                  <input required type="email" value={form.email} onChange={(e) => update("email", e.target.value)} className={inputClass} placeholder="your@email.com" />
                 </div>
               </div>
               <div className="grid gap-5 sm:grid-cols-2">
                 <div>
-                  <label className="mb-1 block text-sm font-medium text-foreground">{t("admissions.phone")}</label>
-                  <input type="tel" value={form.phone} onChange={(e) => update("phone", e.target.value)} className="w-full rounded-md border border-input bg-background px-4 py-2.5 text-sm text-foreground placeholder:text-muted-foreground focus:outline-none focus:ring-2 focus:ring-ring" placeholder="+355 ..." />
+                  <label className="mb-1.5 block text-sm font-medium text-foreground">{t("admissions.phone")}</label>
+                  <input type="tel" value={form.phone} onChange={(e) => update("phone", e.target.value)} className={inputClass} placeholder="+355 ..." />
                 </div>
                 <div>
-                  <label className="mb-1 block text-sm font-medium text-foreground">{t("admissions.program")} *</label>
-                  <select required value={form.program} onChange={(e) => update("program", e.target.value)} className="w-full rounded-md border border-input bg-background px-3 py-2.5 text-sm text-foreground focus:outline-none focus:ring-2 focus:ring-ring">
+                  <label className="mb-1.5 block text-sm font-medium text-foreground">{t("admissions.program")} *</label>
+                  <select required value={form.program} onChange={(e) => update("program", e.target.value)} className={inputClass}>
                     <option value="">{t("admissions.selectProgram")}</option>
                     {programs?.map((p) => (
                       <option key={p.slug} value={p.slug}>{p.title} ({p.degree})</option>
@@ -151,13 +156,13 @@ const Admissions = () => {
                 </div>
               </div>
               <div>
-                <label className="mb-1 block text-sm font-medium text-foreground">{t("admissions.motivationLetter")} *</label>
-                <textarea required rows={5} value={form.motivation} onChange={(e) => update("motivation", e.target.value)} className="w-full rounded-md border border-input bg-background px-4 py-2.5 text-sm text-foreground placeholder:text-muted-foreground focus:outline-none focus:ring-2 focus:ring-ring" placeholder={t("admissions.motivationPlaceholder")} />
+                <label className="mb-1.5 block text-sm font-medium text-foreground">{t("admissions.motivationLetter")} *</label>
+                <textarea required rows={5} value={form.motivation} onChange={(e) => update("motivation", e.target.value)} className={inputClass} placeholder={t("admissions.motivationPlaceholder")} />
               </div>
               <div>
-                <label className="mb-1 block text-sm font-medium text-foreground">Upload Document (PDF, optional)</label>
+                <label className="mb-1.5 block text-sm font-medium text-foreground">Upload Document (PDF, optional)</label>
                 <div className="relative flex items-center gap-3">
-                  <label className="flex cursor-pointer items-center gap-2 rounded-md border border-input bg-background px-4 py-2.5 text-sm text-muted-foreground transition-colors hover:bg-secondary">
+                  <label className="flex cursor-pointer items-center gap-2 rounded-xl border border-input bg-background px-4 py-3 text-sm text-muted-foreground transition-colors hover:bg-secondary">
                     <Upload className="h-4 w-4" />
                     {form.document ? form.document.name : "Choose file..."}
                     <input
@@ -177,7 +182,7 @@ const Admissions = () => {
                   )}
                 </div>
               </div>
-              <button type="submit" disabled={submitting} className="w-full rounded-md bg-primary py-3 font-semibold text-primary-foreground transition-transform hover:scale-[1.02] disabled:opacity-60">
+              <button type="submit" disabled={submitting} className="w-full rounded-full bg-primary py-3.5 font-semibold text-primary-foreground shadow-lg transition-all duration-200 hover:shadow-xl hover:scale-[1.02] disabled:opacity-60">
                 {submitting ? t("admissions.submitting") : t("admissions.submitApplication")}
               </button>
             </form>

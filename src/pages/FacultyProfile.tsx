@@ -106,7 +106,7 @@ const FacultyProfile = () => {
   if (isLoading) {
     return (
       <Layout>
-        <div className="container mx-auto max-w-4xl px-4 py-12">
+        <div className="container mx-auto max-w-4xl px-4 py-20">
           <p className="text-center text-muted-foreground">Loading profile...</p>
         </div>
       </Layout>
@@ -116,7 +116,7 @@ const FacultyProfile = () => {
   if (error || !data) {
     return (
       <Layout>
-        <div className="container mx-auto max-w-4xl px-4 py-12 text-center">
+        <div className="container mx-auto max-w-4xl px-4 py-20 text-center">
           <h1 className="mb-2 font-display text-2xl font-bold text-foreground">Professor Not Found</h1>
           <p className="mb-6 text-muted-foreground">This professor profile does not exist or is not accessible.</p>
           <Link to="/faculty" className="inline-flex items-center gap-1 text-primary hover:underline">
@@ -129,7 +129,7 @@ const FacultyProfile = () => {
 
   return (
     <Layout>
-      <div className="container mx-auto max-w-4xl px-4 py-10">
+      <div className="container mx-auto max-w-4xl px-4 py-14">
         <Link
           to="/faculty"
           className="mb-8 inline-flex items-center gap-1.5 text-sm text-muted-foreground transition-colors hover:text-primary"
@@ -137,9 +137,9 @@ const FacultyProfile = () => {
           <ArrowLeft className="h-4 w-4" /> Back to Faculty
         </Link>
 
-        <div className="rounded-2xl border border-border bg-card p-6 sm:p-8">
+        <div className="glass-card p-7 sm:p-9">
           <div className="flex flex-col items-center gap-6 sm:flex-row sm:items-start">
-            <Avatar className="h-28 w-28 border-4 border-primary/10">
+            <Avatar className="h-28 w-28 border-4 border-primary/10 shadow-lg">
               {photoUrl ? <AvatarImage src={photoUrl} alt={name} /> : null}
               <AvatarFallback className="bg-primary/10 text-2xl font-bold text-primary">
                 {initials}
@@ -148,15 +148,15 @@ const FacultyProfile = () => {
 
             <div className="flex-1 text-center sm:text-left">
               <h1 className="font-display text-2xl font-bold text-foreground sm:text-3xl">{name}</h1>
-              {title && <p className="mt-1 text-lg font-medium text-primary">{title}</p>}
-              <div className="mt-3 flex flex-wrap justify-center gap-3 sm:justify-start">
+              {title && <p className="mt-1 text-lg font-medium text-accent">{title}</p>}
+              <div className="mt-3 flex flex-wrap justify-center gap-2.5 sm:justify-start">
                 {department && (
-                  <span className="inline-flex items-center gap-1.5 rounded-full border border-border bg-secondary/50 px-3 py-1 text-sm text-muted-foreground">
+                  <span className="inline-flex items-center gap-1.5 rounded-full border border-border/50 bg-secondary/50 px-3.5 py-1.5 text-sm text-muted-foreground">
                     <Building2 className="h-3.5 w-3.5" /> {department}
                   </span>
                 )}
                 {email && (
-                  <span className="inline-flex items-center gap-1.5 rounded-full border border-border bg-secondary/50 px-3 py-1 text-sm text-muted-foreground">
+                  <span className="inline-flex items-center gap-1.5 rounded-full border border-border/50 bg-secondary/50 px-3.5 py-1.5 text-sm text-muted-foreground">
                     <Mail className="h-3.5 w-3.5" /> {email}
                   </span>
                 )}
@@ -165,27 +165,27 @@ const FacultyProfile = () => {
           </div>
 
           {bio && (
-            <div className="mt-6 border-t border-border pt-6">
-              <h2 className="mb-2 font-display text-lg font-semibold text-foreground">About</h2>
+            <div className="mt-7 border-t border-border/50 pt-7">
+              <h2 className="mb-3 font-display text-lg font-semibold text-foreground">About</h2>
               <p className="whitespace-pre-line leading-relaxed text-muted-foreground">{bio}</p>
             </div>
           )}
         </div>
 
         {courses.length > 0 && (
-          <div className="mt-8">
-            <h2 className="mb-4 flex items-center gap-2 font-display text-lg font-semibold text-foreground">
-              <GraduationCap className="h-5 w-5 text-primary" />
+          <div className="mt-10">
+            <h2 className="mb-5 flex items-center gap-2 font-display text-lg font-semibold text-foreground">
+              <GraduationCap className="h-5 w-5 text-accent" />
               Courses Taught
             </h2>
             <div className="grid gap-3 sm:grid-cols-2">
               {courses.map((course) => (
                 <div
                   key={course.id}
-                  className="flex items-start gap-3 rounded-xl border border-border bg-card p-4"
+                  className="glass-card flex items-start gap-3 p-5"
                 >
-                  <div className="rounded-md bg-primary/10 p-1.5">
-                    <BookOpen className="h-4 w-4 text-primary" />
+                  <div className="rounded-xl bg-accent/10 p-2">
+                    <BookOpen className="h-4 w-4 text-accent" />
                   </div>
                   <div className="min-w-0">
                     <h3 className="truncate text-sm font-semibold text-foreground">{course.name}</h3>

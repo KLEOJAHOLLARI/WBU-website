@@ -41,6 +41,8 @@ const Contact = () => {
     { icon: Clock, label: t("contact.officeHours"), value: t("contact.officeHoursValue") },
   ];
 
+  const inputClass = "w-full rounded-xl border border-input bg-background px-4 py-3 text-sm text-foreground placeholder:text-muted-foreground focus:outline-none focus:ring-2 focus:ring-ring transition-shadow";
+
   return (
     <Layout>
       <PageHero title={t("contact.title")} subtitle={t("contact.subtitle")} />
@@ -49,29 +51,29 @@ const Contact = () => {
         <div className="container grid gap-12 lg:grid-cols-5">
           <div className="lg:col-span-2">
             <h2 className="heading-md text-foreground">{t("contact.getInTouch")}</h2>
-            <div className="mt-2 h-1 w-12 rounded-full bg-accent" />
-            <div className="mt-8 space-y-6">
+            <div className="mt-3 h-1 w-12 rounded-full bg-accent" />
+            <div className="mt-8 space-y-5">
               {contactInfo.map((item) => (
                 <div key={item.label} className="flex items-start gap-4">
-                  <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-lg bg-accent/15">
+                  <div className="flex h-11 w-11 shrink-0 items-center justify-center rounded-2xl bg-accent/10">
                     <item.icon className="h-5 w-5 text-accent" />
                   </div>
                   <div>
-                    <p className="text-sm font-medium text-foreground">{item.label}</p>
+                    <p className="text-sm font-semibold text-foreground">{item.label}</p>
                     <p className="whitespace-pre-line text-sm text-muted-foreground">{item.value}</p>
                   </div>
                 </div>
               ))}
             </div>
 
-            <div className="mt-8 overflow-hidden rounded-xl border border-border">
+            <div className="mt-8 overflow-hidden rounded-2xl border border-border/50 shadow-sm">
               <iframe title="University location" src="https://www.openstreetmap.org/export/embed.html?bbox=19.74%2C41.34%2C19.79%2C41.37&layer=mapnik" className="h-56 w-full" loading="lazy" />
             </div>
           </div>
 
           <div className="lg:col-span-3">
             {submitted ? (
-              <motion.div initial={{ opacity: 0, scale: 0.95 }} animate={{ opacity: 1, scale: 1 }} className="flex h-full items-center justify-center rounded-xl border border-border bg-card p-10">
+              <motion.div initial={{ opacity: 0, scale: 0.95 }} animate={{ opacity: 1, scale: 1 }} className="glass-card flex h-full items-center justify-center p-12">
                 <div className="text-center">
                   <CheckCircle className="mx-auto mb-4 h-16 w-16 text-accent" />
                   <h3 className="font-display text-2xl font-semibold text-foreground">{t("contact.thankYou")}</h3>
@@ -79,27 +81,27 @@ const Contact = () => {
                 </div>
               </motion.div>
             ) : (
-              <form onSubmit={handleSubmit} className="space-y-5 rounded-xl border border-border bg-card p-6 md:p-8">
+              <form onSubmit={handleSubmit} className="glass-card space-y-5 p-7 md:p-9">
                 <h3 className="font-display text-xl font-semibold text-foreground">{t("contact.sendMessage")}</h3>
                 <div className="grid gap-5 sm:grid-cols-2">
                   <div>
-                    <label className="mb-1 block text-sm font-medium text-foreground">{t("contact.name")} *</label>
-                    <input required type="text" value={form.name} onChange={(e) => update("name", e.target.value)} className="w-full rounded-md border border-input bg-background px-4 py-2.5 text-sm text-foreground placeholder:text-muted-foreground focus:outline-none focus:ring-2 focus:ring-ring" placeholder={t("contact.namePlaceholder")} />
+                    <label className="mb-1.5 block text-sm font-medium text-foreground">{t("contact.name")} *</label>
+                    <input required type="text" value={form.name} onChange={(e) => update("name", e.target.value)} className={inputClass} placeholder={t("contact.namePlaceholder")} />
                   </div>
                   <div>
-                    <label className="mb-1 block text-sm font-medium text-foreground">{t("contact.email")} *</label>
-                    <input required type="email" value={form.email} onChange={(e) => update("email", e.target.value)} className="w-full rounded-md border border-input bg-background px-4 py-2.5 text-sm text-foreground placeholder:text-muted-foreground focus:outline-none focus:ring-2 focus:ring-ring" placeholder={t("contact.emailPlaceholder")} />
+                    <label className="mb-1.5 block text-sm font-medium text-foreground">{t("contact.email")} *</label>
+                    <input required type="email" value={form.email} onChange={(e) => update("email", e.target.value)} className={inputClass} placeholder={t("contact.emailPlaceholder")} />
                   </div>
                 </div>
                 <div>
-                  <label className="mb-1 block text-sm font-medium text-foreground">{t("contact.subject")} *</label>
-                  <input required type="text" value={form.subject} onChange={(e) => update("subject", e.target.value)} className="w-full rounded-md border border-input bg-background px-4 py-2.5 text-sm text-foreground placeholder:text-muted-foreground focus:outline-none focus:ring-2 focus:ring-ring" placeholder={t("contact.subjectPlaceholder")} />
+                  <label className="mb-1.5 block text-sm font-medium text-foreground">{t("contact.subject")} *</label>
+                  <input required type="text" value={form.subject} onChange={(e) => update("subject", e.target.value)} className={inputClass} placeholder={t("contact.subjectPlaceholder")} />
                 </div>
                 <div>
-                  <label className="mb-1 block text-sm font-medium text-foreground">{t("contact.message")} *</label>
-                  <textarea required rows={5} value={form.message} onChange={(e) => update("message", e.target.value)} className="w-full rounded-md border border-input bg-background px-4 py-2.5 text-sm text-foreground placeholder:text-muted-foreground focus:outline-none focus:ring-2 focus:ring-ring" placeholder={t("contact.messagePlaceholder")} />
+                  <label className="mb-1.5 block text-sm font-medium text-foreground">{t("contact.message")} *</label>
+                  <textarea required rows={5} value={form.message} onChange={(e) => update("message", e.target.value)} className={inputClass} placeholder={t("contact.messagePlaceholder")} />
                 </div>
-                <button type="submit" disabled={submitting} className="inline-flex items-center gap-2 rounded-md bg-primary px-6 py-3 font-semibold text-primary-foreground transition-transform hover:scale-[1.02] disabled:opacity-60">
+                <button type="submit" disabled={submitting} className="inline-flex items-center gap-2 rounded-full bg-primary px-7 py-3 font-semibold text-primary-foreground shadow-lg transition-all duration-200 hover:shadow-xl hover:scale-105 disabled:opacity-60">
                   <Send className="h-4 w-4" />
                   {submitting ? t("contact.sending") : t("contact.send")}
                 </button>

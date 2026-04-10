@@ -35,9 +35,9 @@ const News = () => {
 
       <section className="section-padding">
         <div className="container">
-          <div className="mb-8 flex flex-wrap gap-2">
+          <div className="mb-10 flex flex-wrap gap-2">
             {categories.map((c) => (
-              <button key={c.value} onClick={() => setActive(c.value)} className={`rounded-full px-4 py-2 text-sm font-medium transition-colors ${active === c.value ? "bg-primary text-primary-foreground" : "bg-secondary text-secondary-foreground hover:bg-secondary/80"}`}>
+              <button key={c.value} onClick={() => setActive(c.value)} className={`rounded-full px-5 py-2.5 text-sm font-medium transition-all duration-200 ${active === c.value ? "bg-primary text-primary-foreground shadow-lg shadow-primary/20" : "bg-secondary text-secondary-foreground hover:bg-secondary/80"}`}>
                 {c.label}
               </button>
             ))}
@@ -48,22 +48,22 @@ const News = () => {
           ) : (
             <div className="grid gap-6 md:grid-cols-2 lg:grid-cols-3">
               {filtered.map((a, i) => (
-                <motion.div key={a.id} initial={{ opacity: 0, y: 20 }} whileInView={{ opacity: 1, y: 0 }} viewport={{ once: true }} transition={{ duration: 0.4, delay: i * 0.05 }}>
-                  <Link to={`/news/${a.slug}`} className="group flex h-full flex-col overflow-hidden rounded-xl border border-border bg-card transition-shadow hover:shadow-lg">
+                <motion.div key={a.id} initial={{ opacity: 0, y: 20 }} whileInView={{ opacity: 1, y: 0 }} viewport={{ once: true }} transition={{ duration: 0.5, delay: i * 0.05 }}>
+                  <Link to={`/news/${a.slug}`} className="glass-card group flex h-full flex-col overflow-hidden">
                     {a.image_url && (
                       <div className="aspect-video overflow-hidden">
-                        <img src={a.image_url} alt={a.title} className="h-full w-full object-cover transition-transform duration-300 group-hover:scale-105" loading="lazy" />
+                        <img src={a.image_url} alt={a.title} className="h-full w-full object-cover transition-transform duration-500 group-hover:scale-105" loading="lazy" />
                       </div>
                     )}
-                    <div className="flex flex-1 flex-col p-5">
-                      <div className="mb-2 flex items-center gap-2 text-xs text-muted-foreground">
+                    <div className="flex flex-1 flex-col p-6">
+                      <div className="mb-3 flex items-center gap-2 text-xs text-muted-foreground">
                         <Calendar className="h-3.5 w-3.5" />
                         {new Date(a.published_at).toLocaleDateString("en-US", { year: "numeric", month: "long", day: "numeric" })}
-                        <span className="rounded-full bg-accent/15 px-2 py-0.5 text-xs font-medium text-accent-foreground">{a.category}</span>
+                        <span className="rounded-full bg-accent/10 px-2.5 py-0.5 text-xs font-medium text-accent">{a.category}</span>
                       </div>
-                      <h3 className="font-display text-lg font-semibold text-foreground group-hover:text-primary">{a.title}</h3>
+                      <h3 className="font-display text-lg font-semibold text-foreground transition-colors group-hover:text-primary">{a.title}</h3>
                       <p className="mt-2 flex-1 text-sm leading-relaxed text-muted-foreground">{a.excerpt}</p>
-                      <span className="mt-3 inline-flex items-center gap-1 text-sm font-medium text-primary">{t("news.readMore")} <ArrowRight className="h-3.5 w-3.5" /></span>
+                      <span className="mt-4 inline-flex items-center gap-1.5 text-sm font-semibold text-primary transition-all group-hover:gap-2.5">{t("news.readMore")} <ArrowRight className="h-3.5 w-3.5" /></span>
                     </div>
                   </Link>
                 </motion.div>
