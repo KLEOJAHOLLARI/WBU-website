@@ -317,15 +317,21 @@ const StudentCourses = () => {
     );
   };
 
-  const availableCourses = programCourses.filter(
+  // Semester-based visibility: sem 1 → only sem 1; sem 2 → sem 1+2
+  const studentYear = profile?.current_year ?? 1;
+  const studentSemester = profile?.current_semester ?? 1;
+
+  const visibleProgramCourses = programCourses.filter(c => {
+    if (c.year > studentYear) return false;
+    if (c.year === studentYear && c.semester > studentSemester) return false;
+    return true;
+  });
+
+  const availableCourses = visibleProgramCourses.filter(
     (c) => !enrolledCourseIds.includes(c.id)
   );
 
-  const pendingCount = enrollmentRequests.filter((r) => r.status === "pending").length;
-  const acceptedCount = enrollmentRequests.filter((r) => r.status === "accepted").length;
-  const rejectedCount = enrollmentRequests.filter((r) => r.status === "rejected").length;
-
-  const yearSemGroups = groupByYearSem(programCourses);
+  const yearSemGroups = groupByYearSem(visibleProgramCourses);
 
   return (
     <StudentLayout>
