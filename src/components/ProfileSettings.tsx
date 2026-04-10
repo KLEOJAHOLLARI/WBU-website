@@ -6,7 +6,7 @@ import { useToast } from "@/hooks/use-toast";
 import { Camera, Save, KeyRound, Mail } from "lucide-react";
 
 const ProfileSettings = () => {
-  const { user } = useAuth();
+  const { user, isAdmin } = useAuth();
   const { toast } = useToast();
   const qc = useQueryClient();
   const fileRef = useRef<HTMLInputElement>(null);
@@ -36,12 +36,17 @@ const ProfileSettings = () => {
 
   const updateProfile = useMutation({
     mutationFn: async () => {
-      const updates: { full_name: string; phone: string | null; pending_email?: string } = {
+      const updates: { full_name: string; phone: string | null; pending_email?: string; email?: string } = {
         full_name: fullName,
         phone: phone || null,
       };
       if (pendingEmail && pendingEmail !== profile?.email) {
-        updates.pending_email = pendingEmail;
+        if (isAdmin) {
+          // Admin: update email directly, no approval needed
+          updates.email = pendingEmail;
+        } else {
+          updates.pending_email = pendingEmail;
+        }
       }
       const { error } = await supabase.from("profiles").update(updates).eq("user_id", user!.id);
       if (error) throw error;
@@ -49,7 +54,7 @@ const ProfileSettings = () => {
     onSuccess: () => {
       qc.invalidateQueries({ queryKey: ["my-profile"] });
       toast({ title: "Profile updated!" });
-      if (pendingEmail && pendingEmail !== profile?.email) {
+      if (pendingEmail && pendingEmail !== profile?.email && !isAdmin) {
         toast({ title: "Email change request submitted for admin approval", description: "Your email will be updated once an admin approves it." });
       }
       setPendingEmail("");
@@ -150,7 +155,7 @@ const ProfileSettings = () => {
           </div>
           <div>
             <label className="mb-1 block text-sm font-medium text-foreground">
-              <span className="flex items-center gap-1"><Mail className="h-4 w-4" /> Request Email Change</span>
+              <span className="flex items-center gap-1"><Mail className="h-4 w-4" /> {isAdmin ? "Email Address" : "Request Email Change"}</span>
             </label>
             <input
               value={pendingEmail}
@@ -159,7 +164,7 @@ const ProfileSettings = () => {
               type="email"
               className="w-full rounded-md border border-input bg-background px-3 py-2 text-sm text-foreground focus:outline-none focus:ring-2 focus:ring-ring"
             />
-            <p className="mt-1 text-xs text-muted-foreground">Email changes require admin approval</p>
+            {!isAdmin && <p className="mt-1 text-xs text-muted-foreground">Email changes require admin approval</p>}
           </div>
           <button
             onClick={() => updateProfile.mutate()}
