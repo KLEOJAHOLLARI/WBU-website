@@ -48,6 +48,7 @@ import ProfessorProfile from "./pages/professor/ProfessorProfile";
 import StudentTranscript from "./pages/portal/StudentTranscript";
 import ProfessorAdvisor from "./pages/professor/ProfessorAdvisor";
 import ProfessorTranscripts from "./pages/professor/ProfessorTranscripts";
+import ChangePassword from "./pages/portal/ChangePassword";
 import DevToolbar from "./components/DevToolbar";
 import FacultyProfile from "./pages/FacultyProfile";
 
