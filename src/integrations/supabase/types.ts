@@ -514,6 +514,7 @@ export type Database = {
           full_name: string
           gender: string | null
           id: string
+          must_change_password: boolean
           pending_email: string | null
           personal_id: string | null
           phone: string | null
@@ -532,6 +533,7 @@ export type Database = {
           full_name?: string
           gender?: string | null
           id?: string
+          must_change_password?: boolean
           pending_email?: string | null
           personal_id?: string | null
           phone?: string | null
@@ -550,6 +552,7 @@ export type Database = {
           full_name?: string
           gender?: string | null
           id?: string
+          must_change_password?: boolean
           pending_email?: string | null
           personal_id?: string | null
           phone?: string | null

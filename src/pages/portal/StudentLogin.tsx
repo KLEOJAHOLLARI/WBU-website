@@ -37,7 +37,7 @@ const StudentLogin = () => {
     if (!roles.isAdmin && !roles.isProfessor) {
       const { data: { user: currentUser } } = await supabase.auth.getUser();
       if (currentUser) {
-        const { data: profile } = await supabase.from("profiles").select("account_status").eq("user_id", currentUser.id).maybeSingle();
+        const { data: profile } = await supabase.from("profiles").select("account_status, must_change_password").eq("user_id", currentUser.id).maybeSingle();
         if (profile && profile.account_status !== "approved") {
           await supabase.auth.signOut();
           setError(
@@ -46,6 +46,12 @@ const StudentLogin = () => {
               : "Your account has been rejected. Please contact administration."
           );
           setSubmitting(false);
+          return;
+        }
+        // Force password change if required
+        if (profile && (profile as any).must_change_password) {
+          setSubmitting(false);
+          navigate("/portal/change-password", { replace: true });
           return;
         }
       }
