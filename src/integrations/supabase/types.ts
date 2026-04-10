@@ -251,6 +251,7 @@ export type Database = {
           created_at: string
           ects: number
           id: string
+          is_shared: boolean
           name: string
           professor_id: string | null
           program: string
@@ -264,6 +265,7 @@ export type Database = {
           created_at?: string
           ects?: number
           id?: string
+          is_shared?: boolean
           name: string
           professor_id?: string | null
           program: string
@@ -277,6 +279,7 @@ export type Database = {
           created_at?: string
           ects?: number
           id?: string
+          is_shared?: boolean
           name?: string
           professor_id?: string | null
           program?: string
@@ -510,6 +513,8 @@ export type Database = {
           avatar_url: string | null
           birthplace: string | null
           created_at: string
+          current_semester: number
+          current_year: number
           email: string
           full_name: string
           gender: string | null
@@ -529,6 +534,8 @@ export type Database = {
           avatar_url?: string | null
           birthplace?: string | null
           created_at?: string
+          current_semester?: number
+          current_year?: number
           email?: string
           full_name?: string
           gender?: string | null
@@ -548,6 +555,8 @@ export type Database = {
           avatar_url?: string | null
           birthplace?: string | null
           created_at?: string
+          current_semester?: number
+          current_year?: number
           email?: string
           full_name?: string
           gender?: string | null
