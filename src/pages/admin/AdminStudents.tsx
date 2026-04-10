@@ -64,9 +64,9 @@ const AdminStudents = () => {
 
   const filteredProfiles = statusFilter === "all"
     ? studentProfiles
-    : studentProfiles.filter(p => (p as any).account_status === statusFilter);
+    : studentProfiles.filter(p => p.account_status === statusFilter);
 
-  const pendingCount = studentProfiles.filter(p => (p as any).account_status === "pending").length;
+  const pendingCount = studentProfiles.filter(p => p.account_status === "pending").length;
 
   const approveAccount = useMutation({
     mutationFn: async (userId: string) => {
