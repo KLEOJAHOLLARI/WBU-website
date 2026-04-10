@@ -70,7 +70,7 @@ const AdminStudents = () => {
 
   const approveAccount = useMutation({
     mutationFn: async (userId: string) => {
-      const { error } = await supabase.from("profiles").update({ account_status: "approved" } as any).eq("user_id", userId);
+      const { error } = await supabase.from("profiles").update({ account_status: "approved" }).eq("user_id", userId);
       if (error) throw error;
     },
     onSuccess: () => {
@@ -82,7 +82,7 @@ const AdminStudents = () => {
 
   const rejectAccount = useMutation({
     mutationFn: async (userId: string) => {
-      const { error } = await supabase.from("profiles").update({ account_status: "rejected" } as any).eq("user_id", userId);
+      const { error } = await supabase.from("profiles").update({ account_status: "rejected" }).eq("user_id", userId);
       if (error) throw error;
     },
     onSuccess: () => {
@@ -171,7 +171,7 @@ const AdminStudents = () => {
                 >
                   <div className="flex items-center justify-between">
                     <p className="font-medium text-foreground">{p.full_name || "Unnamed"}</p>
-                    {getStatusBadge((p as any).account_status || "pending")}
+                    {getStatusBadge(p.account_status || "pending")}
                   </div>
                   <p className="text-xs text-muted-foreground">{p.email}</p>
                 </button>
@@ -188,8 +188,8 @@ const AdminStudents = () => {
             </div>
           ) : (() => {
             const selectedProfile = profiles.find(p => p.user_id === selectedUserId);
-            const status = (selectedProfile as any)?.account_status || "pending";
-            const pendingEmailVal = (selectedProfile as any)?.pending_email;
+            const status = selectedProfile?.account_status || "pending";
+            const pendingEmailVal = selectedProfile?.pending_email;
             return (
               <div className="space-y-6">
                 {/* Pending email change */}
@@ -202,7 +202,7 @@ const AdminStudents = () => {
                     <div className="flex gap-2">
                       <button
                         onClick={async () => {
-                          const { error } = await supabase.from("profiles").update({ email: pendingEmailVal, pending_email: null } as any).eq("user_id", selectedUserId);
+                          const { error } = await supabase.from("profiles").update({ email: pendingEmailVal, pending_email: null }).eq("user_id", selectedUserId);
                           if (error) { toast({ title: "Error", variant: "destructive" }); return; }
                           queryClient.invalidateQueries({ queryKey: ["admin-students"] });
                           toast({ title: "Email updated!" });
@@ -213,7 +213,7 @@ const AdminStudents = () => {
                       </button>
                       <button
                         onClick={async () => {
-                          const { error } = await supabase.from("profiles").update({ pending_email: null } as any).eq("user_id", selectedUserId);
+                          const { error } = await supabase.from("profiles").update({ pending_email: null }).eq("user_id", selectedUserId);
                           if (error) { toast({ title: "Error", variant: "destructive" }); return; }
                           queryClient.invalidateQueries({ queryKey: ["admin-students"] });
                           toast({ title: "Email change rejected" });
@@ -250,10 +250,10 @@ const AdminStudents = () => {
                     <BookOpen className="h-4 w-4" /> Assigned Program
                   </h2>
                   <select
-                    value={(selectedProfile as any)?.program || ""}
+                    value={selectedProfile?.program || ""}
                     onChange={async (e) => {
                       const val = e.target.value || null;
-                      const { error } = await supabase.from("profiles").update({ program: val } as any).eq("user_id", selectedUserId);
+                      const { error } = await supabase.from("profiles").update({ program: val }).eq("user_id", selectedUserId);
                       if (error) { toast({ title: "Error", variant: "destructive" }); return; }
                       queryClient.invalidateQueries({ queryKey: ["admin-students"] });
                       toast({ title: val ? "Program assigned!" : "Program removed" });
