@@ -25,7 +25,7 @@ const StudentDashboard = () => {
       const { data } = await supabase
         .from("programs")
         .select("*")
-        .eq("title", profile!.program!)
+        .eq("slug", profile!.program!)
         .maybeSingle();
       return data;
     },
