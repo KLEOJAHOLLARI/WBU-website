@@ -306,11 +306,11 @@ const StudentDashboard = () => {
             {[
               { label: "Full Name", value: profile?.full_name || "—", icon: User },
               { label: "Email", value: profile?.email || "—", icon: Mail },
-              { label: "Student ID", value: (profile as any)?.student_id || "—", icon: Hash, highlight: true },
-              { label: "Exam Code", value: (profile as any)?.student_exam_code || "—", icon: CreditCard, highlight: true },
-              { label: "Gender", value: (profile as any)?.gender || "—", icon: Users },
-              { label: "Birthplace", value: (profile as any)?.birthplace || "—", icon: MapPin },
-              { label: "Personal ID", value: (profile as any)?.personal_id || "—", icon: CreditCard, highlight: true },
+              { label: "Student ID (WBU ID)", value: profile?.student_id || "Not yet assigned", icon: Hash, highlight: true },
+              { label: "Exam Code", value: profile?.student_exam_code || "Not yet assigned", icon: CreditCard, highlight: true },
+              { label: "Gender", value: profile?.gender || "—", icon: Users },
+              { label: "Birthplace", value: profile?.birthplace || "—", icon: MapPin },
+              { label: "Personal ID", value: profile?.personal_id || "—", icon: CreditCard, highlight: true },
               { label: "Phone", value: profile?.phone || "—", icon: User },
             ].map((item) => (
               <div key={item.label} className="flex items-start gap-3">
