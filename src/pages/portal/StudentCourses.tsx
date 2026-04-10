@@ -115,6 +115,7 @@ const StudentCourses = () => {
     return {
       id: professor.user_id,
       name: professor.full_name.trim(),
+      avatar_url: professor.avatar_url ?? null,
     };
   };
 
@@ -133,10 +134,15 @@ const StudentCourses = () => {
       return <p className="mt-1 text-xs italic text-muted-foreground">Professor profile unavailable</p>;
     }
 
+    const initials = professor.name.split(" ").map((n) => n[0]).join("").toUpperCase().slice(0, 2);
+
     return (
       <div className="mt-2 flex items-center justify-between gap-2">
         <div className="flex min-w-0 items-center gap-1.5 text-xs text-muted-foreground">
-          <User className="h-3 w-3 flex-shrink-0 text-primary" />
+          <Avatar className="h-5 w-5">
+            {professor.avatar_url && <AvatarImage src={professor.avatar_url} alt={professor.name} />}
+            <AvatarFallback className="text-[8px] bg-primary/10 text-primary">{initials}</AvatarFallback>
+          </Avatar>
           <span className="truncate text-foreground">{professor.name}</span>
         </div>
         <Link
