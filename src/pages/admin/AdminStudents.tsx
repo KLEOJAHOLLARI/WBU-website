@@ -14,6 +14,7 @@ const AdminStudents = () => {
   const [sending, setSending] = useState(false);
   const [statusFilter, setStatusFilter] = useState<string>("all");
   const [searchQuery, setSearchQuery] = useState("");
+  const [editPersonal, setEditPersonal] = useState<Record<string, string>>({});
 
   const { data: profiles = [], isLoading } = useQuery({
     queryKey: ["admin-students"],
