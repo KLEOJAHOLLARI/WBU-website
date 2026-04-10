@@ -5,11 +5,10 @@ import { useQuery } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
 import { useTranslation } from "react-i18next";
 
-const fadeUp = {
-  initial: { opacity: 0, y: 30 },
+const stagger = {
+  initial: { opacity: 0, y: 20 },
   whileInView: { opacity: 1, y: 0 },
   viewport: { once: true },
-  transition: { duration: 0.5 },
 };
 
 const Faculty = () => {
@@ -42,35 +41,36 @@ const Faculty = () => {
             <p className="text-center text-muted-foreground">{t("faculty.empty")}</p>
           ) : (
             departments.map((dept) => (
-              <div key={dept} className="mb-12 last:mb-0">
-                <h2 className="mb-6 font-display text-2xl font-semibold text-foreground">{dept}</h2>
+              <div key={dept} className="mb-14 last:mb-0">
+                <h2 className="mb-2 font-display text-2xl font-semibold text-foreground">{dept}</h2>
+                <div className="mb-7 h-1 w-12 rounded-full bg-accent" />
                 <div className="grid gap-6 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4">
                   {professors
                     .filter((p) => p.department === dept)
                     .map((p, i) => (
                       <motion.div
                         key={p.id}
-                        {...fadeUp}
-                        transition={{ ...fadeUp.transition, delay: i * 0.08 }}
-                        className="overflow-hidden rounded-xl border border-border bg-card shadow-sm"
+                        {...stagger}
+                        transition={{ duration: 0.5, delay: i * 0.08 }}
+                        className="glass-card overflow-hidden"
                       >
                         <div className="aspect-[3/4] overflow-hidden bg-secondary">
                           {p.photo_url ? (
                             <img
                               src={p.photo_url}
                               alt={p.name}
-                              className="h-full w-full object-cover"
+                              className="h-full w-full object-cover transition-transform duration-500 hover:scale-105"
                               loading="lazy"
                             />
                           ) : (
-                            <div className="flex h-full items-center justify-center text-4xl font-bold text-muted-foreground/30">
+                            <div className="flex h-full items-center justify-center text-5xl font-bold text-muted-foreground/20">
                               {p.name.charAt(0)}
                             </div>
                           )}
                         </div>
-                        <div className="p-4">
+                        <div className="p-5">
                           <h3 className="font-display text-base font-semibold text-foreground">{p.name}</h3>
-                          <p className="text-sm font-medium text-accent">{p.title}</p>
+                          <p className="mt-0.5 text-sm font-medium text-accent">{p.title}</p>
                           {p.bio && (
                             <p className="mt-2 text-sm leading-relaxed text-muted-foreground line-clamp-3">{p.bio}</p>
                           )}

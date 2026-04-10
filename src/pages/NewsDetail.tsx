@@ -39,26 +39,26 @@ const NewsDetail = () => {
     <Layout>
       <article className="section-padding">
         <div className="container max-w-3xl">
-          <Link to="/news" className="mb-6 inline-flex items-center gap-2 text-sm text-muted-foreground hover:text-foreground">
+          <Link to="/news" className="mb-8 inline-flex items-center gap-2 text-sm text-muted-foreground transition-colors hover:text-foreground">
             <ArrowLeft className="h-4 w-4" /> {t("news.backToNews")}
           </Link>
 
-          <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: 0.5 }}>
-            <div className="mb-4 flex items-center gap-3 text-sm text-muted-foreground">
+          <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: 0.6 }}>
+            <div className="mb-5 flex items-center gap-3 text-sm text-muted-foreground">
               <Calendar className="h-4 w-4" />
               {new Date(article.published_at).toLocaleDateString("en-US", { year: "numeric", month: "long", day: "numeric" })}
-              <span className="rounded-full bg-accent/15 px-3 py-0.5 text-xs font-semibold text-accent-foreground">{article.category}</span>
+              <span className="rounded-full bg-accent/10 px-3 py-0.5 text-xs font-semibold text-accent">{article.category}</span>
             </div>
             <h1 className="heading-xl text-foreground">{article.title}</h1>
           </motion.div>
 
-          <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: 0.5, delay: 0.15 }}>
+          <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: 0.6, delay: 0.15 }}>
             {article.image_url && (
-              <div className="mt-8 overflow-hidden rounded-xl">
+              <div className="mt-8 overflow-hidden rounded-2xl shadow-lg">
                 <img src={article.image_url} alt={article.title} className="w-full object-cover" />
               </div>
             )}
-            <div className="mt-8 space-y-4 text-lg leading-relaxed text-muted-foreground">
+            <div className="mt-10 space-y-5 text-lg leading-relaxed text-muted-foreground">
               <p className="font-medium text-foreground">{article.excerpt}</p>
               <p>{article.content}</p>
             </div>
