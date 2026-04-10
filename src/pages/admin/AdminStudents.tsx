@@ -3,7 +3,7 @@ import AdminLayout from "@/components/AdminLayout";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
 import { useToast } from "@/hooks/use-toast";
-import { Send, FileText, CheckCircle, XCircle, UserCheck, UserX, Clock, Mail, BookOpen, Save, Hash, CreditCard } from "lucide-react";
+import { Send, FileText, CheckCircle, XCircle, UserCheck, UserX, Clock, Mail, BookOpen, Save, Hash, CreditCard, Search } from "lucide-react";
 
 const AdminStudents = () => {
   const { toast } = useToast();
@@ -13,6 +13,7 @@ const AdminStudents = () => {
   const [msgBody, setMsgBody] = useState("");
   const [sending, setSending] = useState(false);
   const [statusFilter, setStatusFilter] = useState<string>("all");
+  const [searchQuery, setSearchQuery] = useState("");
 
   const { data: profiles = [], isLoading } = useQuery({
     queryKey: ["admin-students"],
@@ -62,9 +63,18 @@ const AdminStudents = () => {
     return roles.includes("user") || roles.length === 0;
   });
 
-  const filteredProfiles = statusFilter === "all"
-    ? studentProfiles
-    : studentProfiles.filter(p => p.account_status === statusFilter);
+  const filteredProfiles = studentProfiles.filter(p => {
+    const matchesStatus = statusFilter === "all" || p.account_status === statusFilter;
+    const q = searchQuery.toLowerCase().trim();
+    const matchesSearch = !q || 
+      (p.full_name || "").toLowerCase().includes(q) ||
+      (p.email || "").toLowerCase().includes(q) ||
+      (p.student_id || "").toLowerCase().includes(q) ||
+      (p.student_exam_code || "").toLowerCase().includes(q) ||
+      (p.personal_id || "").toLowerCase().includes(q) ||
+      (p.phone || "").toLowerCase().includes(q);
+    return matchesStatus && matchesSearch;
+  });
 
   const pendingCount = studentProfiles.filter(p => p.account_status === "pending").length;
 
@@ -143,7 +153,18 @@ const AdminStudents = () => {
         </div>
       )}
 
-      <div className="mt-4 flex gap-2">
+      <div className="mt-4 relative">
+        <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
+        <input
+          type="text"
+          placeholder="Search by name, email, student ID, exam code, personal ID..."
+          value={searchQuery}
+          onChange={(e) => setSearchQuery(e.target.value)}
+          className="w-full rounded-md border border-input bg-background pl-9 pr-3 py-2 text-sm text-foreground placeholder:text-muted-foreground focus:outline-none focus:ring-2 focus:ring-ring"
+        />
+      </div>
+
+      <div className="mt-3 flex gap-2">
         <button onClick={() => setStatusFilter("all")} className={tabCls("all")}>All ({studentProfiles.length})</button>
         <button onClick={() => setStatusFilter("pending")} className={tabCls("pending")}>Pending ({pendingCount})</button>
         <button onClick={() => setStatusFilter("approved")} className={tabCls("approved")}>Approved</button>
@@ -157,7 +178,7 @@ const AdminStudents = () => {
             {isLoading ? (
               <p className="text-muted-foreground">Loading...</p>
             ) : filteredProfiles.length === 0 ? (
-              <p className="text-muted-foreground text-sm">No students found.</p>
+              <p className="text-muted-foreground text-sm">{searchQuery ? "No students match your search." : "No students found."}</p>
             ) : (
               filteredProfiles.map((p) => (
                 <button
