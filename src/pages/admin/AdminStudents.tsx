@@ -55,6 +55,18 @@ const AdminStudents = () => {
     enabled: !!selectedUserId,
   });
 
+  const { data: applications = [] } = useQuery({
+    queryKey: ["admin-student-applications"],
+    queryFn: async () => {
+      const { data, error } = await supabase
+        .from("applications")
+        .select("user_id, email, full_name, gender, birthplace, personal_id, program, status, created_at")
+        .order("created_at", { ascending: false });
+      if (error) throw error;
+      return data;
+    },
+  });
+
   const getRoles = (userId: string) => allRoles.filter(r => r.user_id === userId).map(r => r.role);
 
   // Filter to only show students (role = 'user' or no role)
@@ -209,6 +221,17 @@ const AdminStudents = () => {
             </div>
           ) : (() => {
             const selectedProfile = profiles.find(p => p.user_id === selectedUserId);
+            const selectedApplication = applications.find((app) => app.user_id === selectedUserId) || null;
+            const personalInfo = {
+              student_id: selectedProfile?.student_id,
+              student_exam_code: selectedProfile?.student_exam_code,
+              personal_id: selectedProfile?.personal_id || selectedApplication?.personal_id,
+              gender: selectedProfile?.gender || selectedApplication?.gender,
+              birthplace: selectedProfile?.birthplace || selectedApplication?.birthplace,
+              phone: selectedProfile?.phone,
+              email: selectedProfile?.email || selectedApplication?.email,
+              program: selectedProfile?.program || selectedApplication?.program,
+            };
             const status = selectedProfile?.account_status || "pending";
             const pendingEmailVal = selectedProfile?.pending_email;
             return (
@@ -345,7 +368,7 @@ const AdminStudents = () => {
                       { key: "email", label: "Email" },
                       { key: "program", label: "Program" },
                     ].map((field) => {
-                      const value = (selectedProfile as any)?.[field.key];
+                      const value = (personalInfo as Record<string, string | null | undefined>)[field.key];
                       return (
                         <div key={field.key}>
                           <p className="text-xs text-muted-foreground">{field.label}</p>
