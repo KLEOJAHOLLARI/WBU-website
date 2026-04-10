@@ -3,19 +3,37 @@ import { Navigate, Link, useLocation } from "react-router-dom";
 import { useAuth } from "@/hooks/useAuth";
 import { useQuery } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
-import { GraduationCap, LayoutDashboard, FileText, Upload, Mail, LogOut, CalendarDays, BookOpen, UserCircle, Menu, ScrollText } from "lucide-react";
+import {
+  GraduationCap, LayoutDashboard, FileText, Upload, Mail, LogOut,
+  CalendarDays, BookOpen, UserCircle, Menu, ScrollText, ArrowLeft,
+} from "lucide-react";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Sheet, SheetContent, SheetTrigger } from "@/components/ui/sheet";
 
-const navItems = [
-  { to: "/portal", label: "Dashboard", icon: LayoutDashboard },
-  { to: "/portal/courses", label: "My Courses", icon: BookOpen },
-  { to: "/portal/applications", label: "My Applications", icon: FileText },
-  { to: "/portal/documents", label: "Documents", icon: Upload },
-  { to: "/portal/timetable", label: "Timetable", icon: CalendarDays },
-  { to: "/portal/transcript", label: "Transcript", icon: ScrollText },
-  { to: "/portal/messages", label: "Messages", icon: Mail },
-  { to: "/portal/profile", label: "My Profile", icon: UserCircle },
+const navGroups = [
+  {
+    label: "Main",
+    items: [
+      { to: "/portal", label: "Dashboard", icon: LayoutDashboard },
+      { to: "/portal/courses", label: "My Courses", icon: BookOpen },
+      { to: "/portal/applications", label: "Applications", icon: FileText },
+    ],
+  },
+  {
+    label: "Academic",
+    items: [
+      { to: "/portal/transcript", label: "Transcript", icon: ScrollText },
+      { to: "/portal/timetable", label: "Timetable", icon: CalendarDays },
+      { to: "/portal/documents", label: "Documents", icon: Upload },
+    ],
+  },
+  {
+    label: "Other",
+    items: [
+      { to: "/portal/messages", label: "Messages", icon: Mail, badge: true },
+      { to: "/portal/profile", label: "My Profile", icon: UserCircle },
+    ],
+  },
 ];
 
 const StudentLayout = ({ children }: { children: ReactNode }) => {
@@ -46,39 +64,66 @@ const StudentLayout = ({ children }: { children: ReactNode }) => {
 
   const sidebarContent = (
     <>
-      <div className="flex h-16 items-center gap-2 border-b border-border px-4">
-        <GraduationCap className="h-6 w-6 text-primary" />
-        <span className="font-display text-lg font-bold text-primary">Student Portal</span>
+      {/* Header */}
+      <div className="flex h-16 shrink-0 items-center gap-2.5 border-b border-border px-5">
+        <div className="flex h-8 w-8 items-center justify-center rounded-lg bg-primary">
+          <GraduationCap className="h-4 w-4 text-primary-foreground" />
+        </div>
+        <span className="font-display text-base font-semibold text-foreground">Student Portal</span>
       </div>
-      <nav className="flex-1 space-y-1 overflow-auto p-3">
-        {navItems.map((item) => (
-          <Link
-            key={item.to}
-            to={item.to}
-            onClick={() => setMobileOpen(false)}
-            className={`flex items-center gap-3 rounded-md px-3 py-2.5 text-sm font-medium transition-colors ${
-              location.pathname === item.to
-                ? "bg-secondary text-secondary-foreground"
-                : "text-muted-foreground hover:bg-secondary hover:text-secondary-foreground"
-            }`}
-          >
-            <item.icon className="h-4 w-4" />
-            {item.label}
-            {item.to === "/portal/messages" && unreadCount > 0 && (
-              <span className="ml-auto inline-flex h-5 min-w-5 items-center justify-center rounded-full bg-primary px-1.5 text-[11px] font-bold text-primary-foreground">
-                {unreadCount}
-              </span>
-            )}
-          </Link>
+
+      {/* Nav groups */}
+      <nav className="flex-1 overflow-auto px-3 py-4">
+        {navGroups.map((group, gi) => (
+          <div key={group.label} className={gi > 0 ? "mt-6" : ""}>
+            <p className="mb-1.5 px-3 text-[11px] font-semibold uppercase tracking-wider text-muted-foreground/70">
+              {group.label}
+            </p>
+            <div className="space-y-0.5">
+              {group.items.map((item) => {
+                const active = location.pathname === item.to;
+                return (
+                  <Link
+                    key={item.to}
+                    to={item.to}
+                    onClick={() => setMobileOpen(false)}
+                    className={`group flex items-center gap-3 rounded-lg px-3 py-2 text-[13px] font-medium transition-all ${
+                      active
+                        ? "bg-primary/10 text-primary"
+                        : "text-muted-foreground hover:bg-muted hover:text-foreground"
+                    }`}
+                  >
+                    <item.icon className={`h-4 w-4 shrink-0 ${active ? "text-primary" : "text-muted-foreground/70 group-hover:text-foreground"}`} />
+                    <span className="truncate">{item.label}</span>
+                    {"badge" in item && item.badge && unreadCount > 0 && (
+                      <span className="ml-auto inline-flex h-5 min-w-5 items-center justify-center rounded-full bg-primary px-1.5 text-[10px] font-bold text-primary-foreground">
+                        {unreadCount}
+                      </span>
+                    )}
+                  </Link>
+                );
+              })}
+            </div>
+          </div>
         ))}
       </nav>
-      <div className="border-t border-border p-3">
-        <button onClick={() => { signOut(); setMobileOpen(false); }} className="flex w-full items-center gap-3 rounded-md px-3 py-2.5 text-sm font-medium text-muted-foreground transition-colors hover:bg-secondary hover:text-destructive">
+
+      {/* Footer */}
+      <div className="shrink-0 border-t border-border p-3 space-y-0.5">
+        <button
+          onClick={() => { signOut(); setMobileOpen(false); }}
+          className="flex w-full items-center gap-3 rounded-lg px-3 py-2 text-[13px] font-medium text-muted-foreground transition-all hover:bg-destructive/10 hover:text-destructive"
+        >
           <LogOut className="h-4 w-4" />
           Sign Out
         </button>
-        <Link to="/" onClick={() => setMobileOpen(false)} className="mt-1 flex items-center gap-3 rounded-md px-3 py-2.5 text-sm font-medium text-muted-foreground hover:bg-secondary">
-          ← Back to Site
+        <Link
+          to="/"
+          onClick={() => setMobileOpen(false)}
+          className="flex items-center gap-3 rounded-lg px-3 py-2 text-[13px] font-medium text-muted-foreground hover:bg-muted hover:text-foreground transition-all"
+        >
+          <ArrowLeft className="h-4 w-4" />
+          Back to Site
         </Link>
       </div>
     </>
@@ -95,7 +140,7 @@ const StudentLayout = ({ children }: { children: ReactNode }) => {
         <div className="flex h-14 items-center justify-between border-b border-border bg-card px-4 md:px-6">
           <Sheet open={mobileOpen} onOpenChange={setMobileOpen}>
             <SheetTrigger asChild>
-              <button className="md:hidden rounded-md p-2 text-muted-foreground hover:bg-secondary transition-colors">
+              <button className="md:hidden rounded-lg p-2 text-muted-foreground hover:bg-muted transition-colors">
                 <Menu className="h-5 w-5" />
               </button>
             </SheetTrigger>
