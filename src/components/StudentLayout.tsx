@@ -3,7 +3,7 @@ import { Navigate, Link, useLocation } from "react-router-dom";
 import { useAuth } from "@/hooks/useAuth";
 import { useQuery } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
-import { GraduationCap, LayoutDashboard, FileText, Upload, Mail, LogOut, CalendarDays, BookOpen, UserCircle, Menu } from "lucide-react";
+import { GraduationCap, LayoutDashboard, FileText, Upload, Mail, LogOut, CalendarDays, BookOpen, UserCircle, Menu, ScrollText } from "lucide-react";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Sheet, SheetContent, SheetTrigger } from "@/components/ui/sheet";
 
@@ -13,6 +13,7 @@ const navItems = [
   { to: "/portal/applications", label: "My Applications", icon: FileText },
   { to: "/portal/documents", label: "Documents", icon: Upload },
   { to: "/portal/timetable", label: "Timetable", icon: CalendarDays },
+  { to: "/portal/transcript", label: "Transcript", icon: ScrollText },
   { to: "/portal/messages", label: "Messages", icon: Mail },
   { to: "/portal/profile", label: "My Profile", icon: UserCircle },
 ];

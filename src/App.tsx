@@ -44,6 +44,7 @@ import AdminAdvisors from "./pages/admin/AdminAdvisors";
 import AdminProfile from "./pages/admin/AdminProfile";
 import StudentProfile from "./pages/portal/StudentProfile";
 import ProfessorProfile from "./pages/professor/ProfessorProfile";
+import StudentTranscript from "./pages/portal/StudentTranscript";
 import ProfessorAdvisor from "./pages/professor/ProfessorAdvisor";
 import DevToolbar from "./components/DevToolbar";
 import FacultyProfile from "./pages/FacultyProfile";
@@ -94,6 +95,7 @@ const App = () => (
             <Route path="/portal/courses" element={<StudentCourses />} />
             <Route path="/portal/courses/:id" element={<StudentCourseDetail />} />
             <Route path="/portal/profile" element={<StudentProfile />} />
+            <Route path="/portal/transcript" element={<StudentTranscript />} />
             <Route path="/professor" element={<ProfessorDashboard />} />
             <Route path="/professor/courses" element={<ProfessorCourses />} />
             <Route path="/professor/courses/:id" element={<ProfessorCourseDetail />} />
