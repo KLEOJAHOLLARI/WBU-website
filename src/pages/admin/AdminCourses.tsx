@@ -331,7 +331,22 @@ const AdminCourses = () => {
             </div>
             {editing?.is_shared && (
               <div>
-                <label className="mb-1.5 block text-sm font-medium text-foreground">Share with programs:</label>
+                <div className="mb-1.5 flex items-center justify-between">
+                  <label className="text-sm font-medium text-foreground">Share with programs:</label>
+                  {(() => {
+                    const otherSlugs = programs.filter(p => p.slug !== editing?.program).map(p => p.slug);
+                    const allSelected = otherSlugs.length > 0 && otherSlugs.every(s => (editing?.shared_programs || []).includes(s));
+                    return otherSlugs.length > 0 ? (
+                      <button
+                        type="button"
+                        onClick={() => setEditing({ ...editing, shared_programs: allSelected ? [] : otherSlugs })}
+                        className="text-xs font-medium text-primary hover:text-primary/80 transition-colors"
+                      >
+                        {allSelected ? "Deselect All" : "Select All"}
+                      </button>
+                    ) : null;
+                  })()}
+                </div>
                 <div className="grid gap-1.5 sm:grid-cols-2 lg:grid-cols-3 max-h-48 overflow-y-auto rounded-md border border-input bg-background p-3">
                   {programs.filter(p => p.slug !== editing?.program).map(p => {
                     const checked = (editing?.shared_programs || []).includes(p.slug);
