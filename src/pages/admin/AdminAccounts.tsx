@@ -4,6 +4,16 @@ import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
 import { useToast } from "@/hooks/use-toast";
 import { Plus, Pencil, Trash2, X, UserPlus, Shield, BookOpen, GraduationCap } from "lucide-react";
+import {
+  AlertDialog,
+  AlertDialogAction,
+  AlertDialogCancel,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle,
+} from "@/components/ui/alert-dialog";
 
 type TabType = "professors" | "students" | "create";
 
@@ -13,8 +23,8 @@ const AdminAccounts = () => {
   const [tab, setTab] = useState<TabType>("professors");
   const [creating, setCreating] = useState(false);
   const [form, setForm] = useState({ email: "", password: "", full_name: "", phone: "", role: "professor" as string });
+  const [deleteTarget, setDeleteTarget] = useState<{ user_id: string; name: string } | null>(null);
 
-  // Fetch all profiles with roles
   const { data: allRoles = [] } = useQuery({
     queryKey: ["admin-all-roles"],
     queryFn: async () => {
@@ -41,12 +51,31 @@ const AdminAccounts = () => {
     return roles.includes("user") || roles.length === 0;
   });
 
+  const deleteMutation = useMutation({
+    mutationFn: async (userId: string) => {
+      const res = await supabase.functions.invoke("admin-delete-user", {
+        body: { user_id: userId },
+      });
+      if (res.error) throw new Error(res.error.message || "Failed to delete user");
+      if (res.data?.error) throw new Error(res.data.error);
+    },
+    onSuccess: () => {
+      qc.invalidateQueries({ queryKey: ["admin-all-profiles"] });
+      qc.invalidateQueries({ queryKey: ["admin-all-roles"] });
+      toast({ title: "User deleted successfully" });
+      setDeleteTarget(null);
+    },
+    onError: (err: any) => {
+      toast({ title: "Error deleting user", description: err.message, variant: "destructive" });
+      setDeleteTarget(null);
+    },
+  });
+
   const createUser = async (e: React.FormEvent) => {
     e.preventDefault();
     if (!form.email || !form.password || !form.full_name) return;
     setCreating(true);
     try {
-      const { data: { session } } = await supabase.auth.getSession();
       const res = await supabase.functions.invoke("admin-create-user", {
         body: { email: form.email, password: form.password, full_name: form.full_name, phone: form.phone, role: form.role },
       });
@@ -75,11 +104,12 @@ const AdminAccounts = () => {
             <th className="px-4 py-3 text-left font-medium text-foreground">Phone</th>
             <th className="px-4 py-3 text-left font-medium text-foreground">Roles</th>
             <th className="px-4 py-3 text-left font-medium text-foreground">Joined</th>
+            <th className="px-4 py-3 text-right font-medium text-foreground">Actions</th>
           </tr>
         </thead>
         <tbody>
           {list.length === 0 ? (
-            <tr><td colSpan={5} className="px-4 py-8 text-center text-muted-foreground">No {roleLabel}s yet.</td></tr>
+            <tr><td colSpan={6} className="px-4 py-8 text-center text-muted-foreground">No {roleLabel}s yet.</td></tr>
           ) : list.map((p) => (
             <tr key={p.id} className="border-b border-border last:border-0">
               <td className="px-4 py-3 font-medium text-foreground">{p.full_name || "—"}</td>
@@ -93,6 +123,15 @@ const AdminAccounts = () => {
                 </div>
               </td>
               <td className="px-4 py-3 text-muted-foreground">{new Date(p.created_at).toLocaleDateString()}</td>
+              <td className="px-4 py-3 text-right">
+                <button
+                  onClick={() => setDeleteTarget({ user_id: p.user_id, name: p.full_name || p.email })}
+                  className="text-muted-foreground hover:text-destructive transition-colors"
+                  title="Delete user"
+                >
+                  <Trash2 className="h-4 w-4" />
+                </button>
+              </td>
             </tr>
           ))}
         </tbody>
@@ -169,6 +208,27 @@ const AdminAccounts = () => {
           </form>
         </div>
       )}
+
+      <AlertDialog open={!!deleteTarget} onOpenChange={(open) => !open && setDeleteTarget(null)}>
+        <AlertDialogContent>
+          <AlertDialogHeader>
+            <AlertDialogTitle>Delete User Account</AlertDialogTitle>
+            <AlertDialogDescription>
+              Are you sure you want to permanently delete <strong>{deleteTarget?.name}</strong>? This will remove their account, profile, enrollments, and all related data. This action cannot be undone.
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+          <AlertDialogFooter>
+            <AlertDialogCancel disabled={deleteMutation.isPending}>Cancel</AlertDialogCancel>
+            <AlertDialogAction
+              onClick={() => deleteTarget && deleteMutation.mutate(deleteTarget.user_id)}
+              disabled={deleteMutation.isPending}
+              className="bg-destructive text-destructive-foreground hover:bg-destructive/90"
+            >
+              {deleteMutation.isPending ? "Deleting..." : "Delete"}
+            </AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
     </AdminLayout>
   );
 };
