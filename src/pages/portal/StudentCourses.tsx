@@ -7,6 +7,7 @@ import { useToast } from "@/hooks/use-toast";
 import { Link, useNavigate } from "react-router-dom";
 import { BookOpen, BarChart3, ClipboardCheck, Lock, Plus, Clock, CheckCircle, XCircle, X, GraduationCap, Building2, ChevronDown, ChevronRight, User } from "lucide-react";
 import { Badge } from "@/components/ui/badge";
+import { Avatar, AvatarImage, AvatarFallback } from "@/components/ui/avatar";
 
 const StudentCourses = () => {
   const { user } = useAuth();
@@ -88,19 +89,20 @@ const StudentCourses = () => {
       if (profilesRes.error) throw profilesRes.error;
       if (professorsRes.error) throw professorsRes.error;
 
-      const profileMap = new Map<string, { id: string; name: string }>();
+      const profileMap = new Map<string, { id: string; name: string; avatar_url: string | null }>();
 
       (professorsRes.data || []).forEach((p) => {
-        if (p.name?.trim()) profileMap.set(p.id, { id: p.id, name: p.name.trim() });
+        if (p.name?.trim()) profileMap.set(p.id, { id: p.id, name: p.name.trim(), avatar_url: p.photo_url ?? null });
       });
 
       (profilesRes.data || []).forEach((p) => {
-        if (p.full_name?.trim()) profileMap.set(p.user_id, { id: p.user_id, name: p.full_name.trim() });
+        if (p.full_name?.trim()) profileMap.set(p.user_id, { id: p.user_id, name: p.full_name.trim(), avatar_url: p.avatar_url ?? null });
       });
 
       return Array.from(profileMap.entries()).map(([userId, info]) => ({
         user_id: userId,
         full_name: info.name,
+        avatar_url: info.avatar_url,
       }));
     },
     enabled: sortedProfessorIds.length > 0,
@@ -113,6 +115,7 @@ const StudentCourses = () => {
     return {
       id: professor.user_id,
       name: professor.full_name.trim(),
+      avatar_url: professor.avatar_url ?? null,
     };
   };
 
@@ -131,10 +134,15 @@ const StudentCourses = () => {
       return <p className="mt-1 text-xs italic text-muted-foreground">Professor profile unavailable</p>;
     }
 
+    const initials = professor.name.split(" ").map((n) => n[0]).join("").toUpperCase().slice(0, 2);
+
     return (
       <div className="mt-2 flex items-center justify-between gap-2">
         <div className="flex min-w-0 items-center gap-1.5 text-xs text-muted-foreground">
-          <User className="h-3 w-3 flex-shrink-0 text-primary" />
+          <Avatar className="h-5 w-5">
+            {professor.avatar_url && <AvatarImage src={professor.avatar_url} alt={professor.name} />}
+            <AvatarFallback className="text-[8px] bg-primary/10 text-primary">{initials}</AvatarFallback>
+          </Avatar>
           <span className="truncate text-foreground">{professor.name}</span>
         </div>
         <Link
