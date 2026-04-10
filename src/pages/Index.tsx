@@ -50,17 +50,24 @@ const Index = () => {
 
   return (
     <Layout>
-      {/* Hero — full-bleed with gradient overlay */}
-      <section className="relative min-h-[100vh] flex items-center overflow-hidden bg-primary">
-        {/* Ambient shapes */}
-        <div className="absolute inset-0 overflow-hidden">
-          <div className="absolute -right-40 -top-40 h-[500px] w-[500px] rounded-full bg-accent/8 blur-3xl animate-float" />
-          <div className="absolute -bottom-32 -left-32 h-[400px] w-[400px] rounded-full bg-accent/5 blur-3xl" />
-          <div className="absolute top-1/2 right-1/4 h-64 w-64 rounded-full bg-primary-foreground/3 blur-2xl" />
-        </div>
+      {/* Hero — full-bleed with background image + dark overlay */}
+      <section className="relative min-h-[100vh] flex items-center overflow-hidden">
+        {/* Background image */}
+        <img
+          src="https://images.unsplash.com/photo-1562774053-701939374585?w=1920&q=80"
+          alt=""
+          aria-hidden="true"
+          className="absolute inset-0 h-full w-full object-cover"
+        />
 
-        {/* Gradient overlay */}
-        <div className="absolute inset-0 bg-gradient-to-br from-primary via-primary/95 to-primary/80" />
+        {/* Dark gradient overlay for readability */}
+        <div className="absolute inset-0 bg-gradient-to-br from-black/75 via-black/60 to-primary/70" />
+
+        {/* Ambient glow shapes */}
+        <div className="absolute inset-0 overflow-hidden pointer-events-none">
+          <div className="absolute -right-40 -top-40 h-[500px] w-[500px] rounded-full bg-accent/10 blur-3xl animate-float" />
+          <div className="absolute -bottom-32 -left-32 h-[400px] w-[400px] rounded-full bg-accent/5 blur-3xl" />
+        </div>
 
         <div className="container relative z-10 py-32 md:py-40">
           <motion.div
