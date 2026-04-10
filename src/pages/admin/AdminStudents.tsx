@@ -63,9 +63,18 @@ const AdminStudents = () => {
     return roles.includes("user") || roles.length === 0;
   });
 
-  const filteredProfiles = statusFilter === "all"
-    ? studentProfiles
-    : studentProfiles.filter(p => p.account_status === statusFilter);
+  const filteredProfiles = studentProfiles.filter(p => {
+    const matchesStatus = statusFilter === "all" || p.account_status === statusFilter;
+    const q = searchQuery.toLowerCase().trim();
+    const matchesSearch = !q || 
+      (p.full_name || "").toLowerCase().includes(q) ||
+      (p.email || "").toLowerCase().includes(q) ||
+      (p.student_id || "").toLowerCase().includes(q) ||
+      (p.student_exam_code || "").toLowerCase().includes(q) ||
+      (p.personal_id || "").toLowerCase().includes(q) ||
+      (p.phone || "").toLowerCase().includes(q);
+    return matchesStatus && matchesSearch;
+  });
 
   const pendingCount = studentProfiles.filter(p => p.account_status === "pending").length;
 
