@@ -47,6 +47,7 @@ import StudentProfile from "./pages/portal/StudentProfile";
 import ProfessorProfile from "./pages/professor/ProfessorProfile";
 import StudentTranscript from "./pages/portal/StudentTranscript";
 import ProfessorAdvisor from "./pages/professor/ProfessorAdvisor";
+import ProfessorTranscripts from "./pages/professor/ProfessorTranscripts";
 import DevToolbar from "./components/DevToolbar";
 import FacultyProfile from "./pages/FacultyProfile";
 
@@ -103,6 +104,7 @@ const App = () => (
             <Route path="/professor/courses/:id" element={<ProfessorCourseDetail />} />
             <Route path="/professor/announcements" element={<ProfessorAnnouncements />} />
             <Route path="/professor/advisor" element={<ProfessorAdvisor />} />
+            <Route path="/professor/transcripts" element={<ProfessorTranscripts />} />
             <Route path="/professor/profile" element={<ProfessorProfile />} />
             <Route path="*" element={<NotFound />} />
           </Routes>
