@@ -688,6 +688,24 @@ const ProfessorCourseDetail = () => {
               </div>
             ) : (
               <>
+                {/* Legend */}
+                <div className="flex flex-wrap items-center gap-4 rounded-lg border border-border bg-card px-4 py-2.5">
+                  <span className="text-xs font-semibold text-muted-foreground uppercase tracking-wider">Legend:</span>
+                  <div className="flex items-center gap-1.5">
+                    <span className="inline-flex h-6 w-6 items-center justify-center rounded-md bg-emerald-500/15 border border-emerald-300">
+                      <CheckCircle2 className="h-3.5 w-3.5 text-emerald-600" />
+                    </span>
+                    <span className="text-xs text-muted-foreground">Present</span>
+                  </div>
+                  <div className="flex items-center gap-1.5">
+                    <span className="inline-flex h-6 w-6 items-center justify-center rounded-md bg-red-500/15 border border-red-300">
+                      <X className="h-3.5 w-3.5 text-red-600" />
+                    </span>
+                    <span className="text-xs text-muted-foreground">Absent</span>
+                  </div>
+                  <div className="ml-auto text-xs text-muted-foreground">Click a cell to toggle</div>
+                </div>
+
                 <div className="overflow-x-auto rounded-xl border border-border shadow-sm">
                   <table className="w-full text-sm">
                     <thead>
@@ -696,17 +714,33 @@ const ProfessorCourseDetail = () => {
                           Student
                         </th>
                         {sessions.map((s) => (
-                          <th key={s.id} className="px-2 py-3 text-center min-w-[60px]">
+                          <th key={s.id} className="px-1 py-2 text-center min-w-[56px]">
                             <div className="flex flex-col items-center gap-0.5">
                               <span className="text-xs font-semibold text-foreground">W{s.week_number}</span>
                               <span className="text-[10px] text-muted-foreground">{new Date(s.session_date + "T00:00:00").toLocaleDateString("en", { month: "short", day: "numeric" })}</span>
-                              <button
-                                onClick={() => { if (confirm("Delete this session?")) deleteSession.mutate(s.id); }}
-                                className="mt-0.5 rounded p-0.5 text-muted-foreground/50 hover:text-destructive transition-colors"
-                                title="Delete session"
-                              >
-                                <Trash2 className="h-3 w-3" />
-                              </button>
+                              <div className="flex items-center gap-0.5 mt-0.5">
+                                <button
+                                  onClick={() => {
+                                    enrollments.forEach((enr) => {
+                                      const rec = attendanceRecords.find((r) => r.session_id === s.id && r.enrollment_id === enr.id);
+                                      if (!rec || rec.status !== "present") {
+                                        toggleAttendance.mutate({ sessionId: s.id, enrollmentId: enr.id, status: "present" });
+                                      }
+                                    });
+                                  }}
+                                  className="rounded p-0.5 text-emerald-500 hover:bg-emerald-500/15 transition-colors"
+                                  title="Mark all present"
+                                >
+                                  <CheckCircle2 className="h-3 w-3" />
+                                </button>
+                                <button
+                                  onClick={() => { if (confirm("Delete this session?")) deleteSession.mutate(s.id); }}
+                                  className="rounded p-0.5 text-muted-foreground/50 hover:text-destructive transition-colors"
+                                  title="Delete session"
+                                >
+                                  <Trash2 className="h-3 w-3" />
+                                </button>
+                              </div>
                             </div>
                           </th>
                         ))}
@@ -729,18 +763,34 @@ const ProfessorCourseDetail = () => {
                             </td>
                             {sessions.map((s) => {
                               const rec = attendanceRecords.find((r) => r.session_id === s.id && r.enrollment_id === enr.id);
-                              const st = rec?.status || "absent";
+                              const isPresent = rec?.status === "present";
                               return (
-                                <td key={s.id} className="px-1 py-2 text-center">
+                                <td key={s.id} className="px-1 py-1.5 text-center">
                                   <button
                                     onClick={() => {
-                                      const next = st === "present" ? "absent" : st === "absent" ? "excused" : "present";
-                                      toggleAttendance.mutate({ sessionId: s.id, enrollmentId: enr.id, status: next });
+                                      toggleAttendance.mutate({
+                                        sessionId: s.id,
+                                        enrollmentId: enr.id,
+                                        status: isPresent ? "absent" : "present",
+                                      });
                                     }}
-                                    className={`inline-flex h-7 w-9 items-center justify-center rounded-md border text-xs font-bold transition-colors ${statusStyles[st]}`}
-                                    title={`Click to toggle (${st})`}
+                                    className={`inline-flex h-9 w-10 items-center justify-center rounded-lg border-2 transition-all duration-200 ease-out
+                                      hover:scale-110 active:scale-95
+                                      ${isPresent
+                                        ? "border-emerald-400 bg-emerald-500/20 text-emerald-600 shadow-sm shadow-emerald-500/10"
+                                        : rec
+                                          ? "border-red-300 bg-red-500/15 text-red-500"
+                                          : "border-border bg-secondary/50 text-muted-foreground/40 hover:border-muted-foreground/30"
+                                      }`}
+                                    title={isPresent ? "Present — click to mark absent" : "Absent — click to mark present"}
                                   >
-                                    {st === "present" ? "P" : st === "excused" ? "E" : "A"}
+                                    {isPresent ? (
+                                      <CheckCircle2 className="h-4.5 w-4.5 animate-scale-in" />
+                                    ) : rec ? (
+                                      <X className="h-4.5 w-4.5" />
+                                    ) : (
+                                      <span className="text-lg leading-none">·</span>
+                                    )}
                                   </button>
                                 </td>
                               );
