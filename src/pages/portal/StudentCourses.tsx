@@ -333,6 +333,10 @@ const StudentCourses = () => {
 
   const yearSemGroups = groupByYearSem(visibleProgramCourses);
 
+  const pendingCount = enrollmentRequests.filter((r) => r.status === "pending").length;
+  const acceptedCount = enrollmentRequests.filter((r) => r.status === "accepted").length;
+  const rejectedCount = enrollmentRequests.filter((r) => r.status === "rejected").length;
+
   return (
     <StudentLayout>
       {/* Header */}
