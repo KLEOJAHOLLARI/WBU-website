@@ -61,7 +61,7 @@ const AdminStudents = () => {
     queryFn: async () => {
       const { data, error } = await supabase
         .from("applications")
-        .select("user_id, email, full_name, gender, birthplace, personal_id, program, status, created_at")
+        .select("user_id, email, full_name, gender, birthplace, personal_id, phone, program, status, created_at")
         .order("created_at", { ascending: false });
       if (error) throw error;
       return data;
