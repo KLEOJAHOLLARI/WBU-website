@@ -216,6 +216,7 @@ const AdminCourses = () => {
         semester: parseInt(form.semester) || 1,
         year: parseInt(form.year) || 1,
         professor_id: form.professor_id || null,
+        is_shared: !!form.is_shared,
       };
       if (form.id) {
         const { error } = await supabase.from("courses").update(payload).eq("id", form.id);
