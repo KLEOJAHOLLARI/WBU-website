@@ -368,6 +368,11 @@ const StudentCourses = () => {
             <GraduationCap className="h-3.5 w-3.5 text-primary" />
             <span className="font-medium text-foreground">{programData.title}</span>
           </div>
+          <ChevronRight className="h-3.5 w-3.5 text-muted-foreground" />
+          <div className="inline-flex items-center gap-1.5 rounded-full border border-border bg-secondary/50 px-3 py-1">
+            <Clock className="h-3.5 w-3.5 text-muted-foreground" />
+            <span className="text-muted-foreground">Year {studentYear} · Semester {studentSemester}</span>
+          </div>
         </div>
       )}
 
