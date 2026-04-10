@@ -2,7 +2,9 @@ import StudentLayout from "@/components/StudentLayout";
 import { useQuery } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/hooks/useAuth";
-import { FileText, Upload, Mail, Clock, Megaphone, BookOpen, GraduationCap } from "lucide-react";
+import { FileText, Upload, Mail, Clock, Megaphone, BookOpen, GraduationCap, Building2, Calendar, User, Award } from "lucide-react";
+import { Badge } from "@/components/ui/badge";
+import { Link } from "react-router-dom";
 
 const StudentDashboard = () => {
   const { user } = useAuth();
@@ -14,6 +16,40 @@ const StudentDashboard = () => {
       return data;
     },
     enabled: !!user,
+  });
+
+  // Fetch program details based on profile.program
+  const { data: programInfo } = useQuery({
+    queryKey: ["student-program-info", profile?.program],
+    queryFn: async () => {
+      const { data } = await supabase
+        .from("programs")
+        .select("*")
+        .eq("title", profile!.program!)
+        .maybeSingle();
+      return data;
+    },
+    enabled: !!profile?.program,
+  });
+
+  // Fetch academic advisor for this program
+  const { data: advisor } = useQuery({
+    queryKey: ["student-advisor", profile?.program],
+    queryFn: async () => {
+      const { data: pa } = await supabase
+        .from("program_advisors")
+        .select("advisor_id")
+        .eq("program", profile!.program!)
+        .maybeSingle();
+      if (!pa) return null;
+      const { data: prof } = await supabase
+        .from("profiles")
+        .select("full_name, user_id")
+        .eq("user_id", pa.advisor_id)
+        .maybeSingle();
+      return prof;
+    },
+    enabled: !!profile?.program,
   });
 
   const { data: appCount = 0 } = useQuery({
@@ -104,6 +140,19 @@ const StudentDashboard = () => {
     { label: "Unread Messages", value: unreadCount, icon: Mail, color: "text-destructive" },
   ];
 
+  const degreeType = programInfo?.degree || "—";
+  const enrollmentDate = profile?.created_at
+    ? new Date(profile.created_at).toLocaleDateString("en-US", { year: "numeric", month: "long", day: "numeric" })
+    : "—";
+
+  const academicItems = [
+    { label: "Study Program", value: profile?.program || "Not assigned", icon: GraduationCap },
+    { label: "Faculty", value: programInfo?.faculty || "—", icon: Building2 },
+    { label: "Program Type", value: degreeType, icon: Award },
+    { label: "Duration", value: programInfo?.duration || "—", icon: Clock },
+    { label: "Enrollment Date", value: enrollmentDate, icon: Calendar },
+  ];
+
   return (
     <StudentLayout>
       <h1 className="font-display text-2xl font-bold text-foreground">
@@ -119,6 +168,61 @@ const StudentDashboard = () => {
             <p className="text-sm text-muted-foreground">{c.label}</p>
           </div>
         ))}
+      </div>
+
+      {/* Academic Information */}
+      <div className="mt-8">
+        <h2 className="mb-4 flex items-center gap-2 font-display text-lg font-semibold text-foreground">
+          <GraduationCap className="h-5 w-5 text-primary" /> Academic Information
+        </h2>
+        <div className="rounded-xl border border-border bg-card p-6">
+          <div className="grid gap-5 sm:grid-cols-2 lg:grid-cols-3">
+            {academicItems.map((item) => (
+              <div key={item.label} className="flex items-start gap-3">
+                <div className="flex h-9 w-9 shrink-0 items-center justify-center rounded-lg bg-primary/10">
+                  <item.icon className="h-4 w-4 text-primary" />
+                </div>
+                <div className="min-w-0">
+                  <p className="text-xs font-medium text-muted-foreground">{item.label}</p>
+                  <p className="mt-0.5 text-sm font-medium text-foreground truncate">{item.value}</p>
+                </div>
+              </div>
+            ))}
+
+            {/* Status */}
+            <div className="flex items-start gap-3">
+              <div className="flex h-9 w-9 shrink-0 items-center justify-center rounded-lg bg-primary/10">
+                <Award className="h-4 w-4 text-primary" />
+              </div>
+              <div>
+                <p className="text-xs font-medium text-muted-foreground">Status</p>
+                <Badge className="mt-1 bg-emerald-500/15 text-emerald-700 border-emerald-500/20 hover:bg-emerald-500/20 dark:text-emerald-400">
+                  Ongoing
+                </Badge>
+              </div>
+            </div>
+
+            {/* Academic Advisor */}
+            <div className="flex items-start gap-3">
+              <div className="flex h-9 w-9 shrink-0 items-center justify-center rounded-lg bg-primary/10">
+                <User className="h-4 w-4 text-primary" />
+              </div>
+              <div>
+                <p className="text-xs font-medium text-muted-foreground">Academic Advisor</p>
+                {advisor ? (
+                  <Link
+                    to={`/faculty`}
+                    className="mt-0.5 inline-block text-sm font-medium text-primary hover:underline"
+                  >
+                    {advisor.full_name}
+                  </Link>
+                ) : (
+                  <p className="mt-0.5 text-sm text-muted-foreground">Not assigned</p>
+                )}
+              </div>
+            </div>
+          </div>
+        </div>
       </div>
 
       {/* Announcements */}
