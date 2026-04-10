@@ -1,6 +1,6 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { Link, useLocation } from "react-router-dom";
-import { Menu, X, GraduationCap } from "lucide-react";
+import { Menu, X, GraduationCap, ArrowRight } from "lucide-react";
 import { motion, AnimatePresence } from "framer-motion";
 import { useTranslation } from "react-i18next";
 import LanguageSwitcher from "./LanguageSwitcher";
@@ -18,65 +18,96 @@ const navKeys = [
 
 const Navbar = () => {
   const [open, setOpen] = useState(false);
+  const [scrolled, setScrolled] = useState(false);
   const location = useLocation();
   const { t } = useTranslation();
+  const isHome = location.pathname === "/";
+
+  useEffect(() => {
+    const onScroll = () => setScrolled(window.scrollY > 20);
+    window.addEventListener("scroll", onScroll, { passive: true });
+    onScroll();
+    return () => window.removeEventListener("scroll", onScroll);
+  }, []);
+
+  const navBg = scrolled || !isHome
+    ? "bg-card/95 backdrop-blur-xl border-b border-border shadow-sm"
+    : "bg-transparent border-b border-transparent";
+
+  const textColor = scrolled || !isHome ? "text-foreground" : "text-primary-foreground";
+  const mutedColor = scrolled || !isHome ? "text-muted-foreground" : "text-primary-foreground/70";
+  const activeColor = scrolled || !isHome ? "bg-secondary text-secondary-foreground" : "bg-primary-foreground/10 text-primary-foreground";
+  const logoColor = scrolled || !isHome ? "text-primary" : "text-primary-foreground";
 
   return (
-    <header className="sticky top-0 z-50 border-b border-border bg-card/95 backdrop-blur supports-[backdrop-filter]:bg-card/80">
-      <div className="container flex h-16 items-center justify-between">
-        <Link to="/" className="flex items-center gap-2">
-          <GraduationCap className="h-8 w-8 text-primary" />
-          <span className="font-display text-xl font-bold text-primary">
+    <header className={`fixed top-0 left-0 right-0 z-50 transition-all duration-300 ${navBg}`}>
+      <div className="container flex h-16 items-center justify-between lg:h-18">
+        <Link to="/" className="flex items-center gap-2.5">
+          <GraduationCap className={`h-8 w-8 ${logoColor} transition-colors`} />
+          <span className={`font-display text-xl font-bold ${logoColor} transition-colors`}>
             WBU<span className="text-accent">.</span>
           </span>
         </Link>
 
         {/* Desktop */}
-        <nav className="hidden items-center gap-1 lg:flex">
+        <nav className="hidden items-center gap-0.5 lg:flex">
           {navKeys.map((l) => (
             <Link
               key={l.to}
               to={l.to}
-              className={`rounded-md px-3 py-2 text-sm font-medium transition-colors hover:bg-secondary hover:text-secondary-foreground ${
-                location.pathname === l.to
-                  ? "bg-secondary text-secondary-foreground"
-                  : "text-muted-foreground"
+              className={`rounded-lg px-3 py-2 text-sm font-medium transition-all duration-200 hover:bg-secondary/80 hover:text-secondary-foreground ${
+                location.pathname === l.to ? activeColor : mutedColor
               }`}
             >
               {t(l.key)}
             </Link>
           ))}
-          <LanguageSwitcher />
-          <Link
-            to="/portal/login"
-            className="ml-2 rounded-md border border-primary px-3 py-2 text-xs font-semibold text-primary transition-colors hover:bg-primary hover:text-primary-foreground"
-          >
-            Student
-          </Link>
-          <Link
-            to="/professor"
-            className="rounded-md border border-accent px-3 py-2 text-xs font-semibold text-accent transition-colors hover:bg-accent hover:text-accent-foreground"
-          >
-            Professor
-          </Link>
-          <Link
-            to="/admin/login"
-            className="rounded-md border border-muted-foreground px-3 py-2 text-xs font-semibold text-muted-foreground transition-colors hover:bg-secondary"
-          >
-            Admin
-          </Link>
-          <Link
-            to="/admissions"
-            className="rounded-md bg-accent px-4 py-2 text-sm font-semibold text-accent-foreground transition-colors hover:opacity-90"
-          >
-            {t("nav.applyNow")}
-          </Link>
+          <div className="ml-2 flex items-center gap-2">
+            <LanguageSwitcher />
+            <Link
+              to="/portal/login"
+              className={`rounded-lg px-3 py-2 text-xs font-semibold transition-all duration-200 border ${
+                scrolled || !isHome
+                  ? "border-primary/20 text-primary hover:bg-primary hover:text-primary-foreground"
+                  : "border-primary-foreground/30 text-primary-foreground hover:bg-primary-foreground/10"
+              }`}
+            >
+              Student
+            </Link>
+            <Link
+              to="/professor"
+              className={`rounded-lg px-3 py-2 text-xs font-semibold transition-all duration-200 border ${
+                scrolled || !isHome
+                  ? "border-accent/30 text-accent hover:bg-accent hover:text-accent-foreground"
+                  : "border-primary-foreground/30 text-primary-foreground hover:bg-primary-foreground/10"
+              }`}
+            >
+              Professor
+            </Link>
+            <Link
+              to="/admin/login"
+              className={`rounded-lg px-3 py-2 text-xs font-semibold transition-all duration-200 border ${
+                scrolled || !isHome
+                  ? "border-muted-foreground/30 text-muted-foreground hover:bg-secondary"
+                  : "border-primary-foreground/30 text-primary-foreground/70 hover:bg-primary-foreground/10"
+              }`}
+            >
+              Admin
+            </Link>
+            <Link
+              to="/admissions"
+              className="ml-1 inline-flex items-center gap-1.5 rounded-full bg-accent px-5 py-2 text-sm font-semibold text-accent-foreground shadow-lg shadow-accent/25 transition-all duration-200 hover:shadow-xl hover:shadow-accent/30 hover:scale-105"
+            >
+              {t("nav.applyNow")}
+              <ArrowRight className="h-3.5 w-3.5" />
+            </Link>
+          </div>
         </nav>
 
         {/* Mobile toggle */}
         <button
           onClick={() => setOpen(!open)}
-          className="inline-flex items-center justify-center rounded-md p-2 text-foreground lg:hidden"
+          className={`inline-flex items-center justify-center rounded-lg p-2 ${textColor} lg:hidden`}
           aria-label="Toggle menu"
         >
           {open ? <X className="h-6 w-6" /> : <Menu className="h-6 w-6" />}
@@ -98,7 +129,7 @@ const Navbar = () => {
                   key={l.to}
                   to={l.to}
                   onClick={() => setOpen(false)}
-                  className={`rounded-md px-3 py-2.5 text-sm font-medium transition-colors hover:bg-secondary ${
+                  className={`rounded-lg px-3 py-2.5 text-sm font-medium transition-colors hover:bg-secondary ${
                     location.pathname === l.to
                       ? "bg-secondary text-secondary-foreground"
                       : "text-muted-foreground"
@@ -110,32 +141,10 @@ const Navbar = () => {
               <div className="mt-2 flex items-center gap-3 px-3">
                 <LanguageSwitcher />
               </div>
-              <Link
-                to="/portal/login"
-                onClick={() => setOpen(false)}
-                className="mt-2 rounded-md border border-primary px-4 py-2.5 text-center text-sm font-semibold text-primary"
-              >
-                Student Portal
-              </Link>
-              <Link
-                to="/professor"
-                onClick={() => setOpen(false)}
-                className="mt-2 rounded-md border border-accent px-4 py-2.5 text-center text-sm font-semibold text-accent"
-              >
-                Professor Portal
-              </Link>
-              <Link
-                to="/admin/login"
-                onClick={() => setOpen(false)}
-                className="mt-2 rounded-md border border-muted-foreground px-4 py-2.5 text-center text-sm font-semibold text-muted-foreground"
-              >
-                Admin Panel
-              </Link>
-              <Link
-                to="/admissions"
-                onClick={() => setOpen(false)}
-                className="mt-2 rounded-md bg-accent px-4 py-2.5 text-center text-sm font-semibold text-accent-foreground"
-              >
+              <Link to="/portal/login" onClick={() => setOpen(false)} className="mt-2 rounded-lg border border-primary/20 px-4 py-2.5 text-center text-sm font-semibold text-primary">Student Portal</Link>
+              <Link to="/professor" onClick={() => setOpen(false)} className="mt-2 rounded-lg border border-accent/30 px-4 py-2.5 text-center text-sm font-semibold text-accent">Professor Portal</Link>
+              <Link to="/admin/login" onClick={() => setOpen(false)} className="mt-2 rounded-lg border border-muted-foreground/30 px-4 py-2.5 text-center text-sm font-semibold text-muted-foreground">Admin Panel</Link>
+              <Link to="/admissions" onClick={() => setOpen(false)} className="mt-3 rounded-full bg-accent px-4 py-2.5 text-center text-sm font-semibold text-accent-foreground shadow-lg shadow-accent/25">
                 {t("nav.applyNow")}
               </Link>
             </nav>

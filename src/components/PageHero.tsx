@@ -6,16 +6,16 @@ interface PageHeroProps {
 }
 
 const PageHero = ({ title, subtitle }: PageHeroProps) => (
-  <section className="relative overflow-hidden bg-primary py-20 text-primary-foreground md:py-28">
-    {/* Decorative shapes */}
-    <div className="absolute -right-20 -top-20 h-64 w-64 rounded-full bg-accent/10" />
-    <div className="absolute -bottom-10 -left-10 h-40 w-40 rounded-full bg-accent/5" />
+  <section className="relative overflow-hidden bg-primary py-24 text-primary-foreground md:py-32">
+    {/* Ambient shapes */}
+    <div className="absolute -right-20 -top-20 h-72 w-72 rounded-full bg-accent/8 blur-3xl" />
+    <div className="absolute -bottom-10 -left-10 h-48 w-48 rounded-full bg-accent/5 blur-3xl" />
 
     <div className="container relative">
       <motion.h1
         initial={{ opacity: 0, y: 20 }}
         animate={{ opacity: 1, y: 0 }}
-        transition={{ duration: 0.5 }}
+        transition={{ duration: 0.6, ease: [0.22, 1, 0.36, 1] }}
         className="heading-xl"
       >
         {title}
@@ -24,8 +24,8 @@ const PageHero = ({ title, subtitle }: PageHeroProps) => (
         <motion.p
           initial={{ opacity: 0, y: 20 }}
           animate={{ opacity: 1, y: 0 }}
-          transition={{ duration: 0.5, delay: 0.15 }}
-          className="mt-4 max-w-2xl text-lg opacity-80"
+          transition={{ duration: 0.6, delay: 0.15, ease: [0.22, 1, 0.36, 1] }}
+          className="mt-5 max-w-2xl text-lg leading-relaxed text-primary-foreground/70"
         >
           {subtitle}
         </motion.p>
