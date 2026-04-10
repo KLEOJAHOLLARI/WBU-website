@@ -401,10 +401,11 @@ const AdminStudents = () => {
                   {Object.keys(editPersonal).length > 0 && (
                     <button
                       onClick={async () => {
-                        const updates: Record<string, string | null> = {};
-                        for (const [k, v] of Object.entries(editPersonal)) {
-                          updates[k] = v || null;
-                        }
+                        const updates: { personal_id?: string | null; gender?: string | null; birthplace?: string | null; phone?: string | null } = {};
+                        if ("personal_id" in editPersonal) updates.personal_id = editPersonal.personal_id || null;
+                        if ("gender" in editPersonal) updates.gender = editPersonal.gender || null;
+                        if ("birthplace" in editPersonal) updates.birthplace = editPersonal.birthplace || null;
+                        if ("phone" in editPersonal) updates.phone = editPersonal.phone || null;
                         const { error } = await supabase.from("profiles").update(updates).eq("user_id", selectedUserId);
                         if (error) { toast({ title: "Error saving", variant: "destructive" }); return; }
                         queryClient.invalidateQueries({ queryKey: ["admin-students"] });
