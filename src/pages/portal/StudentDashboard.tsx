@@ -2,8 +2,9 @@ import StudentLayout from "@/components/StudentLayout";
 import { useQuery } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/hooks/useAuth";
-import { FileText, Upload, Mail, Clock, Megaphone, BookOpen, GraduationCap, Building2, Calendar, User, Award, TrendingUp, Hash, MapPin, Users, CreditCard } from "lucide-react";
+import { FileText, Upload, Mail, Clock, Megaphone, BookOpen, GraduationCap, Building2, Calendar, User, Award, TrendingUp, Hash, MapPin, Users, CreditCard, AlertTriangle, CalendarDays } from "lucide-react";
 import { Badge } from "@/components/ui/badge";
+import { Progress } from "@/components/ui/progress";
 import { Link } from "react-router-dom";
 
 const StudentDashboard = () => {
@@ -164,7 +165,59 @@ const StudentDashboard = () => {
     enabled: !!user,
   });
 
-  // Fetch announcements relevant to student: general, their enrolled courses, or their program
+  // Fetch per-course attendance rates
+  const { data: attendanceAlerts = [] } = useQuery({
+    queryKey: ["student-attendance-alerts", user?.id],
+    queryFn: async () => {
+      const { data: enrollments } = await supabase
+        .from("enrollments")
+        .select("id, course_id")
+        .eq("user_id", user!.id);
+      if (!enrollments?.length) return [];
+
+      const courseIds = [...new Set(enrollments.map((e) => e.course_id))];
+      const enrollmentIds = enrollments.map((e) => e.id);
+
+      const [{ data: courses }, { data: sessions }, { data: records }] = await Promise.all([
+        supabase.from("courses").select("id, name, code").in("id", courseIds),
+        supabase.from("attendance_sessions").select("id, course_id").in("course_id", courseIds),
+        supabase.from("attendance_records").select("enrollment_id, session_id, status").in("enrollment_id", enrollmentIds),
+      ]);
+
+      if (!courses?.length || !sessions?.length) return [];
+
+      const courseMap = Object.fromEntries(courses.map((c) => [c.id, c]));
+      const enrollmentCourseMap = Object.fromEntries(enrollments.map((e) => [e.id, e.course_id]));
+
+      return courseIds.map((courseId) => {
+        const courseSessions = (sessions || []).filter((s) => s.course_id === courseId);
+        if (courseSessions.length === 0) return null;
+
+        const courseEnrollments = enrollments.filter((e) => e.course_id === courseId);
+        const courseEnrollmentIds = courseEnrollments.map((e) => e.id);
+        const sessionIds = courseSessions.map((s) => s.id);
+
+        const presentCount = (records || []).filter(
+          (r) => courseEnrollmentIds.includes(r.enrollment_id) && sessionIds.includes(r.session_id) && r.status === "present"
+        ).length;
+
+        const pct = Math.round((presentCount / courseSessions.length) * 100);
+        const course = courseMap[courseId];
+
+        return {
+          courseId,
+          courseName: course?.name || "Unknown",
+          courseCode: course?.code || "",
+          pct,
+          present: presentCount,
+          total: courseSessions.length,
+        };
+      }).filter((item): item is NonNullable<typeof item> => item !== null && item.pct < 75);
+    },
+    enabled: !!user,
+  });
+
+
   const { data: announcements = [] } = useQuery({
     queryKey: ["student-announcements", user?.id],
     queryFn: async () => {
@@ -240,6 +293,48 @@ const StudentDashboard = () => {
           </p>
         </div>
       </div>
+
+      {/* Attendance Alerts */}
+      {attendanceAlerts.length > 0 && (
+        <div className="mt-6">
+          <div className="rounded-xl border border-destructive/30 bg-destructive/5 p-5">
+            <div className="flex items-center gap-2 mb-3">
+              <AlertTriangle className="h-5 w-5 text-destructive" />
+              <h2 className="font-display text-base font-semibold text-destructive">
+                Low Attendance Warning
+              </h2>
+              <Badge variant="destructive" className="ml-auto text-[10px]">
+                {attendanceAlerts.length} course{attendanceAlerts.length > 1 ? "s" : ""}
+              </Badge>
+            </div>
+            <p className="mb-4 text-xs text-destructive/80">
+              Your attendance has dropped below 75% in the following courses. You may be blocked from exams.
+            </p>
+            <div className="space-y-3">
+              {attendanceAlerts.map((alert) => (
+                <Link
+                  key={alert.courseId}
+                  to={`/portal/courses/${alert.courseId}`}
+                  className="block rounded-lg border border-destructive/20 bg-card p-3 transition-colors hover:border-destructive/40"
+                >
+                  <div className="flex items-center justify-between mb-1.5">
+                    <div className="flex items-center gap-2">
+                      <CalendarDays className="h-4 w-4 text-destructive" />
+                      <span className="text-sm font-semibold text-foreground">{alert.courseName}</span>
+                      <span className="text-xs text-muted-foreground">{alert.courseCode}</span>
+                    </div>
+                    <span className="text-lg font-bold text-destructive">{alert.pct}%</span>
+                  </div>
+                  <Progress value={alert.pct} className="h-2 [&>div]:bg-destructive" />
+                  <p className="mt-1.5 text-xs text-muted-foreground">
+                    {alert.present} of {alert.total} sessions attended · {75 - alert.pct}% below threshold
+                  </p>
+                </Link>
+              ))}
+            </div>
+          </div>
+        </div>
+      )}
 
       {/* Academic Information */}
       <div className="mt-8">
