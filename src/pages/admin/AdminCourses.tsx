@@ -6,7 +6,7 @@ import { useToast } from "@/hooks/use-toast";
 import { Plus, Pencil, Trash2, X, Search, Filter, RotateCcw, CheckSquare, Square, UserCog, ChevronLeft, ChevronRight, ChevronsLeft, ChevronsRight } from "lucide-react";
 import { Badge } from "@/components/ui/badge";
 
-const emptyCourse = { name: "", code: "", program: "", semester: 1, year: 1, professor_id: "" };
+const emptyCourse = { name: "", code: "", program: "", semester: 1, year: 1, professor_id: "", is_shared: false };
 
 const AdminCourses = () => {
   const { toast } = useToast();
@@ -216,6 +216,7 @@ const AdminCourses = () => {
         semester: parseInt(form.semester) || 1,
         year: parseInt(form.year) || 1,
         professor_id: form.professor_id || null,
+        is_shared: !!form.is_shared,
       };
       if (form.id) {
         const { error } = await supabase.from("courses").update(payload).eq("id", form.id);
@@ -291,6 +292,10 @@ const AdminCourses = () => {
               </select>
               <input type="number" min={1} placeholder="Year" value={editing?.year ?? 1} onChange={(e) => setEditing({ ...editing, year: e.target.value })} className={inputCls} />
               <input type="number" min={1} placeholder="Semester" value={editing?.semester ?? 1} onChange={(e) => setEditing({ ...editing, semester: e.target.value })} className={inputCls} />
+              <label className="flex items-center gap-2 cursor-pointer">
+                <input type="checkbox" checked={!!editing?.is_shared} onChange={(e) => setEditing({ ...editing, is_shared: e.target.checked })} className="h-4 w-4 rounded border-input accent-primary" />
+                <span className="text-sm text-foreground">Shared / Common Course</span>
+              </label>
             </div>
             <button type="submit" disabled={saveMutation.isPending} className="rounded-md bg-primary px-6 py-2 text-sm font-semibold text-primary-foreground disabled:opacity-60">
               {saveMutation.isPending ? "Saving..." : "Save Course"}
@@ -441,7 +446,10 @@ const AdminCourses = () => {
                   </button>
                 </td>
                 <td className="px-4 py-3 font-mono text-xs text-muted-foreground">{c.code || "—"}</td>
-                <td className="px-4 py-3 font-medium text-foreground">{c.name}</td>
+                <td className="px-4 py-3 font-medium text-foreground">
+                  {c.name}
+                  {c.is_shared && <Badge className="ml-2 bg-amber-500/15 text-amber-600 border-amber-500/25 hover:bg-amber-500/15 text-[10px]">Shared</Badge>}
+                </td>
                 <td className="px-4 py-3">
                   <Badge variant="outline" className="text-xs font-normal">{getProgramFaculty(c.program) || "—"}</Badge>
                 </td>

@@ -20,7 +20,7 @@ const StudentCourses = () => {
   const { data: profile } = useQuery({
     queryKey: ["student-profile-program", user?.id],
     queryFn: async () => {
-      const { data } = await supabase.from("profiles").select("program").eq("user_id", user!.id).maybeSingle();
+      const { data } = await supabase.from("profiles").select("program, current_year, current_semester").eq("user_id", user!.id).maybeSingle();
       return data;
     },
     enabled: !!user,
@@ -56,15 +56,31 @@ const StudentCourses = () => {
   const { data: programCourses = [] } = useQuery({
     queryKey: ["program-courses", profile?.program],
     queryFn: async () => {
-      const { data, error } = await supabase
+      // Fetch program-specific courses + shared courses
+      const { data: ownCourses, error: e1 } = await supabase
         .from("courses")
         .select("*")
         .eq("program", profile!.program!)
         .order("year")
         .order("semester")
         .order("name");
-      if (error) throw error;
-      return data;
+      if (e1) throw e1;
+
+      const { data: sharedCourses, error: e2 } = await supabase
+        .from("courses")
+        .select("*")
+        .eq("is_shared", true)
+        .neq("program", profile!.program!)
+        .order("year")
+        .order("semester")
+        .order("name");
+      if (e2) throw e2;
+
+      // Merge, deduplicate by id
+      const map = new Map<string, any>();
+      (ownCourses || []).forEach(c => map.set(c.id, c));
+      (sharedCourses || []).forEach(c => map.set(c.id, c));
+      return Array.from(map.values()).sort((a, b) => a.year - b.year || a.semester - b.semester || a.name.localeCompare(b.name));
     },
     enabled: !!profile?.program,
   });
@@ -301,15 +317,25 @@ const StudentCourses = () => {
     );
   };
 
-  const availableCourses = programCourses.filter(
+  // Semester-based visibility: sem 1 → only sem 1; sem 2 → sem 1+2
+  const studentYear = profile?.current_year ?? 1;
+  const studentSemester = profile?.current_semester ?? 1;
+
+  const visibleProgramCourses = programCourses.filter(c => {
+    if (c.year > studentYear) return false;
+    if (c.year === studentYear && c.semester > studentSemester) return false;
+    return true;
+  });
+
+  const availableCourses = visibleProgramCourses.filter(
     (c) => !enrolledCourseIds.includes(c.id)
   );
+
+  const yearSemGroups = groupByYearSem(visibleProgramCourses);
 
   const pendingCount = enrollmentRequests.filter((r) => r.status === "pending").length;
   const acceptedCount = enrollmentRequests.filter((r) => r.status === "accepted").length;
   const rejectedCount = enrollmentRequests.filter((r) => r.status === "rejected").length;
-
-  const yearSemGroups = groupByYearSem(programCourses);
 
   return (
     <StudentLayout>
@@ -341,6 +367,11 @@ const StudentCourses = () => {
           <div className="inline-flex items-center gap-1.5 rounded-full border border-primary/20 bg-primary/5 px-3 py-1">
             <GraduationCap className="h-3.5 w-3.5 text-primary" />
             <span className="font-medium text-foreground">{programData.title}</span>
+          </div>
+          <ChevronRight className="h-3.5 w-3.5 text-muted-foreground" />
+          <div className="inline-flex items-center gap-1.5 rounded-full border border-border bg-secondary/50 px-3 py-1">
+            <Clock className="h-3.5 w-3.5 text-muted-foreground" />
+            <span className="text-muted-foreground">Year {studentYear} · Semester {studentSemester}</span>
           </div>
         </div>
       )}
@@ -388,6 +419,9 @@ const StudentCourses = () => {
                     <div className="flex-1 min-w-0">
                       <h3 className="font-display font-semibold text-foreground text-sm truncate">{course.name}</h3>
                       <p className="text-xs text-muted-foreground">{course.code} · Y{course.year}/S{course.semester}</p>
+                      {course.is_shared && (
+                        <Badge className="mt-1 bg-amber-500/15 text-amber-600 border-amber-500/25 hover:bg-amber-500/15 text-[10px]">Common Course</Badge>
+                      )}
                       {renderProfessorMeta(course.professor_id ?? null)}
                     </div>
                   </div>
@@ -483,6 +517,9 @@ const StudentCourses = () => {
                             <div className="flex-1 min-w-0">
                               <h3 className="font-display font-semibold text-foreground text-sm truncate">{course.name}</h3>
                               <p className="text-xs text-muted-foreground">{course.code}</p>
+                              {course.is_shared && (
+                                <Badge className="mt-1 bg-amber-500/15 text-amber-600 border-amber-500/25 hover:bg-amber-500/15 text-[10px]">Common Course</Badge>
+                              )}
                               {renderProfessorMeta(course.professor_id)}
                             </div>
                           </div>

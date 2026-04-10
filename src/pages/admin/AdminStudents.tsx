@@ -286,6 +286,49 @@ const AdminStudents = () => {
                   </select>
                 </div>
 
+                {/* Academic Year & Semester */}
+                <div className="rounded-xl border border-border bg-card p-4">
+                  <h2 className="mb-2 flex items-center gap-2 font-display text-sm font-semibold text-foreground">
+                    <BookOpen className="h-4 w-4" /> Current Academic Period
+                  </h2>
+                  <div className="grid gap-3 sm:grid-cols-2">
+                    <div>
+                      <label className="mb-1 block text-xs font-medium text-muted-foreground">Current Year</label>
+                      <select
+                        defaultValue={(selectedProfile as any)?.current_year || 1}
+                        key={`year-${selectedUserId}`}
+                        onChange={async (e) => {
+                          const val = parseInt(e.target.value);
+                          const { error } = await supabase.from("profiles").update({ current_year: val } as any).eq("user_id", selectedUserId);
+                          if (error) { toast({ title: "Error", variant: "destructive" }); return; }
+                          queryClient.invalidateQueries({ queryKey: ["admin-students"] });
+                          toast({ title: "Current year updated" });
+                        }}
+                        className="w-full rounded-md border border-input bg-background px-3 py-2 text-sm text-foreground focus:outline-none focus:ring-2 focus:ring-ring"
+                      >
+                        {[1,2,3,4,5].map(y => <option key={y} value={y}>Year {y}</option>)}
+                      </select>
+                    </div>
+                    <div>
+                      <label className="mb-1 block text-xs font-medium text-muted-foreground">Current Semester</label>
+                      <select
+                        defaultValue={(selectedProfile as any)?.current_semester || 1}
+                        key={`sem-${selectedUserId}`}
+                        onChange={async (e) => {
+                          const val = parseInt(e.target.value);
+                          const { error } = await supabase.from("profiles").update({ current_semester: val } as any).eq("user_id", selectedUserId);
+                          if (error) { toast({ title: "Error", variant: "destructive" }); return; }
+                          queryClient.invalidateQueries({ queryKey: ["admin-students"] });
+                          toast({ title: "Current semester updated" });
+                        }}
+                        className="w-full rounded-md border border-input bg-background px-3 py-2 text-sm text-foreground focus:outline-none focus:ring-2 focus:ring-ring"
+                      >
+                        {[1,2].map(s => <option key={s} value={s}>Semester {s}</option>)}
+                      </select>
+                    </div>
+                  </div>
+                </div>
+
                 {/* Personal Information */}
                 <div className="rounded-xl border border-border bg-card p-4">
                   <h2 className="mb-3 flex items-center gap-2 font-display text-sm font-semibold text-foreground">
