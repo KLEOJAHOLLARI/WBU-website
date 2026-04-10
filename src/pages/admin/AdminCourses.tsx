@@ -6,7 +6,7 @@ import { useToast } from "@/hooks/use-toast";
 import { Plus, Pencil, Trash2, X, Search, Filter, RotateCcw, CheckSquare, Square, UserCog, ChevronLeft, ChevronRight, ChevronsLeft, ChevronsRight } from "lucide-react";
 import { Badge } from "@/components/ui/badge";
 
-const emptyCourse = { name: "", code: "", program: "", semester: 1, year: 1, professor_id: "", is_shared: false };
+const emptyCourse = { name: "", code: "", program: "", semester: 1, year: 1, professor_id: "", is_shared: false, shared_programs: [] as string[] };
 
 const AdminCourses = () => {
   const { toast } = useToast();
