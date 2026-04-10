@@ -327,8 +327,8 @@ const AdminStudents = () => {
                       </select>
                     </div>
                   </div>
+                </div>
 
-                {/* Personal Information */}
                 <div className="rounded-xl border border-border bg-card p-4">
                   <h2 className="mb-3 flex items-center gap-2 font-display text-sm font-semibold text-foreground">
                     <Hash className="h-4 w-4" /> Personal Information
