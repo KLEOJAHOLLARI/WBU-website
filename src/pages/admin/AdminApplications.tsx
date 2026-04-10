@@ -40,9 +40,13 @@ const AdminApplications = () => {
             .maybeSingle();
 
           if (profile && profile.account_status !== "approved" && profile.account_status !== "active") {
+            const updateData: Record<string, any> = { account_status: "approved", program: app.program };
+            if ((app as any).gender) updateData.gender = (app as any).gender;
+            if ((app as any).birthplace) updateData.birthplace = (app as any).birthplace;
+            if ((app as any).personal_id) updateData.personal_id = (app as any).personal_id;
             await supabase
               .from("profiles")
-              .update({ account_status: "approved", program: app.program })
+              .update(updateData)
               .eq("id", profile.id);
           }
         }
@@ -201,6 +205,9 @@ const AdminApplications = () => {
               <div><p className="text-xs text-muted-foreground">Email</p><p className="text-foreground">{app.email}</p></div>
               <div><p className="text-xs text-muted-foreground">Phone</p><p className="text-foreground">{app.phone || "—"}</p></div>
               <div><p className="text-xs text-muted-foreground">Program</p><p className="text-foreground">{app.program}</p></div>
+              <div><p className="text-xs text-muted-foreground">Gender</p><p className="text-foreground">{(app as any).gender || "—"}</p></div>
+              <div><p className="text-xs text-muted-foreground">Birthplace</p><p className="text-foreground">{(app as any).birthplace || "—"}</p></div>
+              <div><p className="text-xs text-muted-foreground">Personal ID</p><p className="text-foreground">{(app as any).personal_id || "—"}</p></div>
               <div><p className="text-xs text-muted-foreground">Status</p>{statusBadge(app.status)}</div>
               <div><p className="text-xs text-muted-foreground">Date</p><p className="text-foreground">{new Date(app.created_at).toLocaleString()}</p></div>
             </div>
