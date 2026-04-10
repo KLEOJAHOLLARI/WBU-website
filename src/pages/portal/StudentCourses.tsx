@@ -20,7 +20,7 @@ const StudentCourses = () => {
   const { data: profile } = useQuery({
     queryKey: ["student-profile-program", user?.id],
     queryFn: async () => {
-      const { data } = await supabase.from("profiles").select("program").eq("user_id", user!.id).maybeSingle();
+      const { data } = await supabase.from("profiles").select("program, current_year, current_semester").eq("user_id", user!.id).maybeSingle();
       return data;
     },
     enabled: !!user,
