@@ -239,7 +239,6 @@ const StudentDashboard = () => {
             GPA {gpaData?.gradedCourses ? `(${gpaData.gradedCourses} courses)` : "/ 4.00"}
           </p>
         </div>
-        ))}
       </div>
 
       {/* Academic Information */}
