@@ -294,6 +294,48 @@ const StudentDashboard = () => {
         </div>
       </div>
 
+      {/* Attendance Alerts */}
+      {attendanceAlerts.length > 0 && (
+        <div className="mt-6">
+          <div className="rounded-xl border border-destructive/30 bg-destructive/5 p-5">
+            <div className="flex items-center gap-2 mb-3">
+              <AlertTriangle className="h-5 w-5 text-destructive" />
+              <h2 className="font-display text-base font-semibold text-destructive">
+                Low Attendance Warning
+              </h2>
+              <Badge variant="destructive" className="ml-auto text-[10px]">
+                {attendanceAlerts.length} course{attendanceAlerts.length > 1 ? "s" : ""}
+              </Badge>
+            </div>
+            <p className="mb-4 text-xs text-destructive/80">
+              Your attendance has dropped below 75% in the following courses. You may be blocked from exams.
+            </p>
+            <div className="space-y-3">
+              {attendanceAlerts.map((alert) => (
+                <Link
+                  key={alert.courseId}
+                  to={`/portal/courses/${alert.courseId}`}
+                  className="block rounded-lg border border-destructive/20 bg-card p-3 transition-colors hover:border-destructive/40"
+                >
+                  <div className="flex items-center justify-between mb-1.5">
+                    <div className="flex items-center gap-2">
+                      <CalendarDays className="h-4 w-4 text-destructive" />
+                      <span className="text-sm font-semibold text-foreground">{alert.courseName}</span>
+                      <span className="text-xs text-muted-foreground">{alert.courseCode}</span>
+                    </div>
+                    <span className="text-lg font-bold text-destructive">{alert.pct}%</span>
+                  </div>
+                  <Progress value={alert.pct} className="h-2 [&>div]:bg-destructive" />
+                  <p className="mt-1.5 text-xs text-muted-foreground">
+                    {alert.present} of {alert.total} sessions attended · {75 - alert.pct}% below threshold
+                  </p>
+                </Link>
+              ))}
+            </div>
+          </div>
+        </div>
+      )}
+
       {/* Academic Information */}
       <div className="mt-8">
         <h2 className="mb-4 flex items-center gap-2 font-display text-lg font-semibold text-foreground">
