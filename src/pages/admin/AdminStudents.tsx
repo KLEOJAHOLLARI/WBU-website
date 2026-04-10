@@ -376,7 +376,11 @@ const AdminStudents = () => {
                         <div key={field.key}>
                           <label className="mb-1 block text-xs text-muted-foreground">{field.label}</label>
                           {field.readOnly ? (
-                            <p className="font-medium text-foreground text-sm py-1.5">{original || <span className="text-muted-foreground italic">Not provided</span>}</p>
+                            <p className="font-medium text-foreground text-sm py-1.5">
+                              {field.key === "program"
+                                ? (programs.find((pr: any) => pr.slug === original)?.title || original || <span className="text-muted-foreground italic">Not provided</span>)
+                                : (original || <span className="text-muted-foreground italic">Not provided</span>)}
+                            </p>
                           ) : field.type === "select" ? (
                             <select
                               value={currentVal}
