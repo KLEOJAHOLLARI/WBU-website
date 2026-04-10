@@ -47,6 +47,8 @@ const AdminCourses = () => {
       if (error) throw error;
       return data;
     },
+  });
+
   const { data: programs = [] } = useQuery({
     queryKey: ["admin-programs-list"],
     queryFn: async () => {
