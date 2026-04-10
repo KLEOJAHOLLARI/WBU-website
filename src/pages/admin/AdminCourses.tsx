@@ -360,7 +360,6 @@ const AdminCourses = () => {
                 </p>
               </div>
             )}
-            </div>
             <button type="submit" disabled={saveMutation.isPending} className="rounded-md bg-primary px-6 py-2 text-sm font-semibold text-primary-foreground disabled:opacity-60">
               {saveMutation.isPending ? "Saving..." : "Save Course"}
             </button>
