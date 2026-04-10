@@ -18,7 +18,7 @@ const stagger = {
 const Admissions = () => {
   const { t } = useTranslation();
   const { toast } = useToast();
-  const [form, setForm] = useState({ fullName: "", email: "", phone: "", program: "", motivation: "", document: null as File | null });
+  const [form, setForm] = useState({ fullName: "", email: "", phone: "", program: "", motivation: "", gender: "", birthplace: "", personalId: "", document: null as File | null });
   const [submitting, setSubmitting] = useState(false);
   const [submitted, setSubmitted] = useState(false);
 
@@ -66,9 +66,12 @@ const Admissions = () => {
       phone: form.phone || null,
       program: form.program,
       motivation: form.motivation,
+      gender: form.gender || null,
+      birthplace: form.birthplace || null,
+      personal_id: form.personalId || null,
       document_url,
       user_id: currentUser?.id || null,
-    });
+    } as any);
     setSubmitting(false);
     if (error) {
       toast({ title: t("admissions.errorTitle"), description: t("admissions.errorDesc"), variant: "destructive" });
@@ -153,6 +156,25 @@ const Admissions = () => {
                       <option key={p.slug} value={p.slug}>{p.title} ({p.degree})</option>
                     ))}
                   </select>
+                </div>
+              </div>
+              <div className="grid gap-5 sm:grid-cols-3">
+                <div>
+                  <label className="mb-1.5 block text-sm font-medium text-foreground">Gender *</label>
+                  <select required value={form.gender} onChange={(e) => update("gender", e.target.value)} className={inputClass}>
+                    <option value="">Select gender</option>
+                    <option value="Male">Male</option>
+                    <option value="Female">Female</option>
+                    <option value="Other">Other</option>
+                  </select>
+                </div>
+                <div>
+                  <label className="mb-1.5 block text-sm font-medium text-foreground">Birthplace *</label>
+                  <input required type="text" value={form.birthplace} onChange={(e) => update("birthplace", e.target.value)} className={inputClass} placeholder="City, Country" />
+                </div>
+                <div>
+                  <label className="mb-1.5 block text-sm font-medium text-foreground">Personal ID *</label>
+                  <input required type="text" value={form.personalId} onChange={(e) => update("personalId", e.target.value)} className={inputClass} placeholder="ID number" />
                 </div>
               </div>
               <div>

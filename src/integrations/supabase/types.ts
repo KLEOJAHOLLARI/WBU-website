@@ -60,36 +60,45 @@ export type Database = {
       }
       applications: {
         Row: {
+          birthplace: string | null
           created_at: string
           document_url: string | null
           email: string
           full_name: string
+          gender: string | null
           id: string
           motivation: string
+          personal_id: string | null
           phone: string | null
           program: string
           status: string
           user_id: string | null
         }
         Insert: {
+          birthplace?: string | null
           created_at?: string
           document_url?: string | null
           email: string
           full_name: string
+          gender?: string | null
           id?: string
           motivation: string
+          personal_id?: string | null
           phone?: string | null
           program: string
           status?: string
           user_id?: string | null
         }
         Update: {
+          birthplace?: string | null
           created_at?: string
           document_url?: string | null
           email?: string
           full_name?: string
+          gender?: string | null
           id?: string
           motivation?: string
+          personal_id?: string | null
           phone?: string | null
           program?: string
           status?: string
