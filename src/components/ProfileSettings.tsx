@@ -155,7 +155,7 @@ const ProfileSettings = () => {
           </div>
           <div>
             <label className="mb-1 block text-sm font-medium text-foreground">
-              <span className="flex items-center gap-1"><Mail className="h-4 w-4" /> Request Email Change</span>
+              <span className="flex items-center gap-1"><Mail className="h-4 w-4" /> {isAdmin ? "Email Address" : "Request Email Change"}</span>
             </label>
             <input
               value={pendingEmail}
@@ -164,7 +164,7 @@ const ProfileSettings = () => {
               type="email"
               className="w-full rounded-md border border-input bg-background px-3 py-2 text-sm text-foreground focus:outline-none focus:ring-2 focus:ring-ring"
             />
-            <p className="mt-1 text-xs text-muted-foreground">Email changes require admin approval</p>
+            {!isAdmin && <p className="mt-1 text-xs text-muted-foreground">Email changes require admin approval</p>}
           </div>
           <button
             onClick={() => updateProfile.mutate()}
