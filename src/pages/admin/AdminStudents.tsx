@@ -14,6 +14,7 @@ const AdminStudents = () => {
   const [sending, setSending] = useState(false);
   const [statusFilter, setStatusFilter] = useState<string>("all");
   const [searchQuery, setSearchQuery] = useState("");
+  const [editPersonal, setEditPersonal] = useState<Record<string, string>>({});
 
   const { data: profiles = [], isLoading } = useQuery({
     queryKey: ["admin-students"],
@@ -195,7 +196,7 @@ const AdminStudents = () => {
               filteredProfiles.map((p) => (
                 <button
                   key={p.id}
-                  onClick={() => setSelectedUserId(p.user_id)}
+                  onClick={() => { setSelectedUserId(p.user_id); setEditPersonal({}); }}
                   className={`w-full rounded-lg border p-3 text-left transition-colors ${
                     selectedUserId === p.user_id
                       ? "border-primary bg-primary/5"
@@ -352,31 +353,70 @@ const AdminStudents = () => {
                   </div>
                 </div>
 
-                {/* Personal Information (read-only from application) */}
+                {/* Personal Information (editable by admin) */}
                 <div className="rounded-xl border border-border bg-card p-4">
                   <h2 className="mb-3 flex items-center gap-2 font-display text-sm font-semibold text-foreground">
                     <Hash className="h-4 w-4" /> Personal Information
                   </h2>
                   <div className="grid gap-3 sm:grid-cols-2">
                     {[
-                      { key: "student_id", label: "Student ID" },
-                      { key: "student_exam_code", label: "Exam Code" },
+                      { key: "student_id", label: "Student ID", readOnly: true },
+                      { key: "student_exam_code", label: "Exam Code", readOnly: true },
                       { key: "personal_id", label: "Personal ID" },
-                      { key: "gender", label: "Gender" },
+                      { key: "gender", label: "Gender", type: "select", options: ["Male", "Female", "Other"] },
                       { key: "birthplace", label: "Birthplace" },
                       { key: "phone", label: "Phone" },
-                      { key: "email", label: "Email" },
-                      { key: "program", label: "Program" },
+                      { key: "email", label: "Email", readOnly: true },
+                      { key: "program", label: "Program", readOnly: true },
                     ].map((field) => {
-                      const value = (personalInfo as Record<string, string | null | undefined>)[field.key];
+                      const original = (personalInfo as Record<string, string | null | undefined>)[field.key] || "";
+                      const editVal = editPersonal[field.key];
+                      const currentVal = editVal !== undefined ? editVal : (original || "");
                       return (
                         <div key={field.key}>
-                          <p className="text-xs text-muted-foreground">{field.label}</p>
-                          <p className="font-medium text-foreground text-sm">{value || <span className="text-muted-foreground italic">Not provided</span>}</p>
+                          <label className="mb-1 block text-xs text-muted-foreground">{field.label}</label>
+                          {field.readOnly ? (
+                            <p className="font-medium text-foreground text-sm py-1.5">{original || <span className="text-muted-foreground italic">Not provided</span>}</p>
+                          ) : field.type === "select" ? (
+                            <select
+                              value={currentVal}
+                              onChange={(e) => setEditPersonal(prev => ({ ...prev, [field.key]: e.target.value }))}
+                              className="w-full rounded-md border border-input bg-background px-3 py-2 text-sm text-foreground focus:outline-none focus:ring-2 focus:ring-ring"
+                            >
+                              <option value="">Not provided</option>
+                              {field.options!.map(o => <option key={o} value={o}>{o}</option>)}
+                            </select>
+                          ) : (
+                            <input
+                              value={currentVal}
+                              onChange={(e) => setEditPersonal(prev => ({ ...prev, [field.key]: e.target.value }))}
+                              className="w-full rounded-md border border-input bg-background px-3 py-2 text-sm text-foreground focus:outline-none focus:ring-2 focus:ring-ring"
+                              placeholder={`Enter ${field.label.toLowerCase()}`}
+                            />
+                          )}
                         </div>
                       );
                     })}
                   </div>
+                  {Object.keys(editPersonal).length > 0 && (
+                    <button
+                      onClick={async () => {
+                        const updates: { personal_id?: string | null; gender?: string | null; birthplace?: string | null; phone?: string | null } = {};
+                        if ("personal_id" in editPersonal) updates.personal_id = editPersonal.personal_id || null;
+                        if ("gender" in editPersonal) updates.gender = editPersonal.gender || null;
+                        if ("birthplace" in editPersonal) updates.birthplace = editPersonal.birthplace || null;
+                        if ("phone" in editPersonal) updates.phone = editPersonal.phone || null;
+                        const { error } = await supabase.from("profiles").update(updates).eq("user_id", selectedUserId);
+                        if (error) { toast({ title: "Error saving", variant: "destructive" }); return; }
+                        queryClient.invalidateQueries({ queryKey: ["admin-students"] });
+                        setEditPersonal({});
+                        toast({ title: "Personal info updated!" });
+                      }}
+                      className="mt-4 inline-flex items-center gap-2 rounded-md bg-primary px-4 py-2 text-sm font-semibold text-primary-foreground"
+                    >
+                      <Save className="h-4 w-4" /> Save Changes
+                    </button>
+                  )}
                 </div>
 
                 {/* Documents */}
