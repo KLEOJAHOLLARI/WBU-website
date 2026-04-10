@@ -221,13 +221,24 @@ const StudentDashboard = () => {
       </h1>
       <p className="mt-1 text-muted-foreground">Your student portal overview</p>
 
-      <div className="mt-8 grid gap-4 sm:grid-cols-2 lg:grid-cols-5">
+      <div className="mt-8 grid gap-4 sm:grid-cols-2 lg:grid-cols-6">
         {cards.map((c) => (
           <div key={c.label} className="rounded-xl border border-border bg-card p-6">
             <c.icon className={`mb-2 h-6 w-6 ${c.color}`} />
             <p className="font-display text-3xl font-bold text-foreground">{c.value}</p>
             <p className="text-sm text-muted-foreground">{c.label}</p>
           </div>
+        ))}
+        {/* GPA Card */}
+        <div className="rounded-xl border border-border bg-card p-6">
+          <TrendingUp className="mb-2 h-6 w-6 text-primary" />
+          <p className="font-display text-3xl font-bold text-foreground">
+            {gpaData?.gpa != null ? gpaData.gpa.toFixed(2) : "—"}
+          </p>
+          <p className="text-sm text-muted-foreground">
+            GPA {gpaData?.gradedCourses ? `(${gpaData.gradedCourses} courses)` : "/ 4.00"}
+          </p>
+        </div>
         ))}
       </div>
 
