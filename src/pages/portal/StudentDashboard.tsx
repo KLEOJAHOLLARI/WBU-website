@@ -2,7 +2,7 @@ import StudentLayout from "@/components/StudentLayout";
 import { useQuery } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/hooks/useAuth";
-import { FileText, Upload, Mail, Clock, Megaphone, BookOpen, GraduationCap, Building2, Calendar, User, Award } from "lucide-react";
+import { FileText, Upload, Mail, Clock, Megaphone, BookOpen, GraduationCap, Building2, Calendar, User, Award, TrendingUp } from "lucide-react";
 import { Badge } from "@/components/ui/badge";
 import { Link } from "react-router-dom";
 
@@ -103,6 +103,67 @@ const StudentDashboard = () => {
     enabled: !!user,
   });
 
+  // Fetch GPA data
+  const { data: gpaData } = useQuery({
+    queryKey: ["student-gpa", user?.id],
+    queryFn: async () => {
+      const { data: enrollments } = await supabase
+        .from("enrollments")
+        .select("id, course_id")
+        .eq("user_id", user!.id);
+      if (!enrollments?.length) return { gpa: null, gradedCourses: 0 };
+
+      const enrollmentIds = enrollments.map((e) => e.id);
+      const courseIds = [...new Set(enrollments.map((e) => e.course_id))];
+
+      const [{ data: components }, { data: grades }, { data: courses }] = await Promise.all([
+        supabase.from("grade_components").select("*").in("course_id", courseIds),
+        supabase.from("grades").select("*").in("enrollment_id", enrollmentIds),
+        supabase.from("courses").select("id, ects").in("id", courseIds),
+      ]);
+
+      if (!grades?.length || !components?.length) return { gpa: null, gradedCourses: 0 };
+
+      const ectsMap = Object.fromEntries((courses || []).map((c) => [c.id, c.ects]));
+      const compsByCourse: Record<string, typeof components> = {};
+      for (const comp of components) {
+        (compsByCourse[comp.course_id] ??= []).push(comp);
+      }
+
+      let totalWeightedGpa = 0;
+      let totalEcts = 0;
+      let gradedCourses = 0;
+
+      for (const enrollment of enrollments) {
+        const courseComps = compsByCourse[enrollment.course_id];
+        if (!courseComps?.length) continue;
+        const courseGrades = grades.filter((g) => g.enrollment_id === enrollment.id);
+        if (!courseGrades.length) continue;
+
+        let coursePercent = 0;
+        let totalWeight = 0;
+        for (const comp of courseComps) {
+          const compGrades = courseGrades.filter((g) => g.grade_component_id === comp.id);
+          if (!compGrades.length) continue;
+          const avg = compGrades.reduce((sum, g) => sum + ((g.score ?? 0) / g.max_score) * 100, 0) / compGrades.length;
+          coursePercent += avg * Number(comp.weight) / 100;
+          totalWeight += Number(comp.weight);
+        }
+        if (totalWeight === 0) continue;
+        const normalized = (coursePercent / totalWeight) * 100;
+        const courseGpa = Math.min(4.0, (normalized / 100) * 4.0);
+        const ects = ectsMap[enrollment.course_id] ?? 6;
+        totalWeightedGpa += courseGpa * ects;
+        totalEcts += ects;
+        gradedCourses++;
+      }
+
+      if (totalEcts === 0) return { gpa: null, gradedCourses: 0 };
+      return { gpa: Math.round((totalWeightedGpa / totalEcts) * 100) / 100, gradedCourses };
+    },
+    enabled: !!user,
+  });
+
   // Fetch announcements relevant to student: general, their enrolled courses, or their program
   const { data: announcements = [] } = useQuery({
     queryKey: ["student-announcements", user?.id],
@@ -160,7 +221,7 @@ const StudentDashboard = () => {
       </h1>
       <p className="mt-1 text-muted-foreground">Your student portal overview</p>
 
-      <div className="mt-8 grid gap-4 sm:grid-cols-2 lg:grid-cols-5">
+      <div className="mt-8 grid gap-4 sm:grid-cols-2 lg:grid-cols-6">
         {cards.map((c) => (
           <div key={c.label} className="rounded-xl border border-border bg-card p-6">
             <c.icon className={`mb-2 h-6 w-6 ${c.color}`} />
@@ -168,6 +229,16 @@ const StudentDashboard = () => {
             <p className="text-sm text-muted-foreground">{c.label}</p>
           </div>
         ))}
+        {/* GPA Card */}
+        <div className="rounded-xl border border-border bg-card p-6">
+          <TrendingUp className="mb-2 h-6 w-6 text-primary" />
+          <p className="font-display text-3xl font-bold text-foreground">
+            {gpaData?.gpa != null ? gpaData.gpa.toFixed(2) : "—"}
+          </p>
+          <p className="text-sm text-muted-foreground">
+            GPA {gpaData?.gradedCourses ? `(${gpaData.gradedCourses} courses)` : "/ 4.00"}
+          </p>
+        </div>
       </div>
 
       {/* Academic Information */}
