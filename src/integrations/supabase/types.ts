@@ -764,6 +764,8 @@ export type Database = {
       [_ in never]: never
     }
     Functions: {
+      generate_exam_code: { Args: never; Returns: string }
+      generate_student_id: { Args: never; Returns: string }
       has_role: {
         Args: {
           _role: Database["public"]["Enums"]["app_role"]
