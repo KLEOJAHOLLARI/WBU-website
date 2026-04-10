@@ -39,6 +39,14 @@ const AdminCourses = () => {
     },
   });
 
+  // Fetch shared program assignments
+  const { data: courseSharedPrograms = [] } = useQuery({
+    queryKey: ["admin-course-shared-programs"],
+    queryFn: async () => {
+      const { data, error } = await supabase.from("course_shared_programs").select("*");
+      if (error) throw error;
+      return data;
+    },
   const { data: programs = [] } = useQuery({
     queryKey: ["admin-programs-list"],
     queryFn: async () => {
@@ -218,16 +226,34 @@ const AdminCourses = () => {
         professor_id: form.professor_id || null,
         is_shared: !!form.is_shared,
       };
+      let courseId = form.id;
       if (form.id) {
         const { error } = await supabase.from("courses").update(payload).eq("id", form.id);
         if (error) throw error;
       } else {
-        const { error } = await supabase.from("courses").insert(payload);
+        const { data, error } = await supabase.from("courses").insert(payload).select("id").single();
         if (error) throw error;
+        courseId = data.id;
+      }
+      // Sync shared programs
+      if (form.is_shared && courseId) {
+        // Delete existing
+        await supabase.from("course_shared_programs").delete().eq("course_id", courseId);
+        // Insert selected
+        const sharedPrograms = (form.shared_programs || []) as string[];
+        if (sharedPrograms.length > 0) {
+          const rows = sharedPrograms.map((slug: string) => ({ course_id: courseId, program_slug: slug }));
+          const { error } = await supabase.from("course_shared_programs").insert(rows);
+          if (error) throw error;
+        }
+      } else if (!form.is_shared && courseId) {
+        // Clear shared programs if no longer shared
+        await supabase.from("course_shared_programs").delete().eq("course_id", courseId);
       }
     },
     onSuccess: () => {
       qc.invalidateQueries({ queryKey: ["admin-courses"] });
+      qc.invalidateQueries({ queryKey: ["admin-course-shared-programs"] });
       setShowForm(false);
       setEditing(null);
       toast({ title: "Course saved!" });
@@ -246,7 +272,11 @@ const AdminCourses = () => {
     },
   });
 
-  const openEdit = (c: any) => { setEditing({ ...c }); setShowForm(true); };
+  const openEdit = (c: any) => {
+    const sharedSlugs = courseSharedPrograms.filter(sp => sp.course_id === c.id).map(sp => sp.program_slug);
+    setEditing({ ...c, shared_programs: sharedSlugs });
+    setShowForm(true);
+  };
   const openNew = () => { setEditing({ ...emptyCourse }); setShowForm(true); };
   const handleSubmit = (e: React.FormEvent) => { e.preventDefault(); saveMutation.mutate(editing); };
 
@@ -293,9 +323,41 @@ const AdminCourses = () => {
               <input type="number" min={1} placeholder="Year" value={editing?.year ?? 1} onChange={(e) => setEditing({ ...editing, year: e.target.value })} className={inputCls} />
               <input type="number" min={1} placeholder="Semester" value={editing?.semester ?? 1} onChange={(e) => setEditing({ ...editing, semester: e.target.value })} className={inputCls} />
               <label className="flex items-center gap-2 cursor-pointer">
-                <input type="checkbox" checked={!!editing?.is_shared} onChange={(e) => setEditing({ ...editing, is_shared: e.target.checked })} className="h-4 w-4 rounded border-input accent-primary" />
+                <input type="checkbox" checked={!!editing?.is_shared} onChange={(e) => setEditing({ ...editing, is_shared: e.target.checked, shared_programs: e.target.checked ? editing?.shared_programs || [] : [] })} className="h-4 w-4 rounded border-input accent-primary" />
                 <span className="text-sm text-foreground">Shared / Common Course</span>
               </label>
+            </div>
+            {editing?.is_shared && (
+              <div>
+                <label className="mb-1.5 block text-sm font-medium text-foreground">Share with programs:</label>
+                <div className="grid gap-1.5 sm:grid-cols-2 lg:grid-cols-3 max-h-48 overflow-y-auto rounded-md border border-input bg-background p-3">
+                  {programs.filter(p => p.slug !== editing?.program).map(p => {
+                    const checked = (editing?.shared_programs || []).includes(p.slug);
+                    return (
+                      <label key={p.slug} className="flex items-center gap-2 cursor-pointer text-sm text-foreground hover:text-primary transition-colors">
+                        <input
+                          type="checkbox"
+                          checked={checked}
+                          onChange={() => {
+                            const current: string[] = editing?.shared_programs || [];
+                            const next = checked ? current.filter((s: string) => s !== p.slug) : [...current, p.slug];
+                            setEditing({ ...editing, shared_programs: next });
+                          }}
+                          className="h-3.5 w-3.5 rounded border-input accent-primary"
+                        />
+                        {p.title}
+                      </label>
+                    );
+                  })}
+                  {programs.filter(p => p.slug !== editing?.program).length === 0 && (
+                    <p className="text-xs text-muted-foreground col-span-full">No other programs available</p>
+                  )}
+                </div>
+                <p className="mt-1 text-xs text-muted-foreground">
+                  {(editing?.shared_programs || []).length === 0 ? "No programs selected — course won't be shared" : `Shared with ${(editing?.shared_programs || []).length} program(s)`}
+                </p>
+              </div>
+            )}
             </div>
             <button type="submit" disabled={saveMutation.isPending} className="rounded-md bg-primary px-6 py-2 text-sm font-semibold text-primary-foreground disabled:opacity-60">
               {saveMutation.isPending ? "Saving..." : "Save Course"}
