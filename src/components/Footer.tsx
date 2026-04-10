@@ -67,7 +67,7 @@ const Footer = () => {
         </div>
 
         <div className="mt-10 border-t border-primary-foreground/20 pt-6 text-center text-sm opacity-60">
-          © 2026 Western Balkan University. {t("footer.rights")} Kleo Jahollari
+          © 2026 Western Balkan University. {t("footer.rights")} Kleo Jahollari.
         </div>
       </div>
     </footer>
