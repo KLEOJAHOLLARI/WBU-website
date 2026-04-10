@@ -229,7 +229,7 @@ const AdminStudents = () => {
               personal_id: selectedProfile?.personal_id || selectedApplication?.personal_id,
               gender: selectedProfile?.gender || selectedApplication?.gender,
               birthplace: selectedProfile?.birthplace || selectedApplication?.birthplace,
-              phone: selectedProfile?.phone,
+              phone: selectedProfile?.phone || selectedApplication?.phone,
               email: selectedProfile?.email || selectedApplication?.email,
               program: selectedProfile?.program || selectedApplication?.program,
             };
