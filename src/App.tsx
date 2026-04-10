@@ -42,6 +42,7 @@ import ProfessorAnnouncements from "./pages/professor/ProfessorAnnouncements";
 import AdminAnnouncements from "./pages/admin/AdminAnnouncements";
 import AdminAdvisors from "./pages/admin/AdminAdvisors";
 import AdminProfile from "./pages/admin/AdminProfile";
+import AdminTranscripts from "./pages/admin/AdminTranscripts";
 import StudentProfile from "./pages/portal/StudentProfile";
 import ProfessorProfile from "./pages/professor/ProfessorProfile";
 import StudentTranscript from "./pages/portal/StudentTranscript";
@@ -85,6 +86,7 @@ const App = () => (
             <Route path="/admin/announcements" element={<AdminAnnouncements />} />
             <Route path="/admin/advisors" element={<AdminAdvisors />} />
             <Route path="/admin/profile" element={<AdminProfile />} />
+            <Route path="/admin/transcripts" element={<AdminTranscripts />} />
             <Route path="/portal/login" element={<StudentLogin />} />
             <Route path="/portal/register" element={<StudentRegister />} />
             <Route path="/portal" element={<StudentDashboard />} />

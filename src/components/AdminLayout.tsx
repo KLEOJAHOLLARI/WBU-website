@@ -3,7 +3,7 @@ import { Navigate, Link, useLocation } from "react-router-dom";
 import { useAuth } from "@/hooks/useAuth";
 import { useQuery } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
-import { GraduationCap, LayoutDashboard, BookOpen, Newspaper, Mail, FileText, Users, LogOut, CalendarDays, UserPlus, Megaphone, UserCircle, UserCheck, Menu } from "lucide-react";
+import { GraduationCap, LayoutDashboard, BookOpen, Newspaper, Mail, FileText, Users, LogOut, CalendarDays, UserPlus, Megaphone, UserCircle, UserCheck, Menu, ScrollText } from "lucide-react";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Sheet, SheetContent, SheetTrigger } from "@/components/ui/sheet";
 
@@ -20,6 +20,7 @@ const navItems: { to: string; label: string; icon: any; badgeKey?: BadgeKey }[] 
   { to: "/admin/news", label: "News", icon: Newspaper },
   { to: "/admin/applications", label: "Applications", icon: FileText, badgeKey: "applications" },
   { to: "/admin/students", label: "Students", icon: Users },
+  { to: "/admin/transcripts", label: "Transcripts", icon: ScrollText },
   { to: "/admin/timetable", label: "Timetable", icon: CalendarDays },
   { to: "/admin/contacts", label: "Messages", icon: Mail },
   { to: "/admin/profile", label: "My Profile", icon: UserCircle },
