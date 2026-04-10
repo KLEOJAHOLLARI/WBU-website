@@ -3,7 +3,7 @@ import AdminLayout from "@/components/AdminLayout";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
 import { useToast } from "@/hooks/use-toast";
-import { Send, FileText, CheckCircle, XCircle, UserCheck, UserX, Clock, Mail, BookOpen, Save, Hash, CreditCard } from "lucide-react";
+import { Send, FileText, CheckCircle, XCircle, UserCheck, UserX, Clock, Mail, BookOpen, Save, Hash, CreditCard, Search } from "lucide-react";
 
 const AdminStudents = () => {
   const { toast } = useToast();
@@ -13,6 +13,7 @@ const AdminStudents = () => {
   const [msgBody, setMsgBody] = useState("");
   const [sending, setSending] = useState(false);
   const [statusFilter, setStatusFilter] = useState<string>("all");
+  const [searchQuery, setSearchQuery] = useState("");
 
   const { data: profiles = [], isLoading } = useQuery({
     queryKey: ["admin-students"],
