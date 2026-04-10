@@ -165,7 +165,59 @@ const StudentDashboard = () => {
     enabled: !!user,
   });
 
-  // Fetch announcements relevant to student: general, their enrolled courses, or their program
+  // Fetch per-course attendance rates
+  const { data: attendanceAlerts = [] } = useQuery({
+    queryKey: ["student-attendance-alerts", user?.id],
+    queryFn: async () => {
+      const { data: enrollments } = await supabase
+        .from("enrollments")
+        .select("id, course_id")
+        .eq("user_id", user!.id);
+      if (!enrollments?.length) return [];
+
+      const courseIds = [...new Set(enrollments.map((e) => e.course_id))];
+      const enrollmentIds = enrollments.map((e) => e.id);
+
+      const [{ data: courses }, { data: sessions }, { data: records }] = await Promise.all([
+        supabase.from("courses").select("id, name, code").in("id", courseIds),
+        supabase.from("attendance_sessions").select("id, course_id").in("course_id", courseIds),
+        supabase.from("attendance_records").select("enrollment_id, session_id, status").in("enrollment_id", enrollmentIds),
+      ]);
+
+      if (!courses?.length || !sessions?.length) return [];
+
+      const courseMap = Object.fromEntries(courses.map((c) => [c.id, c]));
+      const enrollmentCourseMap = Object.fromEntries(enrollments.map((e) => [e.id, e.course_id]));
+
+      return courseIds.map((courseId) => {
+        const courseSessions = (sessions || []).filter((s) => s.course_id === courseId);
+        if (courseSessions.length === 0) return null;
+
+        const courseEnrollments = enrollments.filter((e) => e.course_id === courseId);
+        const courseEnrollmentIds = courseEnrollments.map((e) => e.id);
+        const sessionIds = courseSessions.map((s) => s.id);
+
+        const presentCount = (records || []).filter(
+          (r) => courseEnrollmentIds.includes(r.enrollment_id) && sessionIds.includes(r.session_id) && r.status === "present"
+        ).length;
+
+        const pct = Math.round((presentCount / courseSessions.length) * 100);
+        const course = courseMap[courseId];
+
+        return {
+          courseId,
+          courseName: course?.name || "Unknown",
+          courseCode: course?.code || "",
+          pct,
+          present: presentCount,
+          total: courseSessions.length,
+        };
+      }).filter((item): item is NonNullable<typeof item> => item !== null && item.pct < 75);
+    },
+    enabled: !!user,
+  });
+
+
   const { data: announcements = [] } = useQuery({
     queryKey: ["student-announcements", user?.id],
     queryFn: async () => {
