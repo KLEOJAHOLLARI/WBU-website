@@ -292,6 +292,10 @@ const AdminCourses = () => {
               </select>
               <input type="number" min={1} placeholder="Year" value={editing?.year ?? 1} onChange={(e) => setEditing({ ...editing, year: e.target.value })} className={inputCls} />
               <input type="number" min={1} placeholder="Semester" value={editing?.semester ?? 1} onChange={(e) => setEditing({ ...editing, semester: e.target.value })} className={inputCls} />
+              <label className="flex items-center gap-2 cursor-pointer">
+                <input type="checkbox" checked={!!editing?.is_shared} onChange={(e) => setEditing({ ...editing, is_shared: e.target.checked })} className="h-4 w-4 rounded border-input accent-primary" />
+                <span className="text-sm text-foreground">Shared / Common Course</span>
+              </label>
             </div>
             <button type="submit" disabled={saveMutation.isPending} className="rounded-md bg-primary px-6 py-2 text-sm font-semibold text-primary-foreground disabled:opacity-60">
               {saveMutation.isPending ? "Saving..." : "Save Course"}
