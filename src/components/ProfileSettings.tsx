@@ -132,6 +132,51 @@ const ProfileSettings = () => {
         </div>
       </div>
 
+      {/* Personal Information (read-only) */}
+      {(profile?.gender || profile?.birthplace || profile?.personal_id || profile?.student_id || profile?.student_exam_code) && (
+        <div className="rounded-xl border border-border bg-card p-6">
+          <h2 className="mb-4 font-display text-lg font-semibold text-foreground">Personal Information</h2>
+          <div className="grid gap-4 sm:grid-cols-2">
+            {profile?.gender && (
+              <div>
+                <p className="text-xs text-muted-foreground">Gender</p>
+                <p className="font-medium text-foreground">{profile.gender}</p>
+              </div>
+            )}
+            {profile?.birthplace && (
+              <div>
+                <p className="text-xs text-muted-foreground">Birthplace</p>
+                <p className="font-medium text-foreground">{profile.birthplace}</p>
+              </div>
+            )}
+            {profile?.personal_id && (
+              <div>
+                <p className="text-xs text-muted-foreground">Personal ID</p>
+                <p className="font-medium text-foreground">{profile.personal_id}</p>
+              </div>
+            )}
+            {profile?.student_id && (
+              <div>
+                <p className="text-xs text-muted-foreground">Student ID</p>
+                <p className="font-medium text-foreground">{profile.student_id}</p>
+              </div>
+            )}
+            {profile?.student_exam_code && (
+              <div>
+                <p className="text-xs text-muted-foreground">Exam Code</p>
+                <p className="font-medium text-foreground">{profile.student_exam_code}</p>
+              </div>
+            )}
+            {profile?.program && (
+              <div>
+                <p className="text-xs text-muted-foreground">Program</p>
+                <p className="font-medium text-foreground">{profile.program}</p>
+              </div>
+            )}
+          </div>
+        </div>
+      )}
+
       {/* Profile Info */}
       <div className="rounded-xl border border-border bg-card p-6">
         <h2 className="mb-4 font-display text-lg font-semibold text-foreground">Profile Information</h2>
