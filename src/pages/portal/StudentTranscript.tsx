@@ -43,6 +43,20 @@ const StudentTranscript = () => {
   const [yearFilter, setYearFilter] = useState<string>("all");
   const printRef = useRef<HTMLDivElement>(null);
 
+  // Fetch program from profiles table
+  const { data: studentProgram } = useQuery({
+    queryKey: ["student-program", user?.id],
+    queryFn: async () => {
+      const { data } = await supabase
+        .from("profiles")
+        .select("program")
+        .eq("user_id", user!.id)
+        .single();
+      return data?.program || null;
+    },
+    enabled: !!user,
+  });
+
   // Fetch enrollments with courses, grades, and grade_components
   const { data: transcriptData, isLoading } = useQuery({
     queryKey: ["student-transcript", user?.id],
@@ -200,7 +214,7 @@ const StudentTranscript = () => {
     const infoY = 40;
     doc.text(`Student: ${profile?.full_name || "N/A"}`, 14, infoY);
     doc.text(`Email: ${profile?.email || "N/A"}`, 14, infoY + 6);
-    doc.text(`Program: ${profile?.program || "N/A"}`, 14, infoY + 12);
+    doc.text(`Program: ${studentProgram || "N/A"}`, 14, infoY + 12);
     doc.text(`Date: ${new Date().toLocaleDateString()}`, pageW - 14, infoY, { align: "right" });
 
     // Table
