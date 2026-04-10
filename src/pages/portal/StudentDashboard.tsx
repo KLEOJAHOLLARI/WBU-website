@@ -2,7 +2,7 @@ import StudentLayout from "@/components/StudentLayout";
 import { useQuery } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/hooks/useAuth";
-import { FileText, Upload, Mail, Clock, Megaphone, BookOpen, GraduationCap, Building2, Calendar, User, Award, TrendingUp } from "lucide-react";
+import { FileText, Upload, Mail, Clock, Megaphone, BookOpen, GraduationCap, Building2, Calendar, User, Award, TrendingUp, Hash, MapPin, Users, CreditCard } from "lucide-react";
 import { Badge } from "@/components/ui/badge";
 import { Link } from "react-router-dom";
 
@@ -292,6 +292,39 @@ const StudentDashboard = () => {
                 )}
               </div>
             </div>
+          </div>
+        </div>
+      </div>
+
+      {/* Personal Information */}
+      <div className="mt-8">
+        <h2 className="mb-4 flex items-center gap-2 font-display text-lg font-semibold text-foreground">
+          <User className="h-5 w-5 text-primary" /> Personal Information
+        </h2>
+        <div className="rounded-xl border border-border bg-card p-6">
+          <div className="grid gap-5 sm:grid-cols-2 lg:grid-cols-3">
+            {[
+              { label: "Full Name", value: profile?.full_name || "—", icon: User },
+              { label: "Email", value: profile?.email || "—", icon: Mail },
+              { label: "Student ID", value: (profile as any)?.student_id || "—", icon: Hash, highlight: true },
+              { label: "Exam Code", value: (profile as any)?.student_exam_code || "—", icon: CreditCard, highlight: true },
+              { label: "Gender", value: (profile as any)?.gender || "—", icon: Users },
+              { label: "Birthplace", value: (profile as any)?.birthplace || "—", icon: MapPin },
+              { label: "Personal ID", value: (profile as any)?.personal_id || "—", icon: CreditCard, highlight: true },
+              { label: "Phone", value: profile?.phone || "—", icon: User },
+            ].map((item) => (
+              <div key={item.label} className="flex items-start gap-3">
+                <div className="flex h-9 w-9 shrink-0 items-center justify-center rounded-lg bg-primary/10">
+                  <item.icon className="h-4 w-4 text-primary" />
+                </div>
+                <div className="min-w-0">
+                  <p className="text-xs font-medium text-muted-foreground">{item.label}</p>
+                  <p className={`mt-0.5 text-sm truncate ${item.highlight ? "font-semibold text-foreground" : "font-medium text-foreground"}`}>
+                    {item.value}
+                  </p>
+                </div>
+              </div>
+            ))}
           </div>
         </div>
       </div>

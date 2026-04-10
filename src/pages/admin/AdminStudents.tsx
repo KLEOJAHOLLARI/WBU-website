@@ -3,7 +3,7 @@ import AdminLayout from "@/components/AdminLayout";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
 import { useToast } from "@/hooks/use-toast";
-import { Send, FileText, CheckCircle, XCircle, UserCheck, UserX, Clock, Mail, BookOpen } from "lucide-react";
+import { Send, FileText, CheckCircle, XCircle, UserCheck, UserX, Clock, Mail, BookOpen, Save, Hash, CreditCard } from "lucide-react";
 
 const AdminStudents = () => {
   const { toast } = useToast();
@@ -263,6 +263,65 @@ const AdminStudents = () => {
                     <option value="">No program assigned</option>
                     {programs.map((p: any) => <option key={p.slug} value={p.slug}>{p.title}</option>)}
                   </select>
+                </div>
+
+                {/* Personal Information */}
+                <div className="rounded-xl border border-border bg-card p-4">
+                  <h2 className="mb-3 flex items-center gap-2 font-display text-sm font-semibold text-foreground">
+                    <Hash className="h-4 w-4" /> Personal Information
+                  </h2>
+                  <div className="grid gap-3 sm:grid-cols-2">
+                    {[
+                      { key: "student_id", label: "Student ID", placeholder: "e.g. STU-2024-001" },
+                      { key: "student_exam_code", label: "Exam Code", placeholder: "e.g. EX-001" },
+                      { key: "personal_id", label: "Personal ID / ID Number", placeholder: "National ID" },
+                      { key: "gender", label: "Gender", type: "select", options: ["Male", "Female", "Other"] },
+                      { key: "birthplace", label: "Birthplace", placeholder: "City, Country" },
+                      { key: "phone", label: "Phone", placeholder: "+383..." },
+                    ].map((field) => (
+                      <div key={field.key}>
+                        <label className="mb-1 block text-xs font-medium text-muted-foreground">{field.label}</label>
+                        {field.type === "select" ? (
+                          <select
+                            defaultValue={(selectedProfile as any)?.[field.key] || ""}
+                            onBlur={async (e) => {
+                              const val = e.target.value || null;
+                              if (val === ((selectedProfile as any)?.[field.key] || "")) return;
+                              const { error } = await supabase.from("profiles").update({ [field.key]: val } as any).eq("user_id", selectedUserId);
+                              if (error) {
+                                toast({ title: "Error", description: error.message, variant: "destructive" });
+                              } else {
+                                queryClient.invalidateQueries({ queryKey: ["admin-students"] });
+                                toast({ title: `${field.label} updated` });
+                              }
+                            }}
+                            className="w-full rounded-md border border-input bg-background px-3 py-2 text-sm text-foreground focus:outline-none focus:ring-2 focus:ring-ring"
+                          >
+                            <option value="">Not set</option>
+                            {field.options!.map((o) => <option key={o} value={o}>{o}</option>)}
+                          </select>
+                        ) : (
+                          <input
+                            type="text"
+                            defaultValue={(selectedProfile as any)?.[field.key] || ""}
+                            placeholder={field.placeholder}
+                            onBlur={async (e) => {
+                              const val = e.target.value.trim() || null;
+                              if (val === ((selectedProfile as any)?.[field.key] || null)) return;
+                              const { error } = await supabase.from("profiles").update({ [field.key]: val } as any).eq("user_id", selectedUserId);
+                              if (error) {
+                                toast({ title: "Error", description: error.message.includes("unique") ? `${field.label} must be unique` : error.message, variant: "destructive" });
+                              } else {
+                                queryClient.invalidateQueries({ queryKey: ["admin-students"] });
+                                toast({ title: `${field.label} updated` });
+                              }
+                            }}
+                            className="w-full rounded-md border border-input bg-background px-3 py-2 text-sm text-foreground focus:outline-none focus:ring-2 focus:ring-ring"
+                          />
+                        )}
+                      </div>
+                    ))}
+                  </div>
                 </div>
 
                 {/* Documents */}
