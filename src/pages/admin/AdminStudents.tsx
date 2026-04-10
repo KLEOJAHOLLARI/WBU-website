@@ -196,7 +196,7 @@ const AdminStudents = () => {
               filteredProfiles.map((p) => (
                 <button
                   key={p.id}
-                  onClick={() => setSelectedUserId(p.user_id)}
+                  onClick={() => { setSelectedUserId(p.user_id); setEditPersonal({}); }}
                   className={`w-full rounded-lg border p-3 text-left transition-colors ${
                     selectedUserId === p.user_id
                       ? "border-primary bg-primary/5"
