@@ -89,19 +89,20 @@ const StudentCourses = () => {
       if (profilesRes.error) throw profilesRes.error;
       if (professorsRes.error) throw professorsRes.error;
 
-      const profileMap = new Map<string, { id: string; name: string }>();
+      const profileMap = new Map<string, { id: string; name: string; avatar_url: string | null }>();
 
       (professorsRes.data || []).forEach((p) => {
-        if (p.name?.trim()) profileMap.set(p.id, { id: p.id, name: p.name.trim() });
+        if (p.name?.trim()) profileMap.set(p.id, { id: p.id, name: p.name.trim(), avatar_url: p.photo_url ?? null });
       });
 
       (profilesRes.data || []).forEach((p) => {
-        if (p.full_name?.trim()) profileMap.set(p.user_id, { id: p.user_id, name: p.full_name.trim() });
+        if (p.full_name?.trim()) profileMap.set(p.user_id, { id: p.user_id, name: p.full_name.trim(), avatar_url: p.avatar_url ?? null });
       });
 
       return Array.from(profileMap.entries()).map(([userId, info]) => ({
         user_id: userId,
         full_name: info.name,
+        avatar_url: info.avatar_url,
       }));
     },
     enabled: sortedProfessorIds.length > 0,
