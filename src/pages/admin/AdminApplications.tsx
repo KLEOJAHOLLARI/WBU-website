@@ -40,7 +40,7 @@ const AdminApplications = () => {
             .maybeSingle();
 
           if (profile && profile.account_status !== "approved" && profile.account_status !== "active") {
-            const updateData: Record<string, any> = { account_status: "approved", program: app.program };
+            const updateData: { account_status: string; program: string; gender?: string; birthplace?: string; personal_id?: string } = { account_status: "approved", program: app.program };
             if ((app as any).gender) updateData.gender = (app as any).gender;
             if ((app as any).birthplace) updateData.birthplace = (app as any).birthplace;
             if ((app as any).personal_id) updateData.personal_id = (app as any).personal_id;
