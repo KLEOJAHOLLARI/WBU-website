@@ -388,6 +388,7 @@ const StudentCourses = () => {
                     <div className="flex-1 min-w-0">
                       <h3 className="font-display font-semibold text-foreground text-sm truncate">{course.name}</h3>
                       <p className="text-xs text-muted-foreground">{course.code} · Y{course.year}/S{course.semester}</p>
+                      {renderProfessorMeta(course.professor_id ?? null)}
                     </div>
                   </div>
                   <div className="mt-3">
