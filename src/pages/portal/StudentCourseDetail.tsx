@@ -6,7 +6,7 @@ import { useAuth } from "@/hooks/useAuth";
 import {
   AlertTriangle, CheckCircle2, ExternalLink, ArrowLeft,
   CalendarDays, BarChart3, Loader2, BookOpen, TrendingUp,
-  FileText, Download
+  FileText, Download, X, Minus
 } from "lucide-react";
 import { Badge } from "@/components/ui/badge";
 import { Progress } from "@/components/ui/progress";
@@ -351,71 +351,157 @@ const StudentCourseDetail = () => {
           <div className="rounded-xl border border-dashed border-border bg-card/50 p-8 text-center text-muted-foreground">
             No attendance data yet.
           </div>
-        ) : (
-          <>
-            {/* Summary pills */}
-            <div className="mb-4 flex flex-wrap gap-3">
-              <div className="inline-flex items-center gap-1.5 rounded-full bg-emerald-500/15 px-3 py-1.5 text-xs font-medium text-emerald-700">
-                ✓ Present: {presentCount}
-              </div>
-              <div className="inline-flex items-center gap-1.5 rounded-full bg-red-500/15 px-3 py-1.5 text-xs font-medium text-red-700">
-                ✗ Absent: {absentCount}
-              </div>
-              <div className="inline-flex items-center gap-1.5 rounded-full bg-amber-500/15 px-3 py-1.5 text-xs font-medium text-amber-700">
-                ⊘ Excused: {excusedCount}
-              </div>
-            </div>
+        ) : (() => {
+          // Group sessions by week_number, each session within a week = one "hour"
+          const weekMap = new Map<number, typeof sessions>();
+          sessions.forEach((s) => {
+            const arr = weekMap.get(s.week_number) || [];
+            arr.push(s);
+            weekMap.set(s.week_number, arr);
+          });
+          const weekNumbers = [...weekMap.keys()].sort((a, b) => a - b);
+          const maxHours = Math.max(...[...weekMap.values()].map((arr) => arr.length));
 
-            {/* Attendance progress bar */}
-            {attPct !== null && (
-              <div className="mb-4 rounded-lg border border-border bg-card p-3">
-                <div className="flex items-center justify-between mb-1.5 text-xs">
-                  <span className="text-muted-foreground">Attendance rate</span>
-                  <span className={`font-bold ${attPct < 75 ? "text-destructive" : "text-emerald-600"}`}>{attPct}%</span>
+          return (
+            <>
+              {/* Attendance percentage highlight */}
+              {attPct !== null && (
+                <div className="mb-4 rounded-xl border border-border bg-card p-4">
+                  <div className="flex items-center justify-between mb-2">
+                    <span className="text-sm font-medium text-muted-foreground">Overall Attendance</span>
+                    <span className={`text-2xl font-bold ${attPct < 75 ? "text-destructive" : "text-emerald-600"}`}>{attPct}%</span>
+                  </div>
+                  <Progress value={attPct} className={`h-3 ${attPct < 75 ? progressColor(0) : progressColor(attPct)}`} />
+                  <div className="mt-2 flex items-center justify-between text-xs text-muted-foreground">
+                    <span>{presentCount} of {sessions.length} sessions attended</span>
+                    {attPct < 75 && <span className="text-destructive font-medium">⚠ Below 75% threshold</span>}
+                  </div>
                 </div>
-                <Progress value={attPct} className={`h-2 ${attPct < 75 ? progressColor(0) : progressColor(attPct)}`} />
-                {attPct < 75 && (
-                  <p className="mt-1.5 text-xs text-destructive">⚠ Below 75% threshold</p>
-                )}
-              </div>
-            )}
+              )}
 
-            <div className="overflow-x-auto rounded-xl border border-border shadow-sm">
-              <table className="w-full text-sm">
-                <thead>
-                  <tr className="border-b border-border bg-secondary/80">
-                    <th className="px-4 py-3 text-left text-xs font-semibold uppercase tracking-wider text-muted-foreground">Week</th>
-                    <th className="px-4 py-3 text-left text-xs font-semibold uppercase tracking-wider text-muted-foreground">Date</th>
-                    <th className="px-4 py-3 text-center text-xs font-semibold uppercase tracking-wider text-muted-foreground">Status</th>
-                  </tr>
-                </thead>
-                <tbody>
-                  {sessions.map((s, idx) => {
-                    const rec = attendanceRecords.find((r) => r.session_id === s.id);
-                    const status = rec?.status || "absent";
-                    return (
-                      <tr key={s.id} className={`border-b border-border last:border-0 ${idx % 2 === 0 ? "bg-card" : "bg-secondary/30"}`}>
-                        <td className="px-4 py-2.5 text-muted-foreground">Week {s.week_number}</td>
-                        <td className="px-4 py-2.5 text-foreground">
-                          {new Date(s.session_date + "T00:00:00").toLocaleDateString("en", { weekday: "short", month: "short", day: "numeric", year: "numeric" })}
-                        </td>
-                        <td className="px-4 py-2.5 text-center">
-                          <span className={`inline-flex items-center gap-1 rounded-full px-3 py-0.5 text-xs font-semibold ${
-                            status === "present" ? "bg-emerald-500/15 text-emerald-700" :
-                            status === "excused" ? "bg-amber-500/15 text-amber-700" :
-                            "bg-red-500/15 text-red-700"
-                          }`}>
-                            {status === "present" ? "✓ Present" : status === "excused" ? "⊘ Excused" : "✗ Absent"}
-                          </span>
-                        </td>
-                      </tr>
-                    );
-                  })}
-                </tbody>
-              </table>
-            </div>
-          </>
-        )}
+              {/* Legend */}
+              <div className="mb-4 flex flex-wrap items-center gap-4 rounded-lg border border-border bg-card px-4 py-2.5">
+                <span className="text-xs font-semibold text-muted-foreground uppercase tracking-wider">Legend:</span>
+                <div className="flex items-center gap-1.5">
+                  <span className="inline-flex h-6 w-6 items-center justify-center rounded-md bg-emerald-500/15 border border-emerald-300">
+                    <CheckCircle2 className="h-3.5 w-3.5 text-emerald-600" />
+                  </span>
+                  <span className="text-xs text-muted-foreground">Present</span>
+                </div>
+                <div className="flex items-center gap-1.5">
+                  <span className="inline-flex h-6 w-6 items-center justify-center rounded-md bg-red-500/15 border border-red-300">
+                    <X className="h-3.5 w-3.5 text-red-600" />
+                  </span>
+                  <span className="text-xs text-muted-foreground">Absent</span>
+                </div>
+                <div className="flex items-center gap-1.5">
+                  <span className="inline-flex h-6 w-6 items-center justify-center rounded-md bg-secondary border border-border">
+                    <Minus className="h-3.5 w-3.5 text-muted-foreground/50" />
+                  </span>
+                  <span className="text-xs text-muted-foreground">Not recorded</span>
+                </div>
+              </div>
+
+              {/* Weeks × Hours grid table */}
+              <div className="overflow-x-auto rounded-xl border border-border shadow-sm">
+                <table className="w-full text-sm">
+                  <thead>
+                    <tr className="border-b border-border bg-secondary/80">
+                      <th className="sticky left-0 z-10 bg-secondary/80 px-4 py-3 text-left text-xs font-semibold uppercase tracking-wider text-muted-foreground min-w-[100px]">
+                        Week
+                      </th>
+                      <th className="px-4 py-3 text-left text-xs font-semibold uppercase tracking-wider text-muted-foreground min-w-[120px]">
+                        Date
+                      </th>
+                      {Array.from({ length: maxHours }, (_, i) => (
+                        <th key={i} className="px-3 py-3 text-center text-xs font-semibold uppercase tracking-wider text-muted-foreground min-w-[80px]">
+                          Hour {i + 1}
+                        </th>
+                      ))}
+                    </tr>
+                  </thead>
+                  <tbody>
+                    {weekNumbers.map((weekNum, wIdx) => {
+                      const weekSessions = weekMap.get(weekNum) || [];
+                      // Sort sessions within a week by date
+                      weekSessions.sort((a, b) => a.session_date.localeCompare(b.session_date));
+                      const firstDate = weekSessions[0]?.session_date;
+
+                      return (
+                        <tr key={weekNum} className={`border-b border-border last:border-0 ${wIdx % 2 === 0 ? "bg-card" : "bg-secondary/30"}`}>
+                          <td className={`sticky left-0 z-10 px-4 py-3 font-semibold text-foreground ${wIdx % 2 === 0 ? "bg-card" : "bg-secondary/30"}`}>
+                            Week {weekNum}
+                          </td>
+                          <td className="px-4 py-3 text-muted-foreground text-xs">
+                            {firstDate
+                              ? new Date(firstDate + "T00:00:00").toLocaleDateString("en", { month: "short", day: "numeric" })
+                              : "—"}
+                          </td>
+                          {Array.from({ length: maxHours }, (_, hIdx) => {
+                            const session = weekSessions[hIdx];
+                            if (!session) {
+                              return (
+                                <td key={hIdx} className="px-3 py-3 text-center">
+                                  <span className="inline-flex h-9 w-10 items-center justify-center rounded-lg border-2 border-border bg-secondary/50 text-muted-foreground/40" title="No session">
+                                    <Minus className="h-4 w-4" />
+                                  </span>
+                                </td>
+                              );
+                            }
+                            const rec = attendanceRecords.find((r) => r.session_id === session.id);
+                            if (!rec) {
+                              return (
+                                <td key={hIdx} className="px-3 py-3 text-center">
+                                  <span
+                                    className="inline-flex h-9 w-10 items-center justify-center rounded-lg border-2 border-dashed border-border bg-secondary/30 text-muted-foreground/40"
+                                    title="No attendance recorded by lecturer"
+                                  >
+                                    <Minus className="h-4 w-4" />
+                                  </span>
+                                </td>
+                              );
+                            }
+                            const isPresent = rec.status === "present";
+                            return (
+                              <td key={hIdx} className="px-3 py-3 text-center">
+                                <span
+                                  className={`inline-flex h-9 w-10 items-center justify-center rounded-lg border-2 transition-all duration-200 ${
+                                    isPresent
+                                      ? "border-emerald-400 bg-emerald-500/20 text-emerald-600 shadow-sm shadow-emerald-500/10"
+                                      : "border-red-300 bg-red-500/15 text-red-500"
+                                  }`}
+                                  title={isPresent ? "Present" : "Absent"}
+                                >
+                                  {isPresent ? <CheckCircle2 className="h-4.5 w-4.5" /> : <X className="h-4.5 w-4.5" />}
+                                </span>
+                              </td>
+                            );
+                          })}
+                        </tr>
+                      );
+                    })}
+                  </tbody>
+                </table>
+              </div>
+
+              {/* Summary stats */}
+              <div className="mt-4 grid gap-3 grid-cols-3">
+                <div className="rounded-xl border border-border bg-card p-3 text-center">
+                  <p className="text-xl font-bold text-emerald-600">{presentCount}</p>
+                  <p className="text-xs text-muted-foreground">Present</p>
+                </div>
+                <div className="rounded-xl border border-border bg-card p-3 text-center">
+                  <p className="text-xl font-bold text-destructive">{absentCount}</p>
+                  <p className="text-xs text-muted-foreground">Absent</p>
+                </div>
+                <div className="rounded-xl border border-border bg-card p-3 text-center">
+                  <p className="text-xl font-bold text-foreground">{sessions.length}</p>
+                  <p className="text-xs text-muted-foreground">Total Sessions</p>
+                </div>
+              </div>
+            </>
+          );
+        })()}
       </div>
 
       {/* ─── MATERIALS ─── */}
