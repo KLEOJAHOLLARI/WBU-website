@@ -153,7 +153,18 @@ const AdminStudents = () => {
         </div>
       )}
 
-      <div className="mt-4 flex gap-2">
+      <div className="mt-4 relative">
+        <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
+        <input
+          type="text"
+          placeholder="Search by name, email, student ID, exam code, personal ID..."
+          value={searchQuery}
+          onChange={(e) => setSearchQuery(e.target.value)}
+          className="w-full rounded-md border border-input bg-background pl-9 pr-3 py-2 text-sm text-foreground placeholder:text-muted-foreground focus:outline-none focus:ring-2 focus:ring-ring"
+        />
+      </div>
+
+      <div className="mt-3 flex gap-2">
         <button onClick={() => setStatusFilter("all")} className={tabCls("all")}>All ({studentProfiles.length})</button>
         <button onClick={() => setStatusFilter("pending")} className={tabCls("pending")}>Pending ({pendingCount})</button>
         <button onClick={() => setStatusFilter("approved")} className={tabCls("approved")}>Approved</button>
@@ -167,7 +178,7 @@ const AdminStudents = () => {
             {isLoading ? (
               <p className="text-muted-foreground">Loading...</p>
             ) : filteredProfiles.length === 0 ? (
-              <p className="text-muted-foreground text-sm">No students found.</p>
+              <p className="text-muted-foreground text-sm">{searchQuery ? "No students match your search." : "No students found."}</p>
             ) : (
               filteredProfiles.map((p) => (
                 <button
