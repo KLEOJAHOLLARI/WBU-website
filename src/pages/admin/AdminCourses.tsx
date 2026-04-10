@@ -446,7 +446,10 @@ const AdminCourses = () => {
                   </button>
                 </td>
                 <td className="px-4 py-3 font-mono text-xs text-muted-foreground">{c.code || "—"}</td>
-                <td className="px-4 py-3 font-medium text-foreground">{c.name}</td>
+                <td className="px-4 py-3 font-medium text-foreground">
+                  {c.name}
+                  {c.is_shared && <Badge className="ml-2 bg-amber-500/15 text-amber-600 border-amber-500/25 hover:bg-amber-500/15 text-[10px]">Shared</Badge>}
+                </td>
                 <td className="px-4 py-3">
                   <Badge variant="outline" className="text-xs font-normal">{getProgramFaculty(c.program) || "—"}</Badge>
                 </td>
