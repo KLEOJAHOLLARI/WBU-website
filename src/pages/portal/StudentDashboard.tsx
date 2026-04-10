@@ -207,7 +207,7 @@ const StudentDashboard = () => {
     : "—";
 
   const academicItems = [
-    { label: "Study Program", value: profile?.program || "Not assigned", icon: GraduationCap },
+    { label: "Study Program", value: programInfo?.title || profile?.program || "Not assigned", icon: GraduationCap },
     { label: "Faculty", value: programInfo?.faculty || "—", icon: Building2 },
     { label: "Program Type", value: degreeType, icon: Award },
     { label: "Duration", value: programInfo?.duration || "—", icon: Clock },
