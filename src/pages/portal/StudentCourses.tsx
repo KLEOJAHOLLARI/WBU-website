@@ -56,15 +56,31 @@ const StudentCourses = () => {
   const { data: programCourses = [] } = useQuery({
     queryKey: ["program-courses", profile?.program],
     queryFn: async () => {
-      const { data, error } = await supabase
+      // Fetch program-specific courses + shared courses
+      const { data: ownCourses, error: e1 } = await supabase
         .from("courses")
         .select("*")
         .eq("program", profile!.program!)
         .order("year")
         .order("semester")
         .order("name");
-      if (error) throw error;
-      return data;
+      if (e1) throw e1;
+
+      const { data: sharedCourses, error: e2 } = await supabase
+        .from("courses")
+        .select("*")
+        .eq("is_shared", true)
+        .neq("program", profile!.program!)
+        .order("year")
+        .order("semester")
+        .order("name");
+      if (e2) throw e2;
+
+      // Merge, deduplicate by id
+      const map = new Map<string, any>();
+      (ownCourses || []).forEach(c => map.set(c.id, c));
+      (sharedCourses || []).forEach(c => map.set(c.id, c));
+      return Array.from(map.values()).sort((a, b) => a.year - b.year || a.semester - b.semester || a.name.localeCompare(b.name));
     },
     enabled: !!profile?.program,
   });
