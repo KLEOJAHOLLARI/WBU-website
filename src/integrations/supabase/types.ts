@@ -245,6 +245,35 @@ export type Database = {
           },
         ]
       }
+      course_shared_programs: {
+        Row: {
+          course_id: string
+          created_at: string
+          id: string
+          program_slug: string
+        }
+        Insert: {
+          course_id: string
+          created_at?: string
+          id?: string
+          program_slug: string
+        }
+        Update: {
+          course_id?: string
+          created_at?: string
+          id?: string
+          program_slug?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "course_shared_programs_course_id_fkey"
+            columns: ["course_id"]
+            isOneToOne: false
+            referencedRelation: "courses"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       courses: {
         Row: {
           code: string

@@ -56,7 +56,7 @@ const StudentCourses = () => {
   const { data: programCourses = [] } = useQuery({
     queryKey: ["program-courses", profile?.program],
     queryFn: async () => {
-      // Fetch program-specific courses + shared courses
+      // Fetch program-specific courses
       const { data: ownCourses, error: e1 } = await supabase
         .from("courses")
         .select("*")
@@ -66,20 +66,31 @@ const StudentCourses = () => {
         .order("name");
       if (e1) throw e1;
 
-      const { data: sharedCourses, error: e2 } = await supabase
-        .from("courses")
-        .select("*")
-        .eq("is_shared", true)
-        .neq("program", profile!.program!)
-        .order("year")
-        .order("semester")
-        .order("name");
+      // Fetch shared courses that include this program
+      const { data: sharedLinks, error: e2 } = await supabase
+        .from("course_shared_programs")
+        .select("course_id")
+        .eq("program_slug", profile!.program!);
       if (e2) throw e2;
+
+      const sharedCourseIds = (sharedLinks || []).map(l => l.course_id);
+      let sharedCourses: any[] = [];
+      if (sharedCourseIds.length > 0) {
+        const { data, error: e3 } = await supabase
+          .from("courses")
+          .select("*")
+          .in("id", sharedCourseIds)
+          .order("year")
+          .order("semester")
+          .order("name");
+        if (e3) throw e3;
+        sharedCourses = data || [];
+      }
 
       // Merge, deduplicate by id
       const map = new Map<string, any>();
       (ownCourses || []).forEach(c => map.set(c.id, c));
-      (sharedCourses || []).forEach(c => map.set(c.id, c));
+      sharedCourses.forEach(c => map.set(c.id, c));
       return Array.from(map.values()).sort((a, b) => a.year - b.year || a.semester - b.semester || a.name.localeCompare(b.name));
     },
     enabled: !!profile?.program,
