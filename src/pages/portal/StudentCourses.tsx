@@ -509,6 +509,9 @@ const StudentCourses = () => {
                             <div className="flex-1 min-w-0">
                               <h3 className="font-display font-semibold text-foreground text-sm truncate">{course.name}</h3>
                               <p className="text-xs text-muted-foreground">{course.code}</p>
+                              {course.is_shared && (
+                                <Badge className="mt-1 bg-amber-500/15 text-amber-600 border-amber-500/25 hover:bg-amber-500/15 text-[10px]">Common Course</Badge>
+                              )}
                               {renderProfessorMeta(course.professor_id)}
                             </div>
                           </div>
