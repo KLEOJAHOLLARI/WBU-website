@@ -269,7 +269,7 @@ const StudentTranscript = () => {
           <div>
             <h1 className="text-2xl font-bold text-foreground">Academic Transcript</h1>
             <p className="text-sm text-muted-foreground">
-              {profile?.full_name} · {profile?.program || "No program assigned"}
+              {profile?.full_name} · {studentProgram || "No program assigned"}
             </p>
           </div>
           <Button onClick={handleDownloadPDF} disabled={isLoading || rows.length === 0} className="gap-2">
