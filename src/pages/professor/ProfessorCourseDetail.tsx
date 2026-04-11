@@ -1065,6 +1065,17 @@ const ProfessorCourseDetail = () => {
             )}
           </div>
         )}
+
+        {/* ═══════ ANALYTICS ═══════ */}
+        {tab === "analytics" && (
+          <ProfessorAnalyticsTab
+            enrollments={enrollments}
+            components={components}
+            grades={grades}
+            sessions={sessions}
+            attendanceRecords={attendanceRecords}
+          />
+        )}
       </div>
     </ProfessorLayout>
   );
