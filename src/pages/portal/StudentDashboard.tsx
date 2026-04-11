@@ -2,7 +2,8 @@ import StudentLayout from "@/components/StudentLayout";
 import { useQuery } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/hooks/useAuth";
-import { FileText, Upload, Mail, Clock, Megaphone, BookOpen, GraduationCap, Building2, Calendar, User, Award, TrendingUp, Hash, MapPin, Users, CreditCard, AlertTriangle, CalendarDays } from "lucide-react";
+import { FileText, Upload, Mail, Clock, Megaphone, BookOpen, GraduationCap, Building2, Calendar, User, Award, TrendingUp, Hash, MapPin, Users, CreditCard, AlertTriangle, CalendarDays, Bell, CheckCircle2 } from "lucide-react";
+import { useMutation, useQueryClient } from "@tanstack/react-query";
 import { Badge } from "@/components/ui/badge";
 import { Progress } from "@/components/ui/progress";
 import { Link } from "react-router-dom";
@@ -246,6 +247,33 @@ const StudentDashboard = () => {
     enabled: !!user,
   });
 
+
+  const queryClient = useQueryClient();
+
+  const { data: gradeNotifications = [] } = useQuery({
+    queryKey: ["student-grade-notifications", user?.id],
+    queryFn: async () => {
+      const { data, error } = await supabase
+        .from("grade_notifications")
+        .select("*")
+        .eq("user_id", user!.id)
+        .order("created_at", { ascending: false })
+        .limit(10);
+      if (error) throw error;
+      return data;
+    },
+    enabled: !!user,
+  });
+
+  const markGradeRead = useMutation({
+    mutationFn: async (id: string) => {
+      await supabase.from("grade_notifications").update({ is_read: true }).eq("id", id);
+    },
+    onSuccess: () => queryClient.invalidateQueries({ queryKey: ["student-grade-notifications"] }),
+  });
+
+  const unreadGradeCount = gradeNotifications.filter((n: any) => !n.is_read).length;
+
   const cards = [
     { label: "Enrolled Courses", value: enrolledCount, icon: BookOpen, color: "text-primary" },
     { label: "Pending Requests", value: pendingRequestCount, icon: Clock, color: "text-amber-600" },
@@ -330,6 +358,51 @@ const StudentDashboard = () => {
                     {alert.present} of {alert.total} sessions attended · {75 - alert.pct}% below threshold
                   </p>
                 </Link>
+              ))}
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* Grade Notifications */}
+      {gradeNotifications.length > 0 && (
+        <div className="mt-6">
+          <div className="rounded-xl border border-primary/30 bg-primary/5 p-5">
+            <div className="flex items-center gap-2 mb-3">
+              <Bell className="h-5 w-5 text-primary" />
+              <h2 className="font-display text-base font-semibold text-foreground">
+                Recent Grades
+              </h2>
+              {unreadGradeCount > 0 && (
+                <Badge className="ml-auto">{unreadGradeCount} new</Badge>
+              )}
+            </div>
+            <div className="space-y-2">
+              {gradeNotifications.map((n: any) => (
+                <div
+                  key={n.id}
+                  className={`flex items-center justify-between rounded-lg border p-3 transition-colors ${
+                    n.is_read ? "border-border bg-card" : "border-primary/20 bg-card"
+                  }`}
+                >
+                  <div className="flex items-center gap-3">
+                    <div className={`h-2 w-2 rounded-full ${n.is_read ? "bg-muted-foreground/30" : "bg-primary"}`} />
+                    <div>
+                      <p className="text-sm font-medium text-foreground">{n.course_name}</p>
+                      <p className="text-xs text-muted-foreground">
+                        {n.component_name}: {n.score}/{n.max_score} ({Math.round((n.score / n.max_score) * 100)}%)
+                      </p>
+                    </div>
+                  </div>
+                  <div className="flex items-center gap-2">
+                    <span className="text-xs text-muted-foreground">{new Date(n.created_at).toLocaleDateString()}</span>
+                    {!n.is_read && (
+                      <button onClick={() => markGradeRead.mutate(n.id)} className="text-primary hover:text-primary/80">
+                        <CheckCircle2 className="h-4 w-4" />
+                      </button>
+                    )}
+                  </div>
+                </div>
               ))}
             </div>
           </div>
