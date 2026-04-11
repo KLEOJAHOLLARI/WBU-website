@@ -417,6 +417,56 @@ export type Database = {
           },
         ]
       }
+      exam_schedule: {
+        Row: {
+          course_id: string | null
+          created_at: string
+          end_time: string
+          exam_date: string
+          exam_type: string
+          id: string
+          notes: string | null
+          program: string
+          room: string
+          start_time: string
+          updated_at: string
+        }
+        Insert: {
+          course_id?: string | null
+          created_at?: string
+          end_time: string
+          exam_date: string
+          exam_type?: string
+          id?: string
+          notes?: string | null
+          program: string
+          room?: string
+          start_time: string
+          updated_at?: string
+        }
+        Update: {
+          course_id?: string | null
+          created_at?: string
+          end_time?: string
+          exam_date?: string
+          exam_type?: string
+          id?: string
+          notes?: string | null
+          program?: string
+          room?: string
+          start_time?: string
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "exam_schedule_course_id_fkey"
+            columns: ["course_id"]
+            isOneToOne: false
+            referencedRelation: "courses"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       grade_components: {
         Row: {
           count: number
@@ -451,6 +501,42 @@ export type Database = {
             referencedColumns: ["id"]
           },
         ]
+      }
+      grade_notifications: {
+        Row: {
+          component_name: string
+          course_name: string
+          created_at: string
+          grade_id: string | null
+          id: string
+          is_read: boolean
+          max_score: number
+          score: number | null
+          user_id: string
+        }
+        Insert: {
+          component_name?: string
+          course_name?: string
+          created_at?: string
+          grade_id?: string | null
+          id?: string
+          is_read?: boolean
+          max_score?: number
+          score?: number | null
+          user_id: string
+        }
+        Update: {
+          component_name?: string
+          course_name?: string
+          created_at?: string
+          grade_id?: string | null
+          id?: string
+          is_read?: boolean
+          max_score?: number
+          score?: number | null
+          user_id?: string
+        }
+        Relationships: []
       }
       grades: {
         Row: {
