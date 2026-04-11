@@ -7,8 +7,9 @@ import { toast } from "@/hooks/use-toast";
 import {
   Plus, Trash2, Save, ArrowLeft, Users, CalendarDays,
   BarChart3, ClipboardCheck, AlertTriangle, CheckCircle2, Loader2,
-  Search, TrendingUp, Award, FileText, Upload, Download, File, X
+  Search, TrendingUp, Award, FileText, Upload, Download, File, X, PieChart as PieChartIcon
 } from "lucide-react";
+import ProfessorAnalyticsTab from "@/components/professor/ProfessorAnalyticsTab";
 import { Badge } from "@/components/ui/badge";
 import { Progress } from "@/components/ui/progress";
 
@@ -77,7 +78,7 @@ const GradeCell = ({ defaultValue, onSave, isSaving }: { defaultValue: string; o
 const ProfessorCourseDetail = () => {
   const { id: courseId } = useParams<{ id: string }>();
   const qc = useQueryClient();
-  const [tab, setTab] = useState<"students" | "scheme" | "attendance" | "grades" | "materials">("students");
+  const [tab, setTab] = useState<"students" | "scheme" | "attendance" | "grades" | "materials" | "analytics">("students");
   const [studentSearch, setStudentSearch] = useState("");
   const fileInputRef = useRef<HTMLInputElement>(null);
   const [uploading, setUploading] = useState(false);
@@ -391,6 +392,7 @@ const ProfessorCourseDetail = () => {
     { key: "attendance", label: "Attendance", icon: CalendarDays },
     { key: "grades", label: "Grades", icon: ClipboardCheck },
     { key: "materials", label: "Materials", icon: FileText },
+    { key: "analytics", label: "Analytics", icon: PieChartIcon },
   ] as const;
 
   if (loadingCourse) {
