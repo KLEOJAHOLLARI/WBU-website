@@ -5,7 +5,7 @@ import { useQuery } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
 import {
   GraduationCap, LayoutDashboard, FileText, Upload, Mail, LogOut,
-  CalendarDays, BookOpen, UserCircle, Menu, ScrollText, ArrowLeft,
+  CalendarDays, BookOpen, UserCircle, Menu, ScrollText, ArrowLeft, ClipboardList,
 } from "lucide-react";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Sheet, SheetContent, SheetTrigger } from "@/components/ui/sheet";
@@ -24,6 +24,7 @@ const navGroups = [
     items: [
       { to: "/portal/transcript", label: "Transcript", icon: ScrollText },
       { to: "/portal/timetable", label: "Timetable", icon: CalendarDays },
+      { to: "/portal/exams", label: "Exam Schedule", icon: ClipboardList },
       { to: "/portal/documents", label: "Documents", icon: Upload },
     ],
   },
