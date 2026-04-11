@@ -14,6 +14,42 @@ export type Database = {
   }
   public: {
     Tables: {
+      academic_semesters: {
+        Row: {
+          created_at: string
+          end_date: string
+          enrollment_deadline: string | null
+          enrollment_open: boolean
+          id: string
+          is_current: boolean
+          name: string
+          start_date: string
+          updated_at: string
+        }
+        Insert: {
+          created_at?: string
+          end_date: string
+          enrollment_deadline?: string | null
+          enrollment_open?: boolean
+          id?: string
+          is_current?: boolean
+          name: string
+          start_date: string
+          updated_at?: string
+        }
+        Update: {
+          created_at?: string
+          end_date?: string
+          enrollment_deadline?: string | null
+          enrollment_open?: boolean
+          id?: string
+          is_current?: boolean
+          name?: string
+          start_date?: string
+          updated_at?: string
+        }
+        Relationships: []
+      }
       announcements: {
         Row: {
           author_id: string
