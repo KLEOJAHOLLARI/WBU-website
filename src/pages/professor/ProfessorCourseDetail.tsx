@@ -392,6 +392,7 @@ const ProfessorCourseDetail = () => {
     { key: "scheme", label: "Evaluation", icon: BarChart3 },
     { key: "attendance", label: "Attendance", icon: CalendarDays },
     { key: "grades", label: "Grades", icon: ClipboardCheck },
+    { key: "quizzes", label: "Quizzes", icon: HelpCircle },
     { key: "materials", label: "Materials", icon: FileText },
     { key: "analytics", label: "Analytics", icon: PieChartIcon },
   ] as const;
