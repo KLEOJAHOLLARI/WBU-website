@@ -247,6 +247,33 @@ const StudentDashboard = () => {
     enabled: !!user,
   });
 
+
+  const queryClient = useQueryClient();
+
+  const { data: gradeNotifications = [] } = useQuery({
+    queryKey: ["student-grade-notifications", user?.id],
+    queryFn: async () => {
+      const { data, error } = await supabase
+        .from("grade_notifications")
+        .select("*")
+        .eq("user_id", user!.id)
+        .order("created_at", { ascending: false })
+        .limit(10);
+      if (error) throw error;
+      return data;
+    },
+    enabled: !!user,
+  });
+
+  const markGradeRead = useMutation({
+    mutationFn: async (id: string) => {
+      await supabase.from("grade_notifications").update({ is_read: true }).eq("id", id);
+    },
+    onSuccess: () => queryClient.invalidateQueries({ queryKey: ["student-grade-notifications"] }),
+  });
+
+  const unreadGradeCount = gradeNotifications.filter((n: any) => !n.is_read).length;
+
   const cards = [
     { label: "Enrolled Courses", value: enrolledCount, icon: BookOpen, color: "text-primary" },
     { label: "Pending Requests", value: pendingRequestCount, icon: Clock, color: "text-amber-600" },
