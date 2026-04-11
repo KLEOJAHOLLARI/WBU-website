@@ -7,8 +7,11 @@ import { toast } from "@/hooks/use-toast";
 import {
   Plus, Trash2, Save, ArrowLeft, Users, CalendarDays,
   BarChart3, ClipboardCheck, AlertTriangle, CheckCircle2, Loader2,
-  Search, TrendingUp, Award, FileText, Upload, Download, File, X
+  Search, TrendingUp, Award, FileText, Upload, Download, File, X, PieChart as PieChartIcon, HelpCircle, Mail
 } from "lucide-react";
+import ProfessorAnalyticsTab from "@/components/professor/ProfessorAnalyticsTab";
+import ProfessorQuizTab from "@/components/professor/ProfessorQuizTab";
+import ProfessorBulkMessage from "@/components/professor/ProfessorBulkMessage";
 import { Badge } from "@/components/ui/badge";
 import { Progress } from "@/components/ui/progress";
 
@@ -77,7 +80,7 @@ const GradeCell = ({ defaultValue, onSave, isSaving }: { defaultValue: string; o
 const ProfessorCourseDetail = () => {
   const { id: courseId } = useParams<{ id: string }>();
   const qc = useQueryClient();
-  const [tab, setTab] = useState<"students" | "scheme" | "attendance" | "grades" | "materials">("students");
+  const [tab, setTab] = useState<"students" | "scheme" | "attendance" | "grades" | "materials" | "analytics" | "quizzes" | "messages">("students");
   const [studentSearch, setStudentSearch] = useState("");
   const fileInputRef = useRef<HTMLInputElement>(null);
   const [uploading, setUploading] = useState(false);
@@ -390,7 +393,10 @@ const ProfessorCourseDetail = () => {
     { key: "scheme", label: "Evaluation", icon: BarChart3 },
     { key: "attendance", label: "Attendance", icon: CalendarDays },
     { key: "grades", label: "Grades", icon: ClipboardCheck },
+    { key: "quizzes", label: "Quizzes", icon: HelpCircle },
     { key: "materials", label: "Materials", icon: FileText },
+    { key: "messages", label: "Messages", icon: Mail },
+    { key: "analytics", label: "Analytics", icon: PieChartIcon },
   ] as const;
 
   if (loadingCourse) {
@@ -1062,6 +1068,31 @@ const ProfessorCourseDetail = () => {
               </div>
             )}
           </div>
+        )}
+
+        {/* ═══════ QUIZZES ═══════ */}
+        {tab === "quizzes" && courseId && (
+          <ProfessorQuizTab courseId={courseId} />
+        )}
+
+        {/* ═══════ MESSAGES ═══════ */}
+        {tab === "messages" && courseId && course && (
+          <ProfessorBulkMessage
+            courseId={courseId}
+            courseName={course.name}
+            enrollments={enrollments}
+          />
+        )}
+
+        {/* ═══════ ANALYTICS ═══════ */}
+        {tab === "analytics" && (
+          <ProfessorAnalyticsTab
+            enrollments={enrollments}
+            components={components}
+            grades={grades}
+            sessions={sessions}
+            attendanceRecords={attendanceRecords}
+          />
         )}
       </div>
     </ProfessorLayout>
