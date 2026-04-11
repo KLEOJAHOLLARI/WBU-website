@@ -5,6 +5,9 @@ import { supabase } from "@/integrations/supabase/client";
 import { toast } from "@/hooks/use-toast";
 import { Plus, Pencil, Trash2, X, Upload, FileSpreadsheet } from "lucide-react";
 import * as XLSX from "xlsx";
+import { useActiveSemester } from "@/hooks/useActiveSemester";
+import SemesterBadge from "@/components/SemesterBadge";
+import { Badge } from "@/components/ui/badge";
 
 const DAYS = ["Monday", "Tuesday", "Wednesday", "Thursday", "Friday", "Saturday"];
 
@@ -40,11 +43,13 @@ const AdminTimetable = () => {
   const [form, setForm] = useState(emptyForm);
   const [uploading, setUploading] = useState(false);
   const [dragOver, setDragOver] = useState(false);
+  const [showAll, setShowAll] = useState(false);
+  const { data: activeSemester } = useActiveSemester();
 
   const { data: entries = [], isLoading } = useQuery({
-    queryKey: ["admin-timetable"],
+    queryKey: ["admin-timetable", showAll, activeSemester?.year, activeSemester?.semester],
     queryFn: async () => {
-      const { data, error } = await supabase
+      let query = supabase
         .from("timetable_entries")
         .select("*")
         .order("program")
@@ -52,6 +57,10 @@ const AdminTimetable = () => {
         .order("semester")
         .order("day_of_week")
         .order("start_time");
+      if (!showAll && activeSemester) {
+        query = query.eq("year", activeSemester.year).eq("semester", activeSemester.semester);
+      }
+      const { data, error } = await query;
       if (error) throw error;
       return data as TimetableEntry[];
     },
@@ -181,6 +190,15 @@ const AdminTimetable = () => {
         <div>
           <h1 className="font-display text-2xl font-bold text-foreground">Timetable</h1>
           <p className="text-sm text-muted-foreground">Manage class schedules</p>
+          <div className="mt-2 flex items-center gap-3">
+            <SemesterBadge />
+            <button
+              onClick={() => setShowAll(!showAll)}
+              className="text-xs text-primary underline-offset-4 hover:underline"
+            >
+              {showAll ? "Show active semester only" : "Show all semesters"}
+            </button>
+          </div>
         </div>
         <div className="flex gap-2">
           <label className="inline-flex cursor-pointer items-center gap-2 rounded-md border border-input bg-background px-4 py-2.5 text-sm font-semibold text-foreground transition-colors hover:bg-secondary">

@@ -7,10 +7,13 @@ import { Badge } from "@/components/ui/badge";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { CalendarDays } from "lucide-react";
 import { useState } from "react";
+import { useActiveSemester } from "@/hooks/useActiveSemester";
+import SemesterBadge from "@/components/SemesterBadge";
 
 const StudentExamSchedule = () => {
   const { user } = useAuth();
   const [filter, setFilter] = useState<string>("all");
+  const { data: activeSemester } = useActiveSemester();
 
   const { data: profile } = useQuery({
     queryKey: ["student-profile-exam", user?.id],
@@ -31,12 +34,13 @@ const StudentExamSchedule = () => {
   });
 
   const { data: exams = [], isLoading } = useQuery({
-    queryKey: ["student-exam-schedule", profile?.program],
+    queryKey: ["student-exam-schedule", profile?.program, activeSemester?.year, activeSemester?.semester],
     queryFn: async () => {
-      const { data, error } = await supabase
+      let query = supabase
         .from("exam_schedule")
-        .select("*, courses(name, code)")
+        .select("*, courses(name, code, year, semester)")
         .order("exam_date", { ascending: true });
+      const { data, error } = await query;
       if (error) throw error;
       return data ?? [];
     },
@@ -45,8 +49,12 @@ const StudentExamSchedule = () => {
 
   const enrolledCourseIds = new Set(enrollments.map((e) => e.course_id));
 
-  // Filter to show only exams for enrolled courses or student's program
+  // Filter to show only exams for enrolled courses or student's program, scoped to active semester
   const relevantExams = exams.filter((e: any) => {
+    // Semester filter: if active semester set, only show exams for courses in that semester
+    if (activeSemester && e.courses) {
+      if (e.courses.year !== activeSemester.year || e.courses.semester !== activeSemester.semester) return false;
+    }
     if (e.course_id && enrolledCourseIds.has(e.course_id)) return true;
     if (e.program === profile?.program) return true;
     return false;
@@ -73,6 +81,7 @@ const StudentExamSchedule = () => {
             <CalendarDays className="h-6 w-6" /> Exam Schedule
           </h1>
           <p className="mt-1 text-muted-foreground">Your upcoming and past exams</p>
+          <div className="mt-2"><SemesterBadge /></div>
         </div>
         <Select value={filter} onValueChange={setFilter}>
           <SelectTrigger className="w-44">
