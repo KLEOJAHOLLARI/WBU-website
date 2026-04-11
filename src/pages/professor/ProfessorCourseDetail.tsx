@@ -1068,6 +1068,11 @@ const ProfessorCourseDetail = () => {
           </div>
         )}
 
+        {/* ═══════ QUIZZES ═══════ */}
+        {tab === "quizzes" && courseId && (
+          <ProfessorQuizTab courseId={courseId} />
+        )}
+
         {/* ═══════ ANALYTICS ═══════ */}
         {tab === "analytics" && (
           <ProfessorAnalyticsTab
