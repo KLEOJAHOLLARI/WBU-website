@@ -6,7 +6,7 @@ import { useAuth } from "@/hooks/useAuth";
 import {
   AlertTriangle, CheckCircle2, ExternalLink, ArrowLeft,
   CalendarDays, BarChart3, Loader2, BookOpen, TrendingUp,
-  FileText, Download, X, Minus
+  FileText, Download, X, Minus, HelpCircle, Clock, ArrowRight
 } from "lucide-react";
 import { Badge } from "@/components/ui/badge";
 import { Progress } from "@/components/ui/progress";
@@ -539,8 +539,93 @@ const StudentCourseDetail = () => {
           </div>
         )}
       </div>
+      {/* ═══ Quizzes ═══ */}
+      <QuizzesSection courseId={courseId!} />
     </StudentLayout>
   );
 };
+
+/* ─── Quizzes section component ─── */
+const QuizzesSection = ({ courseId }: { courseId: string }) => {
+  const { user } = useAuth();
+
+  const { data: quizzes = [] } = useQuery({
+    queryKey: ["student-course-quizzes", courseId],
+    queryFn: async () => {
+      const { data, error } = await supabase
+        .from("quizzes")
+        .select("*")
+        .eq("course_id", courseId)
+        .eq("is_published", true)
+        .order("created_at", { ascending: false });
+      if (error) throw error;
+      return data;
+    },
+  });
+
+  const { data: attempts = [] } = useQuery({
+    queryKey: ["student-quiz-attempts-list", courseId, user?.id],
+    queryFn: async () => {
+      if (!quizzes.length || !user) return [];
+      const { data, error } = await supabase
+        .from("quiz_attempts")
+        .select("*")
+        .eq("user_id", user.id)
+        .in("quiz_id", quizzes.map(q => q.id));
+      if (error) throw error;
+      return data || [];
+    },
+    enabled: quizzes.length > 0 && !!user,
+  });
+
+  if (quizzes.length === 0) return null;
+
+  return (
+    <div className="mt-10">
+      <h2 className="mb-4 flex items-center gap-2 font-display text-lg font-semibold text-foreground">
+        <HelpCircle className="h-5 w-5 text-primary" /> Quizzes
+      </h2>
+      <div className="space-y-3">
+        {quizzes.map((quiz) => {
+          const attempt = attempts.find(a => a.quiz_id === quiz.id);
+          const isCompleted = !!attempt?.submitted_at;
+          const pct = isCompleted && attempt.max_score
+            ? Math.round((Number(attempt.score) / Number(attempt.max_score)) * 100)
+            : null;
+
+          return (
+            <Link
+              key={quiz.id}
+              to={`/portal/quiz/${quiz.id}`}
+              className="flex items-center justify-between rounded-xl border border-border bg-card p-4 transition-all hover:border-primary/30 hover:shadow-sm"
+            >
+              <div className="min-w-0 flex-1">
+                <h3 className="font-display font-semibold text-foreground">{quiz.title}</h3>
+                <div className="mt-1 flex flex-wrap gap-2">
+                  {quiz.time_limit_minutes && (
+                    <span className="inline-flex items-center gap-1 text-xs text-muted-foreground">
+                      <Clock className="h-3 w-3" /> {quiz.time_limit_minutes} min
+                    </span>
+                  )}
+                  {isCompleted ? (
+                    <span className={`inline-flex items-center gap-1 text-xs font-medium ${pct! >= 50 ? "text-emerald-600" : "text-destructive"}`}>
+                      <CheckCircle2 className="h-3 w-3" /> {pct}% — {attempt.score}/{attempt.max_score} points
+                    </span>
+                  ) : attempt ? (
+                    <span className="inline-flex items-center gap-1 text-xs text-amber-600">
+                      <Clock className="h-3 w-3" /> In progress
+                    </span>
+                  ) : (
+                    <span className="text-xs text-muted-foreground">Not started</span>
+                  )}
+                </div>
+              </div>
+              <ArrowRight className="h-4 w-4 text-muted-foreground" />
+            </Link>
+          );
+        })}
+      </div>
+    </div>
+  );
 
 export default StudentCourseDetail;
