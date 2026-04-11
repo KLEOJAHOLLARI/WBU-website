@@ -23,8 +23,11 @@ export type Database = {
           id: string
           is_current: boolean
           name: string
+          semester: number
           start_date: string
+          status: string
           updated_at: string
+          year: number
         }
         Insert: {
           created_at?: string
@@ -34,8 +37,11 @@ export type Database = {
           id?: string
           is_current?: boolean
           name: string
+          semester?: number
           start_date: string
+          status?: string
           updated_at?: string
+          year?: number
         }
         Update: {
           created_at?: string
@@ -45,8 +51,11 @@ export type Database = {
           id?: string
           is_current?: boolean
           name?: string
+          semester?: number
           start_date?: string
+          status?: string
           updated_at?: string
+          year?: number
         }
         Relationships: []
       }
