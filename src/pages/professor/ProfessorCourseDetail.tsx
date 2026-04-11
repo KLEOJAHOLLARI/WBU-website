@@ -395,6 +395,7 @@ const ProfessorCourseDetail = () => {
     { key: "grades", label: "Grades", icon: ClipboardCheck },
     { key: "quizzes", label: "Quizzes", icon: HelpCircle },
     { key: "materials", label: "Materials", icon: FileText },
+    { key: "messages", label: "Messages", icon: Mail },
     { key: "analytics", label: "Analytics", icon: PieChartIcon },
   ] as const;
 
