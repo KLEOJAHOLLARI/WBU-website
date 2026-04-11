@@ -7,7 +7,7 @@ import { toast } from "@/hooks/use-toast";
 import {
   Plus, Trash2, Save, ArrowLeft, Users, CalendarDays,
   BarChart3, ClipboardCheck, AlertTriangle, CheckCircle2, Loader2,
-  Search, TrendingUp, Award, FileText, Upload, Download, File, X, PieChart as PieChartIcon
+  Search, TrendingUp, Award, FileText, Upload, Download, File, X, PieChart as PieChartIcon, HelpCircle
 } from "lucide-react";
 import ProfessorAnalyticsTab from "@/components/professor/ProfessorAnalyticsTab";
 import ProfessorQuizTab from "@/components/professor/ProfessorQuizTab";
