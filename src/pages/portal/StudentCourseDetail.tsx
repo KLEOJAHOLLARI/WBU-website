@@ -627,5 +627,6 @@ const QuizzesSection = ({ courseId }: { courseId: string }) => {
       </div>
     </div>
   );
+};
 
 export default StudentCourseDetail;
