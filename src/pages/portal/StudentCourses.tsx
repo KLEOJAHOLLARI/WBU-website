@@ -8,6 +8,8 @@ import { Link, useNavigate } from "react-router-dom";
 import { BookOpen, BarChart3, ClipboardCheck, Lock, Plus, Clock, CheckCircle, XCircle, X, GraduationCap, Building2, ChevronDown, ChevronRight, User } from "lucide-react";
 import { Badge } from "@/components/ui/badge";
 import { Avatar, AvatarImage, AvatarFallback } from "@/components/ui/avatar";
+import { useActiveSemester } from "@/hooks/useActiveSemester";
+import SemesterBadge from "@/components/SemesterBadge";
 
 const StudentCourses = () => {
   const { user } = useAuth();
@@ -328,9 +330,11 @@ const StudentCourses = () => {
     );
   };
 
-  // Semester-based visibility: sem 1 → only sem 1; sem 2 → sem 1+2
-  const studentYear = profile?.current_year ?? 1;
-  const studentSemester = profile?.current_semester ?? 1;
+  const { data: activeSemester } = useActiveSemester();
+
+  // Use active semester if available, otherwise fall back to profile
+  const studentYear = activeSemester?.year ?? profile?.current_year ?? 1;
+  const studentSemester = activeSemester?.semester ?? profile?.current_semester ?? 1;
 
   const visibleProgramCourses = programCourses.filter(c => {
     if (c.year > studentYear) return false;
@@ -355,6 +359,7 @@ const StudentCourses = () => {
         <div>
           <h1 className="font-display text-2xl font-bold text-foreground">My Courses</h1>
           <p className="text-sm text-muted-foreground">View your enrolled courses, grades, and attendance</p>
+          <div className="mt-2"><SemesterBadge /></div>
         </div>
         {profile?.program && availableCourses.length > 0 && (
           <button

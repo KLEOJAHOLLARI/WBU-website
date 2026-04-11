@@ -2,6 +2,8 @@ import { useState, useMemo } from "react";
 import StudentLayout from "@/components/StudentLayout";
 import { useQuery } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
+import { useActiveSemester } from "@/hooks/useActiveSemester";
+import SemesterBadge from "@/components/SemesterBadge";
 
 const DAYS = ["Monday", "Tuesday", "Wednesday", "Thursday", "Friday", "Saturday"];
 const TIME_SLOTS = ["08:00","09:00","10:00","11:00","12:00","13:00","14:00","15:00","16:00","17:00","18:00"];
@@ -10,11 +12,17 @@ const StudentTimetable = () => {
   const [filterProgram, setFilterProgram] = useState("");
   const [filterYear, setFilterYear] = useState<number | "">("");
   const [filterSemester, setFilterSemester] = useState<number | "">("");
+  const { data: activeSemester } = useActiveSemester();
 
   const { data: entries = [], isLoading } = useQuery({
-    queryKey: ["student-timetable"],
+    queryKey: ["student-timetable", activeSemester?.year, activeSemester?.semester],
     queryFn: async () => {
-      const { data, error } = await supabase.from("timetable_entries").select("*").order("start_time");
+      let query = supabase.from("timetable_entries").select("*").order("start_time");
+      // Auto-filter by active semester if set
+      if (activeSemester) {
+        query = query.eq("year", activeSemester.year).eq("semester", activeSemester.semester);
+      }
+      const { data, error } = await query;
       if (error) throw error;
       return data;
     },
@@ -40,6 +48,7 @@ const StudentTimetable = () => {
     <StudentLayout>
       <h1 className="font-display text-2xl font-bold text-foreground">Timetable</h1>
       <p className="text-sm text-muted-foreground">View your class schedule</p>
+      <div className="mt-2"><SemesterBadge /></div>
 
       <div className="mt-6 flex flex-wrap gap-4">
         <select value={filterProgram} onChange={(e) => setFilterProgram(e.target.value)} className={selectClass}>

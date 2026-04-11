@@ -10,6 +10,8 @@ import {
 import { Badge } from "@/components/ui/badge";
 import { Progress } from "@/components/ui/progress";
 import { useState, useMemo } from "react";
+import { useActiveSemester } from "@/hooks/useActiveSemester";
+import SemesterBadge from "@/components/SemesterBadge";
 
 const gradeColor = (pct: number) => {
   if (pct >= 70) return "text-emerald-600";
@@ -20,16 +22,22 @@ const gradeColor = (pct: number) => {
 const ProfessorDashboard = () => {
   const { user } = useAuth();
   const [search, setSearch] = useState("");
+  const { data: activeSemester } = useActiveSemester();
 
   const { data: courses = [], isLoading: loadingCourses } = useQuery({
-    queryKey: ["professor-courses", user?.id],
+    queryKey: ["professor-courses", user?.id, activeSemester?.year, activeSemester?.semester],
     queryFn: async () => {
-      const { data, error } = await supabase
+      let query = supabase
         .from("courses")
         .select("*")
         .eq("professor_id", user!.id)
         .order("program")
         .order("year");
+      // Filter by active semester if set
+      if (activeSemester) {
+        query = query.eq("year", activeSemester.year).eq("semester", activeSemester.semester);
+      }
+      const { data, error } = await query;
       if (error) throw error;
       return data;
     },
@@ -218,6 +226,7 @@ const ProfessorDashboard = () => {
       <div className="mb-6">
         <h1 className="font-display text-2xl font-bold text-foreground">Professor Dashboard</h1>
         <p className="mt-1 text-sm text-muted-foreground">Overview of your courses, students, and performance</p>
+        <div className="mt-2"><SemesterBadge /></div>
       </div>
 
       {/* Summary cards */}
