@@ -2,6 +2,7 @@ import AdminLayout from "@/components/AdminLayout";
 import { useQuery } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
 import { BookOpen, Newspaper, FileText, Mail, Users, GraduationCap, Clock } from "lucide-react";
+import SemesterBadge from "@/components/SemesterBadge";
 
 const AdminDashboard = () => {
   const { data: programCount = 0 } = useQuery({
@@ -74,6 +75,7 @@ const AdminDashboard = () => {
     <AdminLayout>
       <h1 className="font-display text-2xl font-bold text-foreground">Dashboard</h1>
       <p className="mt-1 text-muted-foreground">Overview of your university management system</p>
+      <div className="mt-2"><SemesterBadge /></div>
 
       <div className="mt-8 grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
         {cards.map((c) => (

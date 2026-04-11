@@ -10,6 +10,8 @@ import {
 } from "lucide-react";
 import { Badge } from "@/components/ui/badge";
 import { Progress } from "@/components/ui/progress";
+import { useActiveSemester } from "@/hooks/useActiveSemester";
+import SemesterBadge from "@/components/SemesterBadge";
 
 const gradeColor = (pct: number) => {
   if (pct >= 70) return "text-emerald-600";
@@ -22,16 +24,21 @@ const ProfessorCourses = () => {
   const [search, setSearch] = useState("");
   const [filterProgram, setFilterProgram] = useState("all");
   const [filterSemester, setFilterSemester] = useState("all");
+  const { data: activeSemester } = useActiveSemester();
 
   const { data: courses = [], isLoading } = useQuery({
-    queryKey: ["professor-courses", user?.id],
+    queryKey: ["professor-courses", user?.id, activeSemester?.year, activeSemester?.semester],
     queryFn: async () => {
-      const { data, error } = await supabase
+      let query = supabase
         .from("courses")
         .select("*")
         .eq("professor_id", user!.id)
         .order("program")
         .order("year");
+      if (activeSemester) {
+        query = query.eq("year", activeSemester.year).eq("semester", activeSemester.semester);
+      }
+      const { data, error } = await query;
       if (error) throw error;
       return data;
     },
@@ -110,6 +117,7 @@ const ProfessorCourses = () => {
       <div className="mb-6">
         <h1 className="font-display text-2xl font-bold text-foreground">My Courses</h1>
         <p className="text-sm text-muted-foreground">Manage grades, attendance, and evaluation schemes</p>
+        <div className="mt-2"><SemesterBadge /></div>
       </div>
 
       {/* Filters */}

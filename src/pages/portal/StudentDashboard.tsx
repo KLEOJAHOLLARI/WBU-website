@@ -7,6 +7,7 @@ import { useMutation, useQueryClient } from "@tanstack/react-query";
 import { Badge } from "@/components/ui/badge";
 import { Progress } from "@/components/ui/progress";
 import { Link } from "react-router-dom";
+import SemesterBadge from "@/components/SemesterBadge";
 
 const StudentDashboard = () => {
   const { user } = useAuth();
@@ -301,6 +302,7 @@ const StudentDashboard = () => {
         Welcome{profile?.full_name ? `, ${profile.full_name}` : ""}!
       </h1>
       <p className="mt-1 text-muted-foreground">Your student portal overview</p>
+      <div className="mt-2"><SemesterBadge /></div>
 
       <div className="mt-8 grid gap-4 grid-cols-2 sm:grid-cols-3 lg:grid-cols-6">
         {cards.map((c) => (
