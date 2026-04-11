@@ -49,6 +49,7 @@ import StudentTranscript from "./pages/portal/StudentTranscript";
 import ProfessorAdvisor from "./pages/professor/ProfessorAdvisor";
 import ProfessorTranscripts from "./pages/professor/ProfessorTranscripts";
 import ChangePassword from "./pages/portal/ChangePassword";
+import StudentQuiz from "./pages/portal/StudentQuiz";
 import DevToolbar from "./components/DevToolbar";
 import FacultyProfile from "./pages/FacultyProfile";
 
@@ -101,6 +102,7 @@ const App = () => (
             <Route path="/portal/profile" element={<StudentProfile />} />
             <Route path="/portal/transcript" element={<StudentTranscript />} />
             <Route path="/portal/change-password" element={<ChangePassword />} />
+            <Route path="/portal/quiz/:quizId" element={<StudentQuiz />} />
             <Route path="/professor" element={<ProfessorDashboard />} />
             <Route path="/professor/courses" element={<ProfessorCourses />} />
             <Route path="/professor/courses/:id" element={<ProfessorCourseDetail />} />
