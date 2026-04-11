@@ -1075,6 +1075,15 @@ const ProfessorCourseDetail = () => {
           <ProfessorQuizTab courseId={courseId} />
         )}
 
+        {/* ═══════ MESSAGES ═══════ */}
+        {tab === "messages" && courseId && course && (
+          <ProfessorBulkMessage
+            courseId={courseId}
+            courseName={course.name}
+            enrollments={enrollments}
+          />
+        )}
+
         {/* ═══════ ANALYTICS ═══════ */}
         {tab === "analytics" && (
           <ProfessorAnalyticsTab
