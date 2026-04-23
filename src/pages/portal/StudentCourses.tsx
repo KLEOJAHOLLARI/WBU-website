@@ -1,18 +1,16 @@
-import { useState, useMemo } from "react";
+import { useState } from "react";
 import StudentLayout from "@/components/StudentLayout";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/hooks/useAuth";
 import { useToast } from "@/hooks/use-toast";
 import { Link, useNavigate } from "react-router-dom";
-import { BookOpen, BarChart3, ClipboardCheck, Lock, Plus, Clock, CheckCircle, XCircle, X, GraduationCap, Building2, ChevronDown, ChevronRight, User, FileText, ExternalLink, ArrowRight } from "lucide-react";
+import { BookOpen, BarChart3, ClipboardCheck, Lock, Plus, Clock, CheckCircle, XCircle, X, GraduationCap, Building2, ChevronDown, ChevronRight, User } from "lucide-react";
 import { Badge } from "@/components/ui/badge";
 import { Avatar, AvatarImage, AvatarFallback } from "@/components/ui/avatar";
 import { useActiveSemester } from "@/hooks/useActiveSemester";
 import SemesterBadge from "@/components/SemesterBadge";
-import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription, DialogFooter } from "@/components/ui/dialog";
-import { Progress } from "@/components/ui/progress";
-import { Button } from "@/components/ui/button";
+import CourseModal from "@/components/portal/CourseModal";
 
 const StudentCourses = () => {
   const { user } = useAuth();
