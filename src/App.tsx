@@ -62,6 +62,7 @@ import StudentTuition from "./pages/portal/StudentTuition";
 import StudentTuitionEstimate from "./pages/portal/StudentTuitionEstimate";
 import AdminExamSchedule from "./pages/admin/AdminExamSchedule";
 import ProfessorExamSchedule from "./pages/professor/ProfessorExamSchedule";
+import ExamDetail from "./pages/portal/ExamDetail";
 
 const queryClient = new QueryClient();
 
