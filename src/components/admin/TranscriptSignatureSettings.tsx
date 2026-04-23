@@ -1,4 +1,4 @@
-import { useEffect, useMemo, useRef, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "@/hooks/use-toast";
@@ -11,7 +11,7 @@ import {
   Select, SelectContent, SelectItem, SelectTrigger, SelectValue,
 } from "@/components/ui/select";
 import { Skeleton } from "@/components/ui/skeleton";
-import { Upload, Trash2, ShieldCheck } from "lucide-react";
+import { ShieldCheck } from "lucide-react";
 
 interface SignatureConfig {
   enabled: boolean;
@@ -19,6 +19,11 @@ interface SignatureConfig {
   admin_name: string;
   title: string;
   label: string;
+  /** Text used to render the stylised signature on the PDF. Falls back to admin_name. */
+  signature_text: string;
+  /** Font style used to render the signature text. */
+  signature_font: "script" | "italic" | "bold";
+  /** Legacy field kept for backwards-compat with prior uploads. Always null in new flow. */
   signature_path: string | null;
 }
 
@@ -28,17 +33,21 @@ const DEFAULTS: SignatureConfig = {
   admin_name: "",
   title: "Registrar",
   label: "Verified by Administration",
+  signature_text: "",
+  signature_font: "script",
   signature_path: null,
+};
+
+const FONT_PREVIEW: Record<SignatureConfig["signature_font"], string> = {
+  script: "'Brush Script MT', 'Lucida Handwriting', cursive",
+  italic: "'Times New Roman', serif",
+  bold: "'Helvetica', sans-serif",
 };
 
 const TranscriptSignatureSettings = () => {
   const queryClient = useQueryClient();
-  const fileInputRef = useRef<HTMLInputElement>(null);
   const [form, setForm] = useState<SignatureConfig>(DEFAULTS);
-  const [previewUrl, setPreviewUrl] = useState<string | null>(null);
-  const [uploading, setUploading] = useState(false);
 
-  // Load existing config
   const { data: settingRow, isLoading } = useQuery({
     queryKey: ["transcript-signature-settings"],
     queryFn: async () => {
@@ -51,7 +60,6 @@ const TranscriptSignatureSettings = () => {
     },
   });
 
-  // Load admins to pick the signing admin from
   const { data: admins = [] } = useQuery({
     queryKey: ["admin-list-for-signature"],
     queryFn: async () => {
@@ -70,25 +78,9 @@ const TranscriptSignatureSettings = () => {
     },
   });
 
-  // Hydrate form from server when loaded
   useEffect(() => {
     if (settingRow) setForm({ ...DEFAULTS, ...settingRow });
   }, [settingRow]);
-
-  // Refresh signed preview whenever the saved path changes
-  useEffect(() => {
-    let cancelled = false;
-    const path = form.signature_path;
-    if (!path) { setPreviewUrl(null); return; }
-    (async () => {
-      const { data } = await supabase
-        .storage
-        .from("transcript-signatures")
-        .createSignedUrl(path, 300);
-      if (!cancelled) setPreviewUrl(data?.signedUrl ?? null);
-    })();
-    return () => { cancelled = true; };
-  }, [form.signature_path]);
 
   const adminOptions = useMemo(
     () => admins.map((a) => ({ value: a.user_id, label: a.full_name || a.email || a.user_id })),
@@ -97,52 +89,13 @@ const TranscriptSignatureSettings = () => {
 
   const onPickAdmin = (userId: string) => {
     const admin = admins.find((a) => a.user_id === userId);
+    const name = admin?.full_name || admin?.email || "";
     setForm((f) => ({
       ...f,
       admin_user_id: userId,
-      admin_name: admin?.full_name || f.admin_name || admin?.email || "",
+      admin_name: name || f.admin_name,
+      signature_text: f.signature_text || name,
     }));
-  };
-
-  const handleUpload = async (file: File) => {
-    if (!file) return;
-    if (!file.type.startsWith("image/")) {
-      toast({ title: "Please choose an image file", variant: "destructive" });
-      return;
-    }
-    if (file.size > 2 * 1024 * 1024) {
-      toast({ title: "Image must be smaller than 2MB", variant: "destructive" });
-      return;
-    }
-    setUploading(true);
-    try {
-      // Delete previous file (best-effort)
-      if (form.signature_path) {
-        await supabase.storage.from("transcript-signatures").remove([form.signature_path]);
-      }
-      const ext = file.name.split(".").pop()?.toLowerCase() || "png";
-      const path = `signature-${Date.now()}.${ext}`;
-      const { error } = await supabase
-        .storage
-        .from("transcript-signatures")
-        .upload(path, file, { upsert: true, contentType: file.type });
-      if (error) throw error;
-      setForm((f) => ({ ...f, signature_path: path }));
-      toast({ title: "Signature uploaded" });
-    } catch (e: any) {
-      toast({ title: "Upload failed", description: e.message, variant: "destructive" });
-    } finally {
-      setUploading(false);
-      if (fileInputRef.current) fileInputRef.current.value = "";
-    }
-  };
-
-  const handleRemoveSignature = async () => {
-    if (!form.signature_path) return;
-    try {
-      await supabase.storage.from("transcript-signatures").remove([form.signature_path]);
-    } catch { /* ignore */ }
-    setForm((f) => ({ ...f, signature_path: null }));
   };
 
   const saveMutation = useMutation({
@@ -153,9 +106,10 @@ const TranscriptSignatureSettings = () => {
         admin_name: form.admin_name,
         title: form.title,
         label: form.label,
-        signature_path: form.signature_path,
+        signature_text: form.signature_text || form.admin_name,
+        signature_font: form.signature_font,
+        signature_path: null,
       };
-      // Upsert by key
       const { data: existing } = await supabase
         .from("system_settings").select("id").eq("key", "transcript_signature").maybeSingle();
       if (existing?.id) {
@@ -188,6 +142,8 @@ const TranscriptSignatureSettings = () => {
     );
   }
 
+  const previewText = form.signature_text || form.admin_name || "Your signature";
+
   return (
     <Card>
       <CardHeader className="pb-3">
@@ -196,11 +152,11 @@ const TranscriptSignatureSettings = () => {
           Transcript Signature & Verification
         </CardTitle>
         <p className="text-sm text-muted-foreground">
-          Configure the official admin signature shown on every downloaded transcript PDF.
+          Configure the official admin signature shown on every downloaded transcript PDF. The
+          signature is rendered as styled text — no image upload required.
         </p>
       </CardHeader>
       <CardContent className="space-y-6">
-        {/* Toggle */}
         <div className="flex items-center justify-between rounded-lg border border-border bg-muted/30 px-4 py-3">
           <div>
             <p className="text-sm font-medium text-foreground">Include signature on transcripts</p>
@@ -251,50 +207,53 @@ const TranscriptSignatureSettings = () => {
               placeholder="Verified by Administration"
             />
           </div>
+
+          <div>
+            <Label>Signature text</Label>
+            <Input
+              value={form.signature_text}
+              onChange={(e) => setForm((f) => ({ ...f, signature_text: e.target.value }))}
+              placeholder="Defaults to display name"
+            />
+            <p className="mt-1 text-xs text-muted-foreground">
+              Leave blank to use the display name.
+            </p>
+          </div>
+
+          <div>
+            <Label>Signature style</Label>
+            <Select
+              value={form.signature_font}
+              onValueChange={(v: SignatureConfig["signature_font"]) =>
+                setForm((f) => ({ ...f, signature_font: v }))
+              }
+            >
+              <SelectTrigger><SelectValue /></SelectTrigger>
+              <SelectContent>
+                <SelectItem value="script">Handwritten (script)</SelectItem>
+                <SelectItem value="italic">Italic serif</SelectItem>
+                <SelectItem value="bold">Bold sans-serif</SelectItem>
+              </SelectContent>
+            </Select>
+          </div>
         </div>
 
-        {/* Signature upload */}
         <div>
-          <Label className="mb-2 block">Signature image</Label>
-          <div className="flex flex-col gap-3 sm:flex-row sm:items-center">
-            <div className="flex h-24 w-56 items-center justify-center rounded-lg border border-dashed border-border bg-muted/20 overflow-hidden">
-              {previewUrl ? (
-                <img src={previewUrl} alt="Signature preview" className="max-h-full max-w-full object-contain" />
-              ) : (
-                <span className="text-xs text-muted-foreground">No signature uploaded</span>
-              )}
-            </div>
-            <div className="flex flex-wrap gap-2">
-              <input
-                ref={fileInputRef}
-                type="file"
-                accept="image/png,image/jpeg,image/webp"
-                className="hidden"
-                onChange={(e) => {
-                  const f = e.target.files?.[0];
-                  if (f) handleUpload(f);
-                }}
-              />
-              <Button
-                type="button"
-                variant="outline"
-                size="sm"
-                disabled={uploading}
-                onClick={() => fileInputRef.current?.click()}
-              >
-                <Upload className="h-4 w-4 mr-2" />
-                {uploading ? "Uploading…" : form.signature_path ? "Replace" : "Upload"}
-              </Button>
-              {form.signature_path && (
-                <Button type="button" variant="ghost" size="sm" onClick={handleRemoveSignature}>
-                  <Trash2 className="h-4 w-4 mr-2" />
-                  Remove
-                </Button>
-              )}
-            </div>
+          <Label className="mb-2 block">Signature preview</Label>
+          <div className="flex h-24 items-center justify-center rounded-lg border border-dashed border-border bg-muted/20 px-6">
+            <span
+              className="truncate text-3xl text-foreground"
+              style={{
+                fontFamily: FONT_PREVIEW[form.signature_font],
+                fontStyle: form.signature_font === "italic" ? "italic" : "normal",
+                fontWeight: form.signature_font === "bold" ? 700 : 400,
+              }}
+            >
+              {previewText}
+            </span>
           </div>
           <p className="mt-2 text-xs text-muted-foreground">
-            PNG with transparent background recommended. Max 2MB.
+            This is exactly how the signature will appear on the transcript PDF.
           </p>
         </div>
 
