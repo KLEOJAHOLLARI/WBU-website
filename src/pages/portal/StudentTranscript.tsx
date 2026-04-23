@@ -20,6 +20,7 @@ import {
 import { SCHOLARSHIP_GPA_THRESHOLD, type GradeDisplayMode } from "@/lib/grading";
 import { downloadTranscriptPdf } from "@/lib/transcriptPdf";
 import GradeDisplayToggle from "@/components/GradeDisplayToggle";
+import TranscriptDownloadDialog from "@/components/TranscriptDownloadDialog";
 
 const StudentTranscript = () => {
   const { user, profile } = useAuth();
