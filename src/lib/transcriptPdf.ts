@@ -229,28 +229,40 @@ export async function downloadTranscriptPdf(opts: BuildTranscriptPdfOptions): Pr
       doc.setTextColor(0);
     }
 
-    // Right: signature image + name + title
+    // Right: typed signature + name + title
     const rightX = pageW - 14;
-    const sigBoxW = 60;
-    const sigBoxH = 22;
+    const sigBoxW = 70;
     const sigX = rightX - sigBoxW;
-    const sigY = blockY + 6;
+    const sigBaselineY = blockY + 22;
 
-    if (signatureDataUrl) {
-      try {
-        doc.addImage(signatureDataUrl, "PNG", sigX, sigY, sigBoxW, sigBoxH);
-      } catch {
-        // Fallback: signature line if image fails
-        doc.setDrawColor(120);
-        doc.line(sigX, sigY + sigBoxH, rightX, sigY + sigBoxH);
+    // Render the signature as styled text (no image upload required)
+    const signatureText = (config.signature_text || config.admin_name || "").trim();
+    const fontStyle = config.signature_font ?? "script";
+
+    if (signatureText) {
+      // jsPDF doesn't ship a script font; we approximate per chosen style.
+      if (fontStyle === "bold") {
+        doc.setFont("helvetica", "bold");
+        doc.setFontSize(22);
+      } else if (fontStyle === "italic") {
+        doc.setFont("times", "italic");
+        doc.setFontSize(24);
+      } else {
+        // "script" — closest built-in approximation
+        doc.setFont("times", "italic");
+        doc.setFontSize(28);
       }
-    } else {
-      doc.setDrawColor(120);
-      doc.line(sigX, sigY + sigBoxH, rightX, sigY + sigBoxH);
+      doc.setTextColor(20, 30, 80);
+      doc.text(signatureText, rightX, sigBaselineY, { align: "right" });
+      doc.setTextColor(0);
     }
 
-    // Name + title under the signature
-    const nameY = sigY + sigBoxH + 5;
+    // Signature line
+    doc.setDrawColor(120);
+    doc.line(sigX, sigBaselineY + 3, rightX, sigBaselineY + 3);
+
+    // Name + title under the signature line
+    const nameY = sigBaselineY + 9;
     doc.setFont("helvetica", "bold");
     doc.setFontSize(10);
     doc.text(config.admin_name || "—", rightX, nameY, { align: "right" });
