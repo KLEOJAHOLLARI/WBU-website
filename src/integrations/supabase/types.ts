@@ -440,10 +440,12 @@ export type Database = {
           exam_date: string
           exam_type: string
           id: string
+          is_published: boolean
           notes: string | null
           program: string
           room: string
           start_time: string
+          supervisor_name: string
           updated_at: string
         }
         Insert: {
@@ -453,10 +455,12 @@ export type Database = {
           exam_date: string
           exam_type?: string
           id?: string
+          is_published?: boolean
           notes?: string | null
           program: string
           room?: string
           start_time: string
+          supervisor_name?: string
           updated_at?: string
         }
         Update: {
@@ -466,10 +470,12 @@ export type Database = {
           exam_date?: string
           exam_type?: string
           id?: string
+          is_published?: boolean
           notes?: string | null
           program?: string
           room?: string
           start_time?: string
+          supervisor_name?: string
           updated_at?: string
         }
         Relationships: [
