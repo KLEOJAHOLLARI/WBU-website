@@ -34,16 +34,12 @@ const progressColor = (pct: number) => {
   return "[&>div]:bg-destructive";
 };
 
-// Albanian academic grading scale (4 = fail, 10 = excellent)
-const toAlbanian = (pct: number): number => {
-  if (pct < 50) return 4;
-  if (pct < 60) return 5;
-  if (pct < 70) return 6;
-  if (pct < 80) return 7;
-  if (pct < 90) return 8;
-  if (pct < 95) return 9;
-  return 10;
-};
+// Albanian academic grading scale — uses the official conversion buckets
+// from the centralized grading module so this page stays in sync with the
+// transcript, GPA, scholarship logic, and admin reports.
+import { percentToAlbanian, percentToLetter } from "@/lib/grading";
+const toAlbanian = (pct: number): number => percentToAlbanian(pct);
+const toLetter = (pct: number): string => percentToLetter(pct);
 
 type GradingScale = "percent" | "albanian";
 
@@ -414,12 +410,14 @@ const StudentCourseDetail = () => {
                       {cs.hasScore ? (
                         <div className="flex flex-col items-end">
                           <span className={`font-display text-lg font-bold ${gradeColor(cs.pct!)}`}>
-                            {gradingScale === "albanian" ? toAlbanian(cs.pct!) : `${cs.score}/${cs.maxScore}`}
+                            {gradingScale === "albanian"
+                              ? `${toAlbanian(cs.pct!)} (${toLetter(cs.pct!)})`
+                              : `${cs.score}/${cs.maxScore}`}
                           </span>
                           <span className="text-xs text-muted-foreground">
                             {gradingScale === "albanian"
                               ? `${cs.score}/${cs.maxScore} · ${cs.pct!.toFixed(0)}%`
-                              : `${cs.pct!.toFixed(0)}%`}
+                              : `${cs.pct!.toFixed(0)}% → ${toAlbanian(cs.pct!)} (${toLetter(cs.pct!)})`}
                           </span>
                         </div>
                       ) : (
@@ -446,8 +444,12 @@ const StudentCourseDetail = () => {
                     <span className={`font-display text-3xl font-bold ${gradeColor(roundedTotal)}`}>
                       {formatGrade(roundedTotal)}
                     </span>
-                    {gradingScale === "albanian" && roundedTotal > 0 && (
-                      <p className="mt-0.5 text-xs text-muted-foreground">{roundedTotal}%</p>
+                    {roundedTotal > 0 && (
+                      <p className="mt-0.5 text-xs text-muted-foreground">
+                        {gradingScale === "albanian"
+                          ? `${roundedTotal}% · ${toLetter(roundedTotal)}`
+                          : `${toAlbanian(roundedTotal)} (${toLetter(roundedTotal)})`}
+                      </p>
                     )}
                   </td>
                 </tr>
@@ -477,12 +479,14 @@ const StudentCourseDetail = () => {
                     {cs.hasScore ? (
                       <>
                         <span className={`font-display text-base font-bold ${gradeColor(cs.pct!)}`}>
-                          {gradingScale === "albanian" ? toAlbanian(cs.pct!) : `${cs.score}/${cs.maxScore}`}
+                          {gradingScale === "albanian"
+                            ? `${toAlbanian(cs.pct!)} (${toLetter(cs.pct!)})`
+                            : `${cs.score}/${cs.maxScore}`}
                         </span>
                         <span className="text-[11px] text-muted-foreground">
                           {gradingScale === "albanian"
                             ? `${cs.score}/${cs.maxScore}`
-                            : `${cs.pct!.toFixed(0)}%`}
+                            : `${cs.pct!.toFixed(0)}% · ${toAlbanian(cs.pct!)}`}
                         </span>
                       </>
                     ) : (

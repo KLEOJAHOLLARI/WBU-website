@@ -14,9 +14,10 @@ import {
   buildTranscriptRows,
   computeTranscriptSummary,
   gradeToLetter,
-  gradeToGPA,
+  gradeToAlbanian,
   type TranscriptRow,
 } from "@/lib/transcript";
+import { SCHOLARSHIP_GPA_THRESHOLD } from "@/lib/grading";
 import { downloadTranscriptPdf } from "@/lib/transcriptPdf";
 
 const StudentTranscript = () => {
@@ -137,7 +138,9 @@ const StudentTranscript = () => {
               {row.grade !== null ? (
                 <span className="font-semibold">
                   {row.grade.toFixed(1)}%{" "}
-                  <span className="text-xs text-muted-foreground">({gradeToLetter(row.grade)})</span>
+                  <span className="text-xs text-muted-foreground">
+                    → {gradeToAlbanian(row.grade)} ({gradeToLetter(row.grade)})
+                  </span>
                 </span>
               ) : (
                 <span className="text-muted-foreground">—</span>
@@ -204,6 +207,7 @@ const StudentTranscript = () => {
               <div>
                 <p className="text-xs text-muted-foreground">CGPA</p>
                 {isLoading ? <Skeleton className="h-6 w-10" /> : <p className="text-lg font-bold text-foreground">{summary.cgpa.toFixed(2)}</p>}
+                <p className="text-[10px] text-muted-foreground">Albanian: {summary.gpaAlbanian.toFixed(2)} / 10</p>
               </div>
             </CardContent>
           </Card>
@@ -213,6 +217,11 @@ const StudentTranscript = () => {
               <div>
                 <p className="text-xs text-muted-foreground">Weighted Avg</p>
                 {isLoading ? <Skeleton className="h-6 w-10" /> : <p className="text-lg font-bold text-foreground">{summary.weightedAvg.toFixed(1)}%</p>}
+                {summary.gpaAlbanian > 0 && (
+                  <p className={`text-[10px] ${summary.gpaAlbanian >= SCHOLARSHIP_GPA_THRESHOLD ? "text-emerald-600" : "text-destructive"}`}>
+                    {summary.gpaAlbanian >= SCHOLARSHIP_GPA_THRESHOLD ? "Scholarship GPA met" : `Below ${SCHOLARSHIP_GPA_THRESHOLD} GPA`}
+                  </p>
+                )}
               </div>
             </CardContent>
           </Card>

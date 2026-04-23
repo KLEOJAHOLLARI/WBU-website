@@ -381,7 +381,7 @@ const AdminStudents = () => {
                   return (
                     <div className="rounded-xl border border-border bg-card p-4">
                       <h2 className="mb-3 flex items-center justify-between font-display text-sm font-semibold text-foreground">
-                        <span className="flex items-center gap-2"><Award className="h-4 w-4" /> Scholarship</span>
+                        <span className="flex items-center gap-2"><Award className="h-4 w-4" /> Scholarship <span className="text-[10px] font-normal text-muted-foreground">(attendance + GPA ≥ 8.5)</span></span>
                         <span className={`inline-flex items-center gap-1 rounded-full px-2 py-0.5 text-xs font-medium ${statusCls}`}>
                           {statusLabel}
                         </span>

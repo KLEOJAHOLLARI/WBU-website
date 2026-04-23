@@ -2,7 +2,12 @@
 // Source of truth: enrollments -> courses -> grade_components -> grades
 // A course is "Completed" only when ALL its grade components have at least one recorded score.
 // Otherwise it's "In Progress".
-// Passing threshold: weighted percentage >= 50.
+// Passing threshold: weighted percentage >= 45 (Albanian scale: grade 5 and above).
+//
+// All percent → letter / GPA conversions are delegated to `lib/grading.ts`
+// so the entire app shares the same official scale.
+
+import { percentToAlbanian, percentToGPA, percentToLetter } from "./grading";
 
 export interface TranscriptEnrollment {
   id: string;
@@ -44,21 +49,10 @@ export interface TranscriptRow {
   isComplete: boolean; // true only when every component has a score
 }
 
-export const gradeToLetter = (grade: number): string => {
-  if (grade >= 90) return "A";
-  if (grade >= 80) return "B";
-  if (grade >= 70) return "C";
-  if (grade >= 60) return "D";
-  return "F";
-};
-
-export const gradeToGPA = (grade: number): number => {
-  if (grade >= 90) return 4.0;
-  if (grade >= 80) return 3.0;
-  if (grade >= 70) return 2.0;
-  if (grade >= 60) return 1.0;
-  return 0.0;
-};
+// Re-exported from the centralized grading module so callers don't need to switch imports.
+export const gradeToLetter = (grade: number): string => percentToLetter(grade);
+export const gradeToGPA = (grade: number): number => percentToGPA(grade);
+export const gradeToAlbanian = (grade: number): number => percentToAlbanian(grade);
 
 export function buildTranscriptRows(
   enrollments: TranscriptEnrollment[],
@@ -119,7 +113,7 @@ export function buildTranscriptRows(
       const status: TranscriptRow["status"] =
         weightedTotal === null
           ? "In Progress"
-          : weightedTotal >= 50
+          : weightedTotal >= 45
           ? "Passed"
           : "Failed";
 
@@ -149,8 +143,9 @@ export interface TranscriptSummary {
   totalECTS: number; // passed ECTS (earned)
   totalInstitutionalCredits: number; // sum of ECTS across all rows (enrolled)
   totalTransferCredits: number;
-  cgpa: number;
-  weightedAvg: number;
+  cgpa: number;            // 0.00 – 4.00 (US-style)
+  gpaAlbanian: number;     // 4.00 – 10.00 (Albanian scale, ECTS-weighted average of converted grades)
+  weightedAvg: number;     // 0 – 100 (raw weighted percentage)
   totalCourses: number;
   passedCourses: number;
   completedCourses: number;
@@ -169,6 +164,7 @@ export function computeTranscriptSummary(
 
   let cgpa = 0;
   let weightedAvg = 0;
+  let gpaAlbanian = 0;
   if (completed.length > 0) {
     const totalEctsGraded = completed.reduce((s, r) => s + r.ects, 0);
     if (totalEctsGraded > 0) {
@@ -177,6 +173,9 @@ export function computeTranscriptSummary(
         totalEctsGraded;
       weightedAvg =
         completed.reduce((s, r) => s + r.grade! * r.ects, 0) / totalEctsGraded;
+      gpaAlbanian =
+        completed.reduce((s, r) => s + gradeToAlbanian(r.grade!) * r.ects, 0) /
+        totalEctsGraded;
     }
   }
 
@@ -185,6 +184,7 @@ export function computeTranscriptSummary(
     totalInstitutionalCredits: totalCredits,
     totalTransferCredits: 0,
     cgpa: Math.round(cgpa * 100) / 100,
+    gpaAlbanian: Math.round(gpaAlbanian * 100) / 100,
     weightedAvg: Math.round(weightedAvg * 100) / 100,
     totalCourses: rows.length,
     passedCourses: passed.length,
