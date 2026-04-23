@@ -106,6 +106,13 @@ const ExamDetail = () => {
             <Badge className={typeColors[exam.exam_type] || "bg-muted"}>{exam.exam_type}</Badge>
             {!exam.is_published && <Badge variant="secondary">Draft</Badge>}
             {isPast && <Badge variant="outline">Past</Badge>}
+            {isAdmin && (
+              <Button asChild size="sm" className="ml-2">
+                <Link to={`/admin/exams?edit=${exam.id}`}>
+                  <Pencil className="h-4 w-4 mr-2" />Edit exam
+                </Link>
+              </Button>
+            )}
           </div>
         </div>
 
