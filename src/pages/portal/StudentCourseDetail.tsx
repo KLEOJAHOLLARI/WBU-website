@@ -197,6 +197,7 @@ const StudentCourseDetail = () => {
         pct,
         weighted,
         hasScore,
+        gradedAt: hasScore ? (grade?.created_at ?? null) : null,
       };
     })
   );
