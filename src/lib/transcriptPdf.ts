@@ -117,6 +117,7 @@ export interface BuildTranscriptPdfOptions {
  */
 export async function downloadTranscriptPdf(opts: BuildTranscriptPdfOptions): Promise<void> {
   const { student, rows, summary } = opts;
+  const displayMode: GradeDisplayMode = opts.displayMode ?? "full";
 
   const [{ default: jsPDF }, { default: autoTable }] = await Promise.all([
     import("jspdf"),
@@ -149,12 +150,20 @@ export async function downloadTranscriptPdf(opts: BuildTranscriptPdfOptions): Pr
   // ── Course table ──────────────────────────────────────────────────────────
   // Note: jsPDF's default WinAnsi encoding doesn't support the "→" arrow
   // (it renders as "!'"), so we use ASCII "->" inside the PDF.
+  const formatGradeForPdf = (pct: number): string => {
+    const alb = gradeToAlbanian(pct);
+    const letter = gradeToLetter(pct);
+    switch (displayMode) {
+      case "percent":  return `${pct.toFixed(1)}%`;
+      case "albanian": return `${alb}`;
+      case "full":
+      default:         return `${pct.toFixed(1)}% -> ${alb} (${letter})`;
+    }
+  };
   const tableData = rows.map((r) => [
     r.courseName,
     r.courseCode,
-    r.grade !== null
-      ? `${r.grade.toFixed(1)}% -> ${gradeToAlbanian(r.grade)} (${gradeToLetter(r.grade)})`
-      : "-",
+    r.grade !== null ? formatGradeForPdf(r.grade) : "-",
     r.ects.toString(),
     `Y${r.year}/S${r.semester}`,
     r.status,
