@@ -48,6 +48,7 @@ const AdminTuition = () => {
   const [viewCharge, setViewCharge] = useState<{ charge: Charge; student: any } | null>(null);
   const [reviewDialog, setReviewDialog] = useState<{ payment: Payment; mode: "verify" | "reject" } | null>(null);
   const [reviewNote, setReviewNote] = useState("");
+  const [bulkDialog, setBulkDialog] = useState<{ semesterId: string; program: string; skipExisting: boolean } | null>(null);
 
   const { data: semesters = [] } = useQuery({
     queryKey: ["adm-tuition-semesters"],
