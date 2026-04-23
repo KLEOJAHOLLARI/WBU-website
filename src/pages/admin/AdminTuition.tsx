@@ -249,12 +249,80 @@ const AdminTuition = () => {
         </div>
       </div>
 
-      <Tabs defaultValue="charges" className="mt-8">
+      <Tabs defaultValue="queue" className="mt-8">
         <TabsList>
+          <TabsTrigger value="queue">
+            Receipt Queue {pendingReceipts > 0 && <Badge className="ml-2">{pendingReceipts}</Badge>}
+          </TabsTrigger>
           <TabsTrigger value="charges">Charges</TabsTrigger>
-          <TabsTrigger value="payments">Payments {pendingReceipts > 0 && <Badge className="ml-2">{pendingReceipts}</Badge>}</TabsTrigger>
+          <TabsTrigger value="payments">All Payments</TabsTrigger>
           <TabsTrigger value="fees">Program Fees</TabsTrigger>
         </TabsList>
+
+        {/* RECEIPT QUEUE TAB */}
+        <TabsContent value="queue" className="mt-4">
+          <div className="rounded-xl border border-border bg-card">
+            <div className="border-b border-border p-4">
+              <h2 className="font-semibold text-foreground">Student-Uploaded Receipts — Pending Review</h2>
+              <p className="text-sm text-muted-foreground mt-1">Approve or reject student proof-of-payment uploads. Approved payments automatically apply to the charge.</p>
+            </div>
+            <div className="overflow-auto">
+              <Table>
+                <TableHeader>
+                  <TableRow>
+                    <TableHead>Student</TableHead>
+                    <TableHead>Submitted</TableHead>
+                    <TableHead>Payment Date</TableHead>
+                    <TableHead>Amount</TableHead>
+                    <TableHead>Method</TableHead>
+                    <TableHead>Reference</TableHead>
+                    <TableHead>Receipt</TableHead>
+                    <TableHead className="text-right">Action</TableHead>
+                  </TableRow>
+                </TableHeader>
+                <TableBody>
+                  {payments.filter((p) => p.uploaded_by_student && p.verification_status === "pending").length === 0 && (
+                    <TableRow><TableCell colSpan={8} className="text-center text-muted-foreground py-8">No receipts awaiting review. 🎉</TableCell></TableRow>
+                  )}
+                  {payments.filter((p) => p.uploaded_by_student && p.verification_status === "pending").map((p) => {
+                    const st = studentMap[p.user_id];
+                    const charge = charges.find((c) => c.id === p.charge_id);
+                    const sem = charge ? semesterMap[charge.academic_semester_id] : null;
+                    return (
+                      <TableRow key={p.id}>
+                        <TableCell>
+                          <div className="font-medium text-foreground">{st?.full_name || "—"}</div>
+                          <div className="text-xs text-muted-foreground">{st?.student_id || st?.email}</div>
+                          {sem && <div className="text-xs text-muted-foreground mt-0.5">{sem.name}</div>}
+                        </TableCell>
+                        <TableCell className="text-sm">{new Date(p.created_at).toLocaleDateString()}</TableCell>
+                        <TableCell className="text-sm">{new Date(p.payment_date).toLocaleDateString()}</TableCell>
+                        <TableCell className="font-medium">{fmtMoney(Number(p.amount), p.currency)}</TableCell>
+                        <TableCell className="text-sm capitalize">{p.method.replace("_", " ")}</TableCell>
+                        <TableCell className="text-sm text-muted-foreground">{p.reference || "—"}</TableCell>
+                        <TableCell>
+                          {p.receipt_path ? (
+                            <Button size="sm" variant="outline" onClick={() => downloadReceipt(p.receipt_path!)}>
+                              <FileDown className="h-3.5 w-3.5 mr-1" /> View
+                            </Button>
+                          ) : <span className="text-xs text-muted-foreground">No file</span>}
+                        </TableCell>
+                        <TableCell className="text-right space-x-1">
+                          <Button size="sm" className="bg-emerald-600 hover:bg-emerald-700 text-white" onClick={() => { setReviewNote(p.admin_note || ""); setReviewDialog({ payment: p, mode: "verify" }); }}>
+                            <CheckCircle2 className="h-3.5 w-3.5 mr-1" /> Approve
+                          </Button>
+                          <Button size="sm" variant="destructive" onClick={() => { setReviewNote(p.admin_note || ""); setReviewDialog({ payment: p, mode: "reject" }); }}>
+                            <XCircle className="h-3.5 w-3.5 mr-1" /> Reject
+                          </Button>
+                        </TableCell>
+                      </TableRow>
+                    );
+                  })}
+                </TableBody>
+              </Table>
+            </div>
+          </div>
+        </TabsContent>
 
         {/* CHARGES TAB */}
         <TabsContent value="charges" className="mt-4">
