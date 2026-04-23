@@ -92,7 +92,7 @@ const StudentTranscript = () => {
 
   const summary = useMemo(() => computeTranscriptSummary(transcriptRows), [transcriptRows]);
 
-  const handleDownloadPDF = async () => {
+  const handleDownloadPDF = async (mode: typeof displayMode = displayMode) => {
     await downloadTranscriptPdf({
       student: {
         full_name: profile?.full_name,
@@ -101,7 +101,7 @@ const StudentTranscript = () => {
       },
       rows: filteredRows,
       summary,
-      displayMode,
+      displayMode: mode,
     });
   };
 
