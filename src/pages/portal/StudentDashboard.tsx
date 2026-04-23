@@ -9,6 +9,7 @@ import { Progress } from "@/components/ui/progress";
 import { Link } from "react-router-dom";
 import SemesterBadge from "@/components/SemesterBadge";
 import ScholarshipCard from "@/components/ScholarshipCard";
+import { percentToAlbanian, percentToGPA } from "@/lib/grading";
 
 const StudentDashboard = () => {
   const { user } = useAuth();
