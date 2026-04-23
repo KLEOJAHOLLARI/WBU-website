@@ -14,7 +14,6 @@ const Footer = () => {
             <Link to="/" className="mb-5 flex items-center gap-2.5" aria-label="Western Balkans University">
               <img src={wbuLogo} alt="Western Balkans University" className="h-9 w-auto brightness-0 invert" />
             </Link>
-            </Link>
             <p className="text-sm leading-relaxed text-primary-foreground/70">{t("footer.description")}</p>
           </div>
 
