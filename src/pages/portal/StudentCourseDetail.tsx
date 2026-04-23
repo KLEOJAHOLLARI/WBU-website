@@ -230,9 +230,9 @@ const StudentCourseDetail = () => {
             {attPct !== null ? `${attPct}%` : "—"}
           </p>
           {attPct !== null && (
-            <Progress value={attPct} className={`mt-2 h-2 ${attPct < 75 ? progressColor(0) : progressColor(attPct)}`} />
+            <Progress value={attPct} className={`mt-2 h-2 ${attPct < threshold ? progressColor(0) : progressColor(attPct)}`} />
           )}
-          <p className="mt-1.5 text-xs text-muted-foreground">{presentCount}/{sessions.length} sessions</p>
+          <p className="mt-1.5 text-xs text-muted-foreground">{attStats.attendedHours}h of {attStats.totalHours}h attended</p>
         </div>
 
         {/* Total Grade card */}
@@ -260,7 +260,7 @@ const StudentCourseDetail = () => {
             {examBlocked ? "Exam Blocked" : "Eligible"}
           </p>
           <p className="mt-1 text-xs text-muted-foreground">
-            {examBlocked ? "Attendance below 75%" : "All requirements met"}
+            {examBlocked ? `Attendance below ${threshold}%` : "All requirements met"}
           </p>
         </div>
       </div>
@@ -376,12 +376,12 @@ const StudentCourseDetail = () => {
                 <div className="mb-4 rounded-xl border border-border bg-card p-4">
                   <div className="flex items-center justify-between mb-2">
                     <span className="text-sm font-medium text-muted-foreground">Overall Attendance</span>
-                    <span className={`text-2xl font-bold ${attPct < 75 ? "text-destructive" : "text-emerald-600"}`}>{attPct}%</span>
+                    <span className={`text-2xl font-bold ${attPct < threshold ? "text-destructive" : "text-emerald-600"}`}>{attPct}%</span>
                   </div>
-                  <Progress value={attPct} className={`h-3 ${attPct < 75 ? progressColor(0) : progressColor(attPct)}`} />
+                  <Progress value={attPct} className={`h-3 ${attPct < threshold ? progressColor(0) : progressColor(attPct)}`} />
                   <div className="mt-2 flex items-center justify-between text-xs text-muted-foreground">
-                    <span>{presentCount} of {sessions.length} sessions attended</span>
-                    {attPct < 75 && <span className="text-destructive font-medium">⚠ Below 75% threshold</span>}
+                    <span>{attStats.attendedHours}h attended of {attStats.totalHours}h recorded</span>
+                    {attPct < threshold && <span className="text-destructive font-medium">⚠ Below {threshold}% threshold</span>}
                   </div>
                 </div>
               )}
