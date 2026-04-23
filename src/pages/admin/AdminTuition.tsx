@@ -50,6 +50,8 @@ const AdminTuition = () => {
   const [reviewDialog, setReviewDialog] = useState<{ payment: Payment; mode: "verify" | "reject" } | null>(null);
   const [reviewNote, setReviewNote] = useState("");
   const [bulkDialog, setBulkDialog] = useState<{ semesterId: string; program: string; skipExisting: boolean } | null>(null);
+  const [lateFeeSettingsDraft, setLateFeeSettingsDraft] = useState<any | null>(null);
+  const [applyLateFeesOpen, setApplyLateFeesOpen] = useState(false);
 
   const { data: semesters = [] } = useQuery({
     queryKey: ["adm-tuition-semesters"],
