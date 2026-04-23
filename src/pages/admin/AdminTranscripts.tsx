@@ -27,6 +27,7 @@ const AdminTranscripts = () => {
   const [searchTerm, setSearchTerm] = useState("");
   const [semesterFilter, setSemesterFilter] = useState<string>("all");
   const [yearFilter, setYearFilter] = useState<string>("all");
+  const [displayMode, setDisplayMode] = useState<GradeDisplayMode>("full");
 
   const { data: students = [], isLoading: loadingStudents } = useQuery({
     queryKey: ["admin-transcript-students"],
