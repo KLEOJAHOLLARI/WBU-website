@@ -641,7 +641,176 @@ const AdminTuition = () => {
             </Table>
           </div>
         </TabsContent>
+
+        {/* LATE FEES TAB */}
+        <TabsContent value="latefees" className="mt-4 space-y-4">
+          <div className="rounded-xl border border-border bg-card p-5">
+            <div className="flex flex-wrap items-start justify-between gap-3">
+              <div className="flex items-start gap-3">
+                <Settings2 className="h-5 w-5 text-primary mt-0.5" />
+                <div>
+                  <h2 className="font-semibold text-foreground">Late Fee Settings</h2>
+                  <p className="text-sm text-muted-foreground">
+                    {lateFeeSettings?.enabled ? (
+                      <>
+                        <span className="text-emerald-600 font-medium">Enabled</span> — {lateFeeSettings.fee_type === "percent"
+                          ? `${lateFeeSettings.amount}% of charge`
+                          : `${fmtMoney(Number(lateFeeSettings.amount), lateFeeSettings.currency)} flat`} after a {lateFeeSettings.grace_days}-day grace period
+                        {lateFeeSettings.max_fee != null && ` (max ${fmtMoney(Number(lateFeeSettings.max_fee), lateFeeSettings.currency)})`}
+                      </>
+                    ) : <span className="text-muted-foreground">Late fees are currently disabled.</span>}
+                  </p>
+                </div>
+              </div>
+              <Button variant="outline" onClick={() => setLateFeeSettingsDraft(lateFeeSettings || { enabled: false, fee_type: "fixed", amount: 25, grace_days: 7, currency: "EUR" })}>
+                <Settings2 className="h-4 w-4 mr-1" /> Configure
+              </Button>
+            </div>
+          </div>
+
+          {lateFeeSettings?.enabled && (
+            <div className="rounded-xl border border-amber-500/30 bg-amber-500/5 p-5">
+              <div className="flex flex-wrap items-center justify-between gap-3">
+                <div>
+                  <h3 className="font-semibold text-foreground flex items-center gap-2"><Gavel className="h-4 w-4" /> Apply Late Fees Now</h3>
+                  <p className="text-sm text-muted-foreground mt-1">
+                    {eligibleForLateFee.length} overdue charge{eligibleForLateFee.length !== 1 ? "s" : ""} eligible · estimated {fmtMoney(eligiblePreviewTotal, lateFeeSettings.currency)} in fees
+                  </p>
+                </div>
+                <Button onClick={() => setApplyLateFeesOpen(true)} disabled={eligibleForLateFee.length === 0}>
+                  <Gavel className="h-4 w-4 mr-1" /> Apply to {eligibleForLateFee.length} Charge{eligibleForLateFee.length !== 1 ? "s" : ""}
+                </Button>
+              </div>
+            </div>
+          )}
+
+          <div className="rounded-xl border border-border bg-card">
+            <div className="border-b border-border p-4">
+              <h2 className="font-semibold text-foreground">Applied Late Fees</h2>
+            </div>
+            <Table>
+              <TableHeader>
+                <TableRow>
+                  <TableHead>Student</TableHead>
+                  <TableHead>Applied</TableHead>
+                  <TableHead>Amount</TableHead>
+                  <TableHead>Reason</TableHead>
+                  <TableHead>Status</TableHead>
+                  <TableHead></TableHead>
+                </TableRow>
+              </TableHeader>
+              <TableBody>
+                {lateFees.length === 0 && <TableRow><TableCell colSpan={6} className="text-center text-muted-foreground">No late fees applied yet.</TableCell></TableRow>}
+                {lateFees.map((lf: any) => {
+                  const st = studentMap[lf.user_id];
+                  return (
+                    <TableRow key={lf.id}>
+                      <TableCell>
+                        <div className="font-medium text-foreground">{st?.full_name || "—"}</div>
+                        <div className="text-xs text-muted-foreground">{st?.student_id || st?.email}</div>
+                      </TableCell>
+                      <TableCell className="text-sm">{new Date(lf.applied_at).toLocaleDateString()}</TableCell>
+                      <TableCell className="font-medium">{fmtMoney(Number(lf.amount), lf.currency)}</TableCell>
+                      <TableCell className="text-sm text-muted-foreground">{lf.reason || "—"}</TableCell>
+                      <TableCell>
+                        {lf.waived
+                          ? <Badge variant="secondary">Waived</Badge>
+                          : <Badge variant="destructive">Active</Badge>}
+                      </TableCell>
+                      <TableCell className="text-right space-x-1">
+                        {!lf.waived && (
+                          <Button size="sm" variant="outline" onClick={() => waiveLateFee.mutate(lf.id)}>
+                            <Undo2 className="h-3.5 w-3.5 mr-1" /> Waive
+                          </Button>
+                        )}
+                        <Button size="sm" variant="ghost" onClick={() => { if (confirm("Remove this late fee record?")) deleteLateFee.mutate(lf.id); }}>
+                          <Trash2 className="h-3.5 w-3.5" />
+                        </Button>
+                      </TableCell>
+                    </TableRow>
+                  );
+                })}
+              </TableBody>
+            </Table>
+          </div>
+        </TabsContent>
       </Tabs>
+
+      {/* Late fee settings dialog */}
+      <Dialog open={!!lateFeeSettingsDraft} onOpenChange={(o) => !o && setLateFeeSettingsDraft(null)}>
+        <DialogContent>
+          <DialogHeader><DialogTitle>Late Fee Settings</DialogTitle></DialogHeader>
+          {lateFeeSettingsDraft && (
+            <div className="space-y-4">
+              <div className="flex items-center justify-between rounded-lg border border-border p-3">
+                <div>
+                  <Label className="text-sm">Enable late fees</Label>
+                  <p className="text-xs text-muted-foreground">When on, you can apply fees to overdue charges.</p>
+                </div>
+                <Switch checked={!!lateFeeSettingsDraft.enabled} onCheckedChange={(v) => setLateFeeSettingsDraft({ ...lateFeeSettingsDraft, enabled: v })} />
+              </div>
+              <div className="grid grid-cols-2 gap-3">
+                <div>
+                  <Label>Fee type</Label>
+                  <Select value={lateFeeSettingsDraft.fee_type} onValueChange={(v) => setLateFeeSettingsDraft({ ...lateFeeSettingsDraft, fee_type: v })}>
+                    <SelectTrigger><SelectValue /></SelectTrigger>
+                    <SelectContent>
+                      <SelectItem value="fixed">Fixed amount</SelectItem>
+                      <SelectItem value="percent">Percentage of charge</SelectItem>
+                    </SelectContent>
+                  </Select>
+                </div>
+                <div>
+                  <Label>{lateFeeSettingsDraft.fee_type === "percent" ? "Percent (%)" : "Amount"}</Label>
+                  <Input type="number" step="0.01" value={lateFeeSettingsDraft.amount ?? ""} onChange={(e) => setLateFeeSettingsDraft({ ...lateFeeSettingsDraft, amount: e.target.value })} />
+                </div>
+              </div>
+              <div className="grid grid-cols-2 gap-3">
+                <div>
+                  <Label>Grace period (days)</Label>
+                  <Input type="number" min="0" value={lateFeeSettingsDraft.grace_days ?? 0} onChange={(e) => setLateFeeSettingsDraft({ ...lateFeeSettingsDraft, grace_days: e.target.value })} />
+                </div>
+                <div>
+                  <Label>Max fee (optional cap)</Label>
+                  <Input type="number" step="0.01" value={lateFeeSettingsDraft.max_fee ?? ""} onChange={(e) => setLateFeeSettingsDraft({ ...lateFeeSettingsDraft, max_fee: e.target.value })} placeholder="No cap" />
+                </div>
+              </div>
+              <div>
+                <Label>Currency</Label>
+                <Input value={lateFeeSettingsDraft.currency || "EUR"} onChange={(e) => setLateFeeSettingsDraft({ ...lateFeeSettingsDraft, currency: e.target.value })} />
+              </div>
+            </div>
+          )}
+          <DialogFooter>
+            <Button variant="outline" onClick={() => setLateFeeSettingsDraft(null)}>Cancel</Button>
+            <Button onClick={() => saveLateFeeSettings.mutate(lateFeeSettingsDraft)} disabled={saveLateFeeSettings.isPending}>Save</Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
+
+      {/* Apply late fees confirmation */}
+      <AlertDialog open={applyLateFeesOpen} onOpenChange={setApplyLateFeesOpen}>
+        <AlertDialogContent>
+          <AlertDialogHeader>
+            <AlertDialogTitle>Apply late fees?</AlertDialogTitle>
+            <AlertDialogDescription asChild>
+              <div className="space-y-2 text-sm text-muted-foreground">
+                <p>
+                  This will apply a late fee to <span className="font-semibold text-foreground">{eligibleForLateFee.length}</span> overdue charge{eligibleForLateFee.length !== 1 ? "s" : ""} that are past the {lateFeeSettings?.grace_days}-day grace period.
+                </p>
+                <p>
+                  Estimated total: <span className="font-semibold text-foreground">{fmtMoney(eligiblePreviewTotal, lateFeeSettings?.currency)}</span>
+                </p>
+                <p className="text-xs">Charges that already have a late fee will be skipped (one fee per charge).</p>
+              </div>
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+          <AlertDialogFooter>
+            <AlertDialogCancel>Cancel</AlertDialogCancel>
+            <AlertDialogAction onClick={() => applyLateFees.mutate()}>Apply Late Fees</AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
 
       {/* Fee Dialog */}
       <Dialog open={!!feeDialog} onOpenChange={(o) => !o && setFeeDialog(null)}>
