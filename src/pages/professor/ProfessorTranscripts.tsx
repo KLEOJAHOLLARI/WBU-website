@@ -18,6 +18,7 @@ import {
   gradeToGPA,
   type TranscriptRow,
 } from "@/lib/transcript";
+import { downloadTranscriptPdf } from "@/lib/transcriptPdf";
 
 const ProfessorTranscripts = () => {
   const { user } = useAuth();
@@ -97,51 +98,15 @@ const ProfessorTranscripts = () => {
 
   const handleDownloadPDF = async () => {
     if (!selectedStudent) return;
-    const { default: jsPDF } = await import("jspdf");
-    const { default: autoTable } = await import("jspdf-autotable");
-    const doc = new jsPDF();
-    const pageW = doc.internal.pageSize.getWidth();
-
-    doc.setFontSize(18);
-    doc.setFont("helvetica", "bold");
-    doc.text("Academic Transcript", pageW / 2, 20, { align: "center" });
-    doc.setFontSize(11);
-    doc.setFont("helvetica", "normal");
-    doc.text("Western Balkan University", pageW / 2, 28, { align: "center" });
-
-    doc.setFontSize(10);
-    const infoY = 40;
-    doc.text(`Student: ${selectedStudent.full_name || "N/A"}`, 14, infoY);
-    doc.text(`Email: ${selectedStudent.email || "N/A"}`, 14, infoY + 6);
-    doc.text(`Program: ${selectedStudent.program || "N/A"}`, 14, infoY + 12);
-    doc.text(`Date: ${new Date().toLocaleDateString()}`, pageW - 14, infoY, { align: "right" });
-
-    const tableData = filteredRows.map((r) => [
-      r.courseName, r.courseCode,
-      r.grade !== null ? `${r.grade.toFixed(1)}% (${gradeToLetter(r.grade)})` : "—",
-      r.ects.toString(), `Y${r.year}/S${r.semester}`, r.status,
-    ]);
-
-    autoTable(doc, {
-      startY: infoY + 20,
-      head: [["Course", "Code", "Grade", "ECTS", "Semester", "Status"]],
-      body: tableData,
-      styles: { fontSize: 9 },
-      headStyles: { fillColor: [30, 58, 138] },
+    await downloadTranscriptPdf({
+      student: {
+        full_name: selectedStudent.full_name,
+        email: selectedStudent.email,
+        program: selectedStudent.program,
+      },
+      rows: filteredRows,
+      summary,
     });
-
-    const finalY = (doc as any).lastAutoTable.finalY + 12;
-    doc.setFontSize(11);
-    doc.setFont("helvetica", "bold");
-    doc.text("Summary", 14, finalY);
-    doc.setFont("helvetica", "normal");
-    doc.setFontSize(10);
-    doc.text(`Total ECTS Earned: ${summary.totalECTS}`, 14, finalY + 8);
-    doc.text(`Total Credits: ${summary.totalInstitutionalCredits}`, 14, finalY + 14);
-    doc.text(`CGPA: ${summary.cgpa.toFixed(2)} / 4.00`, 14, finalY + 20);
-    doc.text(`Weighted Average: ${summary.weightedAvg.toFixed(2)}%`, 14, finalY + 26);
-
-    doc.save(`transcript_${selectedStudent.full_name?.replace(/\s+/g, "_") || "student"}.pdf`);
   };
 
   const statusBadge = (status: TranscriptRow["status"]) => {
