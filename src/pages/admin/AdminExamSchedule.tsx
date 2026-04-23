@@ -1,6 +1,6 @@
-import { useMemo, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import AdminLayout from "@/components/AdminLayout";
-import { Link } from "react-router-dom";
+import { Link, useSearchParams } from "react-router-dom";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "@/hooks/use-toast";
@@ -72,6 +72,7 @@ const typeColors: Record<string, string> = {
 
 const AdminExamSchedule = () => {
   const queryClient = useQueryClient();
+  const [searchParams, setSearchParams] = useSearchParams();
   const [showForm, setShowForm] = useState(false);
   const [editingId, setEditingId] = useState<string | null>(null);
   const [form, setForm] = useState<FormState>(emptyForm);
@@ -112,6 +113,21 @@ const AdminExamSchedule = () => {
       return (data ?? []) as unknown as ExamRow[];
     },
   });
+
+  // Auto-open edit form when navigated with ?edit=<id>
+  const editParam = searchParams.get("edit");
+  useEffect(() => {
+    if (!editParam || exams.length === 0) return;
+    const target = exams.find((e) => e.id === editParam);
+    if (target) {
+      openEdit(target);
+      // Clear the param so refresh / further edits don't re-trigger
+      const next = new URLSearchParams(searchParams);
+      next.delete("edit");
+      setSearchParams(next, { replace: true });
+    }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [editParam, exams]);
 
   const filtered = useMemo(() => {
     const q = search.trim().toLowerCase();
