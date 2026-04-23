@@ -104,6 +104,7 @@ const App = () => (
             <Route path="/admin/graduation" element={<AdminGraduation />} />
             <Route path="/admin/semesters" element={<AdminSemesters />} />
             <Route path="/admin/tuition" element={<AdminTuition />} />
+            <Route path="/admin/exams" element={<AdminExamSchedule />} />
             <Route path="/portal/login" element={<StudentLogin />} />
             <Route path="/portal/register" element={<StudentRegister />} />
             <Route path="/portal" element={<StudentDashboard />} />
