@@ -766,20 +766,25 @@ const AdminTuition = () => {
                 .filter((c) => c.academic_semester_id === bulkDialog.semesterId)
                 .map((c) => `${c.user_id}|${c.program}`)
             );
-            let eligible = 0, alreadyCharged = 0, totalAmount = 0;
+            let eligible = 0, alreadyCharged = 0, totalAmount = 0, fullScholarSkipped = 0;
             for (const fee of semFees) {
               const targets = students.filter((s: any) => s.program === fee.program);
               for (const s of targets) {
+                const sch = Math.max(0, Math.min(100, Number(s.scholarship_percentage || 0)));
+                const net = Number(fee.amount) * (100 - sch) / 100;
                 if (existingKeys.has(`${s.user_id}|${fee.program}`)) {
                   alreadyCharged++;
-                  if (!bulkDialog.skipExisting) totalAmount += Number(fee.amount);
+                  if (!bulkDialog.skipExisting && net > 0) totalAmount += net;
+                } else if (net <= 0) {
+                  fullScholarSkipped++;
                 } else {
                   eligible++;
-                  totalAmount += Number(fee.amount);
+                  totalAmount += net;
                 }
               }
             }
-            const toCreate = bulkDialog.skipExisting ? eligible : eligible + alreadyCharged;
+            const studentsToCharge = bulkDialog.skipExisting ? eligible : eligible + alreadyCharged;
+            const toCreate = studentsToCharge * 4; // 4 installments per student
             const semName = semesters.find((s: any) => s.id === bulkDialog.semesterId)?.name || "—";
 
             return (
