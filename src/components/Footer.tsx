@@ -1,7 +1,6 @@
 import { Link } from "react-router-dom";
-import { Mail, Phone, MapPin } from "lucide-react";
+import { GraduationCap, Mail, Phone, MapPin } from "lucide-react";
 import { useTranslation } from "react-i18next";
-import wbuLogo from "@/assets/wbu-logo.png";
 
 const Footer = () => {
   const { t } = useTranslation();
@@ -11,8 +10,11 @@ const Footer = () => {
       <div className="container py-16 md:py-20">
         <div className="grid gap-12 md:grid-cols-2 lg:grid-cols-4">
           <div>
-            <Link to="/" className="mb-5 flex items-center gap-2.5" aria-label="Western Balkans University">
-              <img src={wbuLogo} alt="Western Balkans University" className="h-9 w-auto brightness-0 invert" />
+            <Link to="/" className="mb-5 flex items-center gap-2.5">
+              <GraduationCap className="h-7 w-7" />
+              <span className="font-display text-xl font-bold">
+                WBU<span className="text-accent">.</span>
+              </span>
             </Link>
             <p className="text-sm leading-relaxed text-primary-foreground/70">{t("footer.description")}</p>
           </div>
