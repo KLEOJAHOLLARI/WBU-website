@@ -678,18 +678,22 @@ export type Database = {
           account_status: string
           avatar_url: string | null
           birthplace: string | null
+          completed_open_lecture_hours: number
           created_at: string
           current_semester: number
           current_year: number
           email: string
           full_name: string
           gender: string | null
+          has_scholarship: boolean
           id: string
           must_change_password: boolean
           pending_email: string | null
           personal_id: string | null
           phone: string | null
           program: string | null
+          required_open_lecture_hours: number
+          scholarship_percentage: number
           student_exam_code: string | null
           student_id: string | null
           updated_at: string
@@ -699,18 +703,22 @@ export type Database = {
           account_status?: string
           avatar_url?: string | null
           birthplace?: string | null
+          completed_open_lecture_hours?: number
           created_at?: string
           current_semester?: number
           current_year?: number
           email?: string
           full_name?: string
           gender?: string | null
+          has_scholarship?: boolean
           id?: string
           must_change_password?: boolean
           pending_email?: string | null
           personal_id?: string | null
           phone?: string | null
           program?: string | null
+          required_open_lecture_hours?: number
+          scholarship_percentage?: number
           student_exam_code?: string | null
           student_id?: string | null
           updated_at?: string
@@ -720,18 +728,22 @@ export type Database = {
           account_status?: string
           avatar_url?: string | null
           birthplace?: string | null
+          completed_open_lecture_hours?: number
           created_at?: string
           current_semester?: number
           current_year?: number
           email?: string
           full_name?: string
           gender?: string | null
+          has_scholarship?: boolean
           id?: string
           must_change_password?: boolean
           pending_email?: string | null
           personal_id?: string | null
           phone?: string | null
           program?: string | null
+          required_open_lecture_hours?: number
+          scholarship_percentage?: number
           student_exam_code?: string | null
           student_id?: string | null
           updated_at?: string
