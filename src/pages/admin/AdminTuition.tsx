@@ -359,6 +359,36 @@ const AdminTuition = () => {
     },
     onSuccess: () => { qc.invalidateQueries({ queryKey: ["adm-late-fees"] }); toast.success("Late fee removed"); },
   });
+
+  const updateLateFeeNotes = useMutation({
+    mutationFn: async (lf: { id: string; reason: string; waive_note: string; waived: boolean }) => {
+      // Schema only has `reason`. Persist active reason and waive note in a single field
+      // using a clear separator so it round-trips on subsequent edits.
+      const SEP = "\n— Waive note: ";
+      const combined = lf.waived && lf.waive_note.trim()
+        ? `${lf.reason.trim()}${SEP}${lf.waive_note.trim()}`
+        : lf.reason.trim();
+      const { error } = await supabase.from("tuition_late_fees")
+        .update({ reason: combined })
+        .eq("id", lf.id);
+      if (error) throw error;
+    },
+    onSuccess: () => {
+      qc.invalidateQueries({ queryKey: ["adm-late-fees"] });
+      setEditLateFee(null);
+      toast.success("Late fee updated");
+    },
+    onError: (e: any) => toast.error(e.message),
+  });
+
+  const splitLateFeeReason = (raw: string | null) => {
+    const SEP = "\n— Waive note: ";
+    if (!raw) return { reason: "", waive_note: "" };
+    const idx = raw.indexOf(SEP);
+    if (idx === -1) return { reason: raw, waive_note: "" };
+    return { reason: raw.slice(0, idx), waive_note: raw.slice(idx + SEP.length) };
+  };
+
   const totalCharged = charges.reduce((s, c) => s + Number(c.amount), 0);
   const verifiedPayments = payments.filter((p) => p.verification_status === "verified");
   const totalCollected = verifiedPayments.reduce((s, p) => s + Number(p.amount), 0);
