@@ -60,6 +60,8 @@ import FacultyProfile from "./pages/FacultyProfile";
 import AdminTuition from "./pages/admin/AdminTuition";
 import StudentTuition from "./pages/portal/StudentTuition";
 import StudentTuitionEstimate from "./pages/portal/StudentTuitionEstimate";
+import AdminExamSchedule from "./pages/admin/AdminExamSchedule";
+import ProfessorExamSchedule from "./pages/professor/ProfessorExamSchedule";
 
 const queryClient = new QueryClient();
 
@@ -102,6 +104,7 @@ const App = () => (
             <Route path="/admin/graduation" element={<AdminGraduation />} />
             <Route path="/admin/semesters" element={<AdminSemesters />} />
             <Route path="/admin/tuition" element={<AdminTuition />} />
+            <Route path="/admin/exams" element={<AdminExamSchedule />} />
             <Route path="/portal/login" element={<StudentLogin />} />
             <Route path="/portal/register" element={<StudentRegister />} />
             <Route path="/portal" element={<StudentDashboard />} />
@@ -124,6 +127,7 @@ const App = () => (
             <Route path="/professor/announcements" element={<ProfessorAnnouncements />} />
             <Route path="/professor/advisor" element={<ProfessorAdvisor />} />
             <Route path="/professor/transcripts" element={<ProfessorTranscripts />} />
+            <Route path="/professor/exams" element={<ProfessorExamSchedule />} />
             <Route path="/professor/profile" element={<ProfessorProfile />} />
             <Route path="*" element={<NotFound />} />
           </Routes>
