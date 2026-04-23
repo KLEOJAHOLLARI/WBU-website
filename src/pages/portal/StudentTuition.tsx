@@ -268,6 +268,14 @@ const StudentTuition = () => {
                     </div>
                     {c.due_date && <p className="mt-1 text-sm text-muted-foreground">Due {new Date(c.due_date).toLocaleDateString()}</p>}
                     {c.notes && <p className="mt-1 text-xs text-muted-foreground">{c.notes}</p>}
+                    {lateFeeByCharge[c.id] && !lateFeeByCharge[c.id].waived && (
+                      <p className="mt-1.5 inline-flex items-center gap-1 rounded-md bg-destructive/10 px-2 py-0.5 text-xs font-medium text-destructive">
+                        Late fee applied: +{fmtMoney(Number(lateFeeByCharge[c.id].amount), lateFeeByCharge[c.id].currency)}
+                      </p>
+                    )}
+                    {lateFeeByCharge[c.id]?.waived && (
+                      <p className="mt-1.5 text-xs text-muted-foreground">Late fee waived ({fmtMoney(Number(lateFeeByCharge[c.id].amount), lateFeeByCharge[c.id].currency)})</p>
+                    )}
                   </div>
                   <div className="text-right">
                     <p className="font-display text-xl font-bold text-foreground">{fmtMoney(Number(c.amount), c.currency)}</p>
