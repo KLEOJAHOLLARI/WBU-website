@@ -244,7 +244,7 @@ const ProfessorTranscripts = () => {
                 </CardContent></Card>
               </div>
 
-              <div className="flex flex-wrap gap-3">
+              <div className="flex flex-wrap items-center gap-3">
                 <Select value={yearFilter} onValueChange={setYearFilter}>
                   <SelectTrigger className="w-[130px]"><SelectValue placeholder="Year" /></SelectTrigger>
                   <SelectContent>
@@ -259,6 +259,10 @@ const ProfessorTranscripts = () => {
                     {semesters.map((s) => <SelectItem key={s} value={String(s)}>Semester {s}</SelectItem>)}
                   </SelectContent>
                 </Select>
+                <div className="ml-auto flex items-center gap-2">
+                  <span className="text-xs text-muted-foreground">Show:</span>
+                  <GradeDisplayToggle value={displayMode} onChange={setDisplayMode} />
+                </div>
               </div>
 
               {loadingTranscript ? (
