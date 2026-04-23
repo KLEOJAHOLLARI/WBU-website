@@ -53,6 +53,10 @@ const AdminTuition = () => {
   const [lateFeeSettingsDraft, setLateFeeSettingsDraft] = useState<any | null>(null);
   const [applyLateFeesOpen, setApplyLateFeesOpen] = useState(false);
   const [editLateFee, setEditLateFee] = useState<any | null>(null);
+  const [lfSearch, setLfSearch] = useState("");
+  const [lfStatus, setLfStatus] = useState<"all" | "active" | "waived">("all");
+  const [lfFrom, setLfFrom] = useState<string>("");
+  const [lfTo, setLfTo] = useState<string>("");
 
   const { data: semesters = [] } = useQuery({
     queryKey: ["adm-tuition-semesters"],
@@ -716,8 +720,38 @@ const AdminTuition = () => {
           )}
 
           <div className="rounded-xl border border-border bg-card">
-            <div className="border-b border-border p-4">
-              <h2 className="font-semibold text-foreground">Applied Late Fees</h2>
+            <div className="border-b border-border p-4 space-y-3">
+              <div className="flex flex-wrap items-center justify-between gap-2">
+                <h2 className="font-semibold text-foreground">Applied Late Fees</h2>
+                {(lfSearch || lfStatus !== "all" || lfFrom || lfTo) && (
+                  <Button size="sm" variant="ghost" onClick={() => { setLfSearch(""); setLfStatus("all"); setLfFrom(""); setLfTo(""); }}>
+                    Clear filters
+                  </Button>
+                )}
+              </div>
+              <div className="grid gap-2 sm:grid-cols-2 lg:grid-cols-4">
+                <Input
+                  placeholder="Search student name, ID or email…"
+                  value={lfSearch}
+                  onChange={(e) => setLfSearch(e.target.value)}
+                />
+                <Select value={lfStatus} onValueChange={(v: any) => setLfStatus(v)}>
+                  <SelectTrigger><SelectValue placeholder="Status" /></SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="all">All statuses</SelectItem>
+                    <SelectItem value="active">Active</SelectItem>
+                    <SelectItem value="waived">Waived</SelectItem>
+                  </SelectContent>
+                </Select>
+                <div>
+                  <Label className="text-xs text-muted-foreground">From</Label>
+                  <Input type="date" value={lfFrom} onChange={(e) => setLfFrom(e.target.value)} />
+                </div>
+                <div>
+                  <Label className="text-xs text-muted-foreground">To</Label>
+                  <Input type="date" value={lfTo} onChange={(e) => setLfTo(e.target.value)} />
+                </div>
+              </div>
             </div>
             <Table>
               <TableHeader>
@@ -731,8 +765,27 @@ const AdminTuition = () => {
                 </TableRow>
               </TableHeader>
               <TableBody>
-                {lateFees.length === 0 && <TableRow><TableCell colSpan={6} className="text-center text-muted-foreground">No late fees applied yet.</TableCell></TableRow>}
-                {lateFees.map((lf: any) => {
+                {(() => {
+                  const q = lfSearch.trim().toLowerCase();
+                  const fromTs = lfFrom ? new Date(lfFrom).setHours(0, 0, 0, 0) : null;
+                  const toTs = lfTo ? new Date(lfTo).setHours(23, 59, 59, 999) : null;
+                  const filtered = (lateFees as any[]).filter((lf) => {
+                    if (lfStatus === "active" && lf.waived) return false;
+                    if (lfStatus === "waived" && !lf.waived) return false;
+                    const ts = new Date(lf.applied_at).getTime();
+                    if (fromTs != null && ts < fromTs) return false;
+                    if (toTs != null && ts > toTs) return false;
+                    if (q) {
+                      const st = studentMap[lf.user_id];
+                      const hay = `${st?.full_name || ""} ${st?.student_id || ""} ${st?.email || ""}`.toLowerCase();
+                      if (!hay.includes(q)) return false;
+                    }
+                    return true;
+                  });
+                  if (filtered.length === 0) {
+                    return <TableRow><TableCell colSpan={6} className="text-center text-muted-foreground">{lateFees.length === 0 ? "No late fees applied yet." : "No late fees match the current filters."}</TableCell></TableRow>;
+                  }
+                  return filtered.map((lf: any) => {
                   const st = studentMap[lf.user_id];
                   const parsed = splitLateFeeReason(lf.reason);
                   return (
@@ -773,7 +826,8 @@ const AdminTuition = () => {
                       </TableCell>
                     </TableRow>
                   );
-                })}
+                  });
+                })()}
               </TableBody>
             </Table>
           </div>
