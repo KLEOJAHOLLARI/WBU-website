@@ -411,17 +411,32 @@ const AdminStudents = () => {
                             min={0}
                             max={100}
                             defaultValue={pct}
-                            key={`pct-${selectedUserId}`}
+                            key={`pct-${selectedUserId}-${pct}`}
                             disabled={!has}
                             onBlur={async (e) => {
                               const val = Math.max(0, Math.min(100, parseInt(e.target.value) || 0));
-                              const { error } = await supabase.from("profiles").update({ scholarship_percentage: val } as any).eq("user_id", selectedUserId);
-                              if (error) { toast({ title: "Error", variant: "destructive" }); return; }
-                              queryClient.invalidateQueries({ queryKey: ["admin-students"] });
-                              toast({ title: "Scholarship % updated" });
+                              if (val === pct) return;
+                              // Fetch unpaid charges + program fees + semesters in parallel for review
+                              const program = (selectedProfile as any)?.program || null;
+                              const [chargesRes, feesRes, semsRes] = await Promise.all([
+                                supabase.from("tuition_charges").select("id, academic_semester_id, amount, due_date, status, program").eq("user_id", selectedUserId!).in("status", ["unpaid", "partial"]),
+                                program ? supabase.from("program_tuition_fees").select("academic_semester_id, amount, program").eq("program", program) : Promise.resolve({ data: [], error: null } as any),
+                                supabase.from("academic_semesters").select("id, name"),
+                              ]);
+                              if (chargesRes.error) { toast({ title: "Error loading charges", variant: "destructive" }); return; }
+                              setScholarshipReview({
+                                userId: selectedUserId!,
+                                program,
+                                currentPct: pct,
+                                newPct: val,
+                                charges: (chargesRes.data || []).map((c: any) => ({ id: c.id, semesterId: c.academic_semester_id, amount: Number(c.amount), due_date: c.due_date, status: c.status })),
+                                fees: (feesRes.data || []) as any,
+                                semesters: (semsRes.data || []) as any,
+                              });
                             }}
                             className="w-full rounded-md border border-input bg-background px-3 py-2 text-sm text-foreground disabled:opacity-60 focus:outline-none focus:ring-2 focus:ring-ring"
                           />
+                          <p className="mt-1 text-[11px] text-muted-foreground">Changes prompt a review of unpaid installments.</p>
                         </div>
                         <div>
                           <label className="mb-1 block text-xs text-muted-foreground">Required hours</label>
