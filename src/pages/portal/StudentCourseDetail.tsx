@@ -276,75 +276,136 @@ const StudentCourseDetail = () => {
         </div>
       )}
 
-      {/* ─── GRADE BREAKDOWN ─── */}
+      {/* ─── GRADES TABLE ─── */}
       <div className="mb-8">
-        <h2 className="mb-4 flex items-center gap-2 font-display text-lg font-semibold text-foreground">
-          <BarChart3 className="h-5 w-5 text-primary" /> Grade Breakdown
-        </h2>
+        <div className="mb-4 flex items-center justify-between gap-3">
+          <h2 className="flex items-center gap-2 font-display text-lg font-semibold text-foreground">
+            <BarChart3 className="h-5 w-5 text-primary" />
+            Grades for {course.name} ({course.code})
+          </h2>
+        </div>
 
         {components.length === 0 ? (
           <div className="rounded-xl border border-dashed border-border bg-card/50 p-8 text-center text-muted-foreground">
             No evaluation scheme defined yet.
           </div>
         ) : (
-          <>
-            {/* Visual grade cards */}
-            <div className="grid gap-3 sm:grid-cols-2">
+          <div className="overflow-hidden rounded-xl border border-border bg-card shadow-sm">
+            {/* Desktop / tablet table */}
+            <table className="hidden w-full sm:table">
+              <thead className="bg-muted/40">
+                <tr className="text-left">
+                  <th className="px-5 py-3 text-xs font-semibold uppercase tracking-wider text-muted-foreground">
+                    Evaluation Type
+                  </th>
+                  <th className="px-5 py-3 text-xs font-semibold uppercase tracking-wider text-muted-foreground">
+                    Weight
+                  </th>
+                  <th className="px-5 py-3 text-right text-xs font-semibold uppercase tracking-wider text-muted-foreground">
+                    Result
+                  </th>
+                </tr>
+              </thead>
+              <tbody>
+                {componentScores.map((cs, idx) => (
+                  <tr key={idx} className="border-t border-border transition-colors hover:bg-muted/30">
+                    <td className="px-5 py-4">
+                      <p className="font-semibold text-foreground">{cs.name}</p>
+                      <p className="text-xs text-muted-foreground">
+                        {cs.hasScore
+                          ? `Contributes ${cs.weighted!.toFixed(1)}% to final grade`
+                          : "Awaiting grade"}
+                      </p>
+                    </td>
+                    <td className="px-5 py-4">
+                      <Badge variant="outline" className="text-xs">{cs.weight}%</Badge>
+                    </td>
+                    <td className="px-5 py-4 text-right">
+                      {cs.hasScore ? (
+                        <div className="flex flex-col items-end">
+                          <span className={`font-display text-lg font-bold ${gradeColor(cs.pct!)}`}>
+                            {cs.score}/{cs.maxScore}
+                          </span>
+                          <span className="text-xs text-muted-foreground">{cs.pct!.toFixed(0)}%</span>
+                        </div>
+                      ) : (
+                        <span className="text-sm text-muted-foreground">—</span>
+                      )}
+                    </td>
+                  </tr>
+                ))}
+              </tbody>
+              <tfoot>
+                <tr className={`border-t-2 border-border ${gradeBg(roundedTotal)}`}>
+                  <td className="px-5 py-4">
+                    <p className="font-display text-base font-bold text-foreground">
+                      Overall Semester Grade
+                    </p>
+                    <p className="text-xs text-muted-foreground">
+                      {gradedComponentCount} of {componentScores.length} components graded
+                      {roundedTotal > 0 && (roundedTotal >= 50 ? " · ✓ Passing" : " · ✗ Below passing")}
+                    </p>
+                  </td>
+                  <td className="px-5 py-4" />
+                  <td className="px-5 py-4 text-right">
+                    <span className={`font-display text-3xl font-bold ${gradeColor(roundedTotal)}`}>
+                      {roundedTotal > 0 ? `${roundedTotal}%` : "—"}
+                    </span>
+                  </td>
+                </tr>
+              </tfoot>
+            </table>
+
+            {/* Mobile stacked list */}
+            <div className="divide-y divide-border sm:hidden">
               {componentScores.map((cs, idx) => (
-                <div key={idx} className="rounded-xl border border-border bg-card p-4 transition-shadow hover:shadow-sm">
-                  <div className="flex items-center justify-between mb-2">
-                    <div className="flex items-center gap-2">
-                      <span className="font-semibold text-foreground text-sm">{cs.name}</span>
+                <div key={idx} className="flex items-start justify-between gap-3 px-4 py-3">
+                  <div className="min-w-0 flex-1">
+                    <p className="truncate font-semibold text-foreground">{cs.name}</p>
+                    <div className="mt-1 flex items-center gap-2">
                       <Badge variant="outline" className="text-[10px] px-1.5 py-0">{cs.weight}%</Badge>
-                    </div>
-                    {cs.hasScore ? (
-                      <span className={`text-lg font-bold ${gradeColor(cs.pct!)}`}>
-                        {cs.score}/{cs.maxScore}
+                      <span className="text-xs text-muted-foreground">
+                        {cs.hasScore ? `+${cs.weighted!.toFixed(1)}% weighted` : "Awaiting grade"}
                       </span>
+                    </div>
+                  </div>
+                  <div className="flex flex-col items-end flex-shrink-0">
+                    {cs.hasScore ? (
+                      <>
+                        <span className={`font-display text-base font-bold ${gradeColor(cs.pct!)}`}>
+                          {cs.score}/{cs.maxScore}
+                        </span>
+                        <span className="text-[11px] text-muted-foreground">{cs.pct!.toFixed(0)}%</span>
+                      </>
                     ) : (
-                      <span className="text-sm text-muted-foreground">Not graded</span>
+                      <span className="text-sm text-muted-foreground">—</span>
                     )}
                   </div>
-                  {cs.hasScore ? (
-                    <>
-                      <Progress value={cs.pct!} className={`h-2 ${progressColor(cs.pct!)}`} />
-                      <div className="mt-1.5 flex items-center justify-between text-xs text-muted-foreground">
-                        <span>{cs.pct!.toFixed(0)}% score</span>
-                        <span className={`font-semibold ${gradeColor(cs.pct!)}`}>
-                          +{cs.weighted!.toFixed(1)}% weighted
-                        </span>
-                      </div>
-                    </>
-                  ) : (
-                    <div className="mt-1">
-                      <Progress value={0} className="h-2" />
-                      <p className="mt-1 text-xs text-muted-foreground">Awaiting grade</p>
-                    </div>
-                  )}
                 </div>
               ))}
+              <div className={`flex items-center justify-between gap-3 px-4 py-4 ${gradeBg(roundedTotal)}`}>
+                <div className="min-w-0">
+                  <p className="font-display text-sm font-bold text-foreground">
+                    Overall Semester Grade
+                  </p>
+                  <p className="text-[11px] text-muted-foreground">
+                    {gradedComponentCount}/{componentScores.length} graded
+                    {roundedTotal > 0 && (roundedTotal >= 50 ? " · Passing" : " · Below passing")}
+                  </p>
+                </div>
+                <span className={`font-display text-2xl font-bold ${gradeColor(roundedTotal)}`}>
+                  {roundedTotal > 0 ? `${roundedTotal}%` : "—"}
+                </span>
+              </div>
             </div>
 
-            {/* Total summary bar */}
-            <div className="mt-4 rounded-xl border border-border bg-card p-5">
-              <div className="flex items-center justify-between mb-3">
-                <div className="flex items-center gap-2">
-                  <TrendingUp className="h-5 w-5 text-primary" />
-                  <span className="font-display text-base font-semibold text-foreground">Final Grade</span>
-                </div>
-                <span className={`text-3xl font-bold ${gradeColor(roundedTotal)}`}>
-                  {roundedTotal}%
-                </span>
+            {/* Final progress bar */}
+            {componentScores.length > 0 && (
+              <div className="border-t border-border bg-card px-5 py-4">
+                <Progress value={roundedTotal} className={`h-2 ${progressColor(roundedTotal)}`} />
               </div>
-              <Progress value={roundedTotal} className={`h-3 ${progressColor(roundedTotal)}`} />
-              <div className="mt-2 flex items-center justify-between text-xs text-muted-foreground">
-                <span>{gradedComponentCount} of {componentScores.length} components graded</span>
-                <span className="font-medium">
-                  {roundedTotal >= 50 ? "✓ Passing" : roundedTotal > 0 ? "✗ Below passing" : "No grades yet"}
-                </span>
-              </div>
-            </div>
-          </>
+            )}
+          </div>
         )}
       </div>
 
