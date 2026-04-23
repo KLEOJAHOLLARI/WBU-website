@@ -427,8 +427,8 @@ const AdminTuition = () => {
                           )}
                           {p.verification_status === "pending" && (
                             <>
-                              <Button size="sm" variant="outline" onClick={() => verifyPayment.mutate({ id: p.id, status: "verified" })}><CheckCircle2 className="h-3.5 w-3.5 text-emerald-600" /></Button>
-                              <Button size="sm" variant="outline" onClick={() => { const note = prompt("Reason for rejection (optional):") || ""; verifyPayment.mutate({ id: p.id, status: "rejected", note }); }}><XCircle className="h-3.5 w-3.5 text-destructive" /></Button>
+                              <Button size="sm" variant="outline" onClick={() => { setReviewNote(p.admin_note || ""); setReviewDialog({ payment: p, mode: "verify" }); }}><CheckCircle2 className="h-3.5 w-3.5 text-emerald-600" /></Button>
+                              <Button size="sm" variant="outline" onClick={() => { setReviewNote(p.admin_note || ""); setReviewDialog({ payment: p, mode: "reject" }); }}><XCircle className="h-3.5 w-3.5 text-destructive" /></Button>
                             </>
                           )}
                           <Button size="sm" variant="ghost" onClick={() => { if (confirm("Delete payment?")) deletePayment.mutate(p.id); }}><Trash2 className="h-3.5 w-3.5" /></Button>
