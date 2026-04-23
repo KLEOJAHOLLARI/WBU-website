@@ -236,6 +236,38 @@ const NotificationBell = () => {
     };
   }, [user?.id, isAdmin, isProfessor, queryClient]);
 
+  // Realtime for admins: new applications, tuition charges, and pending receipts
+  useEffect(() => {
+    if (!user || !isAdmin) return;
+    const invalidate = () =>
+      queryClient.invalidateQueries({ queryKey: ["notifications"] });
+    const channel = supabase
+      .channel(`notif-admin-${user.id}`)
+      .on("postgres_changes", { event: "*", schema: "public", table: "applications" }, invalidate)
+      .on("postgres_changes", { event: "*", schema: "public", table: "tuition_charges" }, invalidate)
+      .on("postgres_changes", { event: "*", schema: "public", table: "tuition_payments" }, invalidate)
+      .subscribe();
+    return () => {
+      supabase.removeChannel(channel);
+    };
+  }, [user?.id, isAdmin, queryClient]);
+
+  // Realtime for professors/advisors: new enrollment requests
+  useEffect(() => {
+    if (!user || !isProfessor) return;
+    const channel = supabase
+      .channel(`notif-prof-${user.id}`)
+      .on(
+        "postgres_changes",
+        { event: "*", schema: "public", table: "enrollment_requests" },
+        () => queryClient.invalidateQueries({ queryKey: ["notifications"] })
+      )
+      .subscribe();
+    return () => {
+      supabase.removeChannel(channel);
+    };
+  }, [user?.id, isProfessor, queryClient]);
+
   const markAllRead = useMutation({
     mutationFn: async () => {
       if (!user) return;
