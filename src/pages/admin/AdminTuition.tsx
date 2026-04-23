@@ -8,8 +8,13 @@ import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
 import { Badge } from "@/components/ui/badge";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from "@/components/ui/dialog";
+import {
+  AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription,
+  AlertDialogFooter, AlertDialogHeader, AlertDialogTitle,
+} from "@/components/ui/alert-dialog";
 import { Tabs, TabsList, TabsTrigger, TabsContent } from "@/components/ui/tabs";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
+import { Checkbox } from "@/components/ui/checkbox";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { toast } from "sonner";
 import { CreditCard, Plus, Trash2, CheckCircle2, XCircle, AlertCircle, Wallet, Receipt, FileDown } from "lucide-react";
@@ -43,6 +48,7 @@ const AdminTuition = () => {
   const [viewCharge, setViewCharge] = useState<{ charge: Charge; student: any } | null>(null);
   const [reviewDialog, setReviewDialog] = useState<{ payment: Payment; mode: "verify" | "reject" } | null>(null);
   const [reviewNote, setReviewNote] = useState("");
+  const [bulkDialog, setBulkDialog] = useState<{ semesterId: string; program: string; skipExisting: boolean } | null>(null);
 
   const { data: semesters = [] } = useQuery({
     queryKey: ["adm-tuition-semesters"],
@@ -117,30 +123,46 @@ const AdminTuition = () => {
   });
 
   const generateForSemester = useMutation({
-    mutationFn: async (semesterId: string) => {
-      const semFees = fees.filter((f: any) => f.academic_semester_id === semesterId);
-      if (!semFees.length) throw new Error("No program fees defined for this semester");
+    mutationFn: async ({ semesterId, program, skipExisting }: { semesterId: string; program: string; skipExisting: boolean }) => {
+      const semFees = fees.filter((f: any) =>
+        f.academic_semester_id === semesterId && (program === "all" || f.program === program)
+      );
+      if (!semFees.length) throw new Error("No program fees defined for this selection");
+
+      // Existing charges to skip
+      const existingKeys = new Set(
+        skipExisting
+          ? charges
+              .filter((c) => c.academic_semester_id === semesterId)
+              .map((c) => `${c.user_id}|${c.program}`)
+          : []
+      );
+
       const rows: any[] = [];
       for (const fee of semFees) {
         const targets = students.filter((s: any) => s.program === fee.program);
         for (const s of targets) {
+          if (skipExisting && existingKeys.has(`${s.user_id}|${fee.program}`)) continue;
           rows.push({
             user_id: s.user_id, academic_semester_id: semesterId, program: fee.program,
             amount: fee.amount, currency: fee.currency, due_date: fee.due_date,
           });
         }
       }
-      if (!rows.length) return 0;
-      // Insert one-by-one to skip dup conflicts
-      let created = 0;
+      if (!rows.length) return { created: 0, skipped: 0 };
+      let created = 0, skipped = 0;
       for (const r of rows) {
         const { error } = await supabase.from("tuition_charges").insert(r);
-        if (!error) created++;
+        if (error) skipped++; else created++;
       }
-      return created;
+      return { created, skipped };
     },
-    onSuccess: (n) => { qc.invalidateQueries({ queryKey: ["adm-tuition-charges"] }); toast.success(`${n} charges generated`); },
-    onError: (e: any) => toast.error(e.message),
+    onSuccess: ({ created, skipped }) => {
+      qc.invalidateQueries({ queryKey: ["adm-tuition-charges"] });
+      setBulkDialog(null);
+      toast.success(`${created} charges generated${skipped ? ` · ${skipped} skipped` : ""}`);
+    },
+    onError: (e: any) => { toast.error(e.message); },
   });
 
   const upsertCharge = useMutation({
@@ -330,12 +352,16 @@ const AdminTuition = () => {
             <div className="flex flex-wrap items-center justify-between gap-2 border-b border-border p-4">
               <h2 className="font-semibold text-foreground">Student Charges</h2>
               <div className="flex gap-2">
-                <Select onValueChange={(v) => generateForSemester.mutate(v)}>
-                  <SelectTrigger className="w-[260px]"><SelectValue placeholder="Generate charges for semester…" /></SelectTrigger>
-                  <SelectContent>
-                    {semesters.map((s: any) => <SelectItem key={s.id} value={s.id}>{s.name}</SelectItem>)}
-                  </SelectContent>
-                </Select>
+                <Button
+                  variant="outline"
+                  onClick={() => {
+                    const current = semesters.find((s: any) => s.is_current) || semesters[0];
+                    if (!current) { toast.error("Create an academic semester first"); return; }
+                    setBulkDialog({ semesterId: current.id, program: "all", skipExisting: true });
+                  }}
+                >
+                  <Plus className="h-4 w-4 mr-1" /> Bulk Generate
+                </Button>
                 <Button onClick={() => setChargeDialog({})}><Plus className="h-4 w-4 mr-1" /> New Charge</Button>
               </div>
             </div>
@@ -700,6 +726,118 @@ const AdminTuition = () => {
           </DialogFooter>
         </DialogContent>
       </Dialog>
+
+      {/* BULK GENERATE CHARGES DIALOG */}
+      <AlertDialog open={!!bulkDialog} onOpenChange={(o) => !o && setBulkDialog(null)}>
+        <AlertDialogContent className="max-w-lg">
+          <AlertDialogHeader>
+            <AlertDialogTitle>Bulk Generate Tuition Charges</AlertDialogTitle>
+            <AlertDialogDescription>
+              Create charges for all eligible students based on the program fees configured for the selected semester.
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+
+          {bulkDialog && (() => {
+            const semFees = fees.filter((f: any) =>
+              f.academic_semester_id === bulkDialog.semesterId &&
+              (bulkDialog.program === "all" || f.program === bulkDialog.program)
+            );
+            const programs = Array.from(new Set(fees.filter((f: any) => f.academic_semester_id === bulkDialog.semesterId).map((f: any) => f.program)));
+            const existingKeys = new Set(
+              charges
+                .filter((c) => c.academic_semester_id === bulkDialog.semesterId)
+                .map((c) => `${c.user_id}|${c.program}`)
+            );
+            let eligible = 0, alreadyCharged = 0, totalAmount = 0;
+            for (const fee of semFees) {
+              const targets = students.filter((s: any) => s.program === fee.program);
+              for (const s of targets) {
+                if (existingKeys.has(`${s.user_id}|${fee.program}`)) {
+                  alreadyCharged++;
+                  if (!bulkDialog.skipExisting) totalAmount += Number(fee.amount);
+                } else {
+                  eligible++;
+                  totalAmount += Number(fee.amount);
+                }
+              }
+            }
+            const toCreate = bulkDialog.skipExisting ? eligible : eligible + alreadyCharged;
+            const semName = semesters.find((s: any) => s.id === bulkDialog.semesterId)?.name || "—";
+
+            return (
+              <div className="space-y-4">
+                <div className="grid grid-cols-2 gap-3">
+                  <div>
+                    <Label>Semester</Label>
+                    <Select
+                      value={bulkDialog.semesterId}
+                      onValueChange={(v) => setBulkDialog({ ...bulkDialog, semesterId: v, program: "all" })}
+                    >
+                      <SelectTrigger><SelectValue /></SelectTrigger>
+                      <SelectContent>
+                        {semesters.map((s: any) => <SelectItem key={s.id} value={s.id}>{s.name}</SelectItem>)}
+                      </SelectContent>
+                    </Select>
+                  </div>
+                  <div>
+                    <Label>Program</Label>
+                    <Select value={bulkDialog.program} onValueChange={(v) => setBulkDialog({ ...bulkDialog, program: v })}>
+                      <SelectTrigger><SelectValue /></SelectTrigger>
+                      <SelectContent>
+                        <SelectItem value="all">All programs</SelectItem>
+                        {programs.map((p) => <SelectItem key={p} value={p}>{p}</SelectItem>)}
+                      </SelectContent>
+                    </Select>
+                  </div>
+                </div>
+
+                <label className="flex items-center gap-2 text-sm">
+                  <Checkbox
+                    checked={bulkDialog.skipExisting}
+                    onCheckedChange={(v) => setBulkDialog({ ...bulkDialog, skipExisting: !!v })}
+                  />
+                  Skip students who already have a charge for this semester
+                </label>
+
+                <div className="rounded-lg border border-border bg-muted/40 p-4 space-y-2 text-sm">
+                  <div className="flex justify-between"><span className="text-muted-foreground">Semester</span><span className="font-medium">{semName}</span></div>
+                  <div className="flex justify-between"><span className="text-muted-foreground">Program fees matched</span><span className="font-medium">{semFees.length}</span></div>
+                  <div className="flex justify-between"><span className="text-muted-foreground">Eligible students (new)</span><span className="font-medium text-emerald-600">{eligible}</span></div>
+                  <div className="flex justify-between"><span className="text-muted-foreground">Already charged</span><span className="font-medium text-amber-600">{alreadyCharged}</span></div>
+                  <div className="border-t border-border pt-2 flex justify-between">
+                    <span className="font-semibold">Charges to create</span>
+                    <span className="font-bold">{toCreate}</span>
+                  </div>
+                  <div className="flex justify-between">
+                    <span className="font-semibold">Estimated total</span>
+                    <span className="font-bold">{fmtMoney(totalAmount)}</span>
+                  </div>
+                </div>
+
+                {semFees.length === 0 && (
+                  <p className="text-sm text-destructive">No program fees defined for this selection. Configure fees first.</p>
+                )}
+                {toCreate === 0 && semFees.length > 0 && (
+                  <p className="text-sm text-muted-foreground">No new charges would be created with the current settings.</p>
+                )}
+              </div>
+            );
+          })()}
+
+          <AlertDialogFooter>
+            <AlertDialogCancel>Cancel</AlertDialogCancel>
+            <AlertDialogAction
+              disabled={generateForSemester.isPending}
+              onClick={(e) => {
+                e.preventDefault();
+                if (bulkDialog) generateForSemester.mutate(bulkDialog);
+              }}
+            >
+              {generateForSemester.isPending ? "Generating…" : "Confirm & Generate"}
+            </AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
     </AdminLayout>
   );
 };
