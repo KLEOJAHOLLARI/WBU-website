@@ -77,7 +77,7 @@ const AdminTuition = () => {
   const { data: students = [] } = useQuery({
     queryKey: ["adm-tuition-students"],
     queryFn: async () => {
-      const { data } = await supabase.from("profiles").select("user_id, full_name, email, student_id, program").order("full_name");
+      const { data } = await supabase.from("profiles").select("user_id, full_name, email, student_id, program, scholarship_percentage, has_scholarship").order("full_name");
       return (data || []).filter((p: any) => p.program);
     },
   });
@@ -129,7 +129,7 @@ const AdminTuition = () => {
       );
       if (!semFees.length) throw new Error("No program fees defined for this selection");
 
-      // Existing charges to skip
+      // Existing keys (user|program|semester) — skip students who already have ANY installment
       const existingKeys = new Set(
         skipExisting
           ? charges
@@ -143,9 +143,27 @@ const AdminTuition = () => {
         const targets = students.filter((s: any) => s.program === fee.program);
         for (const s of targets) {
           if (skipExisting && existingKeys.has(`${s.user_id}|${fee.program}`)) continue;
-          rows.push({
-            user_id: s.user_id, academic_semester_id: semesterId, program: fee.program,
-            amount: fee.amount, currency: fee.currency, due_date: fee.due_date,
+
+          const scholarshipPct = Math.max(0, Math.min(100, Number(s.scholarship_percentage || 0)));
+          const annual = Number(fee.amount) || 0;
+          const netAnnual = +(annual * (100 - scholarshipPct) / 100).toFixed(2);
+          if (netAnnual <= 0) continue; // 100% scholarship => no charges
+
+          // Split into 4 installments (last one absorbs rounding remainder)
+          const base = Math.floor((netAnnual / 4) * 100) / 100;
+          const installments = [base, base, base, +(netAnnual - base * 3).toFixed(2)];
+
+          // Due dates: fee.due_date as installment 1, +1mo, +2mo, +3mo
+          const baseDue = fee.due_date ? new Date(fee.due_date) : null;
+          installments.forEach((amt, idx) => {
+            const due = baseDue
+              ? (() => { const d = new Date(baseDue); d.setMonth(d.getMonth() + idx); return d.toISOString().slice(0, 10); })()
+              : null;
+            rows.push({
+              user_id: s.user_id, academic_semester_id: semesterId, program: fee.program,
+              amount: amt, currency: fee.currency, due_date: due,
+              notes: `Installment ${idx + 1} of 4 · Annual ${fmtMoney(annual, fee.currency)}${scholarshipPct ? ` · Scholarship ${scholarshipPct}%` : ""}`,
+            });
           });
         }
       }
@@ -160,7 +178,7 @@ const AdminTuition = () => {
     onSuccess: ({ created, skipped }) => {
       qc.invalidateQueries({ queryKey: ["adm-tuition-charges"] });
       setBulkDialog(null);
-      toast.success(`${created} charges generated${skipped ? ` · ${skipped} skipped` : ""}`);
+      toast.success(`${created} installment${created !== 1 ? "s" : ""} generated${skipped ? ` · ${skipped} skipped` : ""}`);
     },
     onError: (e: any) => { toast.error(e.message); },
   });
@@ -748,20 +766,25 @@ const AdminTuition = () => {
                 .filter((c) => c.academic_semester_id === bulkDialog.semesterId)
                 .map((c) => `${c.user_id}|${c.program}`)
             );
-            let eligible = 0, alreadyCharged = 0, totalAmount = 0;
+            let eligible = 0, alreadyCharged = 0, totalAmount = 0, fullScholarSkipped = 0;
             for (const fee of semFees) {
               const targets = students.filter((s: any) => s.program === fee.program);
               for (const s of targets) {
+                const sch = Math.max(0, Math.min(100, Number(s.scholarship_percentage || 0)));
+                const net = Number(fee.amount) * (100 - sch) / 100;
                 if (existingKeys.has(`${s.user_id}|${fee.program}`)) {
                   alreadyCharged++;
-                  if (!bulkDialog.skipExisting) totalAmount += Number(fee.amount);
+                  if (!bulkDialog.skipExisting && net > 0) totalAmount += net;
+                } else if (net <= 0) {
+                  fullScholarSkipped++;
                 } else {
                   eligible++;
-                  totalAmount += Number(fee.amount);
+                  totalAmount += net;
                 }
               }
             }
-            const toCreate = bulkDialog.skipExisting ? eligible : eligible + alreadyCharged;
+            const studentsToCharge = bulkDialog.skipExisting ? eligible : eligible + alreadyCharged;
+            const toCreate = studentsToCharge * 4; // 4 installments per student
             const semName = semesters.find((s: any) => s.id === bulkDialog.semesterId)?.name || "—";
 
             return (
@@ -804,15 +827,26 @@ const AdminTuition = () => {
                   <div className="flex justify-between"><span className="text-muted-foreground">Program fees matched</span><span className="font-medium">{semFees.length}</span></div>
                   <div className="flex justify-between"><span className="text-muted-foreground">Eligible students (new)</span><span className="font-medium text-emerald-600">{eligible}</span></div>
                   <div className="flex justify-between"><span className="text-muted-foreground">Already charged</span><span className="font-medium text-amber-600">{alreadyCharged}</span></div>
+                  {fullScholarSkipped > 0 && (
+                    <div className="flex justify-between"><span className="text-muted-foreground">Skipped (100% scholarship)</span><span className="font-medium">{fullScholarSkipped}</span></div>
+                  )}
                   <div className="border-t border-border pt-2 flex justify-between">
-                    <span className="font-semibold">Charges to create</span>
+                    <span className="font-semibold">Students to charge</span>
+                    <span className="font-bold">{studentsToCharge}</span>
+                  </div>
+                  <div className="flex justify-between">
+                    <span className="font-semibold">Installments to create (×4)</span>
                     <span className="font-bold">{toCreate}</span>
                   </div>
                   <div className="flex justify-between">
-                    <span className="font-semibold">Estimated total</span>
+                    <span className="font-semibold">Estimated total (after scholarships)</span>
                     <span className="font-bold">{fmtMoney(totalAmount)}</span>
                   </div>
                 </div>
+
+                <p className="text-xs text-muted-foreground">
+                  Each eligible student receives <strong>4 monthly installments</strong> starting on the program fee's due date. Amounts are split after applying each student's scholarship percentage.
+                </p>
 
                 {semFees.length === 0 && (
                   <p className="text-sm text-destructive">No program fees defined for this selection. Configure fees first.</p>

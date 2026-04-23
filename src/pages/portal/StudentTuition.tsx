@@ -21,6 +21,37 @@ const StudentTuition = () => {
   const qc = useQueryClient();
   const [uploadFor, setUploadFor] = useState<any | null>(null);
 
+  const { data: profile } = useQuery({
+    queryKey: ["student-tuition-profile", user?.id],
+    queryFn: async () => {
+      const { data } = await supabase
+        .from("profiles")
+        .select("program, scholarship_percentage, has_scholarship, full_name, student_id")
+        .eq("user_id", user!.id)
+        .maybeSingle();
+      return data;
+    },
+    enabled: !!user,
+  });
+
+  const { data: programInfo } = useQuery({
+    queryKey: ["student-tuition-program", profile?.program],
+    queryFn: async () => {
+      const { data } = await supabase.from("programs").select("slug, title").eq("slug", profile!.program!).maybeSingle();
+      return data;
+    },
+    enabled: !!profile?.program,
+  });
+
+  const { data: programFees = [] } = useQuery({
+    queryKey: ["student-tuition-program-fees", profile?.program],
+    queryFn: async () => {
+      const { data } = await supabase.from("program_tuition_fees").select("*").eq("program", profile!.program!);
+      return data || [];
+    },
+    enabled: !!profile?.program,
+  });
+
   const { data: charges = [] } = useQuery({
     queryKey: ["student-charges", user?.id],
     queryFn: async () => {
@@ -42,11 +73,17 @@ const StudentTuition = () => {
   const { data: semesters = [] } = useQuery({
     queryKey: ["student-tuition-semesters"],
     queryFn: async () => {
-      const { data } = await supabase.from("academic_semesters").select("id, name");
+      const { data } = await supabase.from("academic_semesters").select("id, name, is_current").order("year", { ascending: false });
       return data || [];
     },
   });
   const semMap = Object.fromEntries(semesters.map((s: any) => [s.id, s]));
+
+  const scholarshipPct = Math.max(0, Math.min(100, Number(profile?.scholarship_percentage || 0)));
+  const currentSem = semesters.find((s: any) => s.is_current);
+  const currentFee = programFees.find((f: any) => f.academic_semester_id === currentSem?.id) || programFees[0];
+  const annualTuition = Number(currentFee?.amount || 0);
+  const afterScholarship = +(annualTuition * (100 - scholarshipPct) / 100).toFixed(2);
 
   const totalCharged = charges.reduce((s, c) => s + Number(c.amount), 0);
   const verifiedPaid = payments.filter((p) => p.verification_status === "verified").reduce((s, p) => s + Number(p.amount), 0);
@@ -97,6 +134,46 @@ const StudentTuition = () => {
         <h1 className="font-display text-2xl font-bold text-foreground">Tuition & Payments</h1>
       </div>
       <p className="mt-1 text-muted-foreground">Track your tuition fees, payments, and upload payment receipts.</p>
+
+      {/* Tuition summary (program-based pricing + scholarship) */}
+      {profile?.program && (
+        <div className="mt-6 rounded-xl border border-border bg-card p-5">
+          <div className="flex flex-wrap items-start justify-between gap-3">
+            <div>
+              <p className="text-xs uppercase tracking-wider text-muted-foreground">Your program</p>
+              <h2 className="font-display text-lg font-bold text-foreground">{programInfo?.title || profile.program}</h2>
+              {currentSem && <p className="text-xs text-muted-foreground mt-0.5">For {currentSem.name}</p>}
+            </div>
+            {scholarshipPct > 0 && (
+              <Badge className="bg-emerald-500/15 text-emerald-700 border-emerald-500/20 dark:text-emerald-400">
+                {scholarshipPct}% Scholarship
+              </Badge>
+            )}
+          </div>
+          {annualTuition > 0 ? (
+            <div className="mt-4 grid gap-3 grid-cols-2 md:grid-cols-4">
+              <div>
+                <p className="text-xs text-muted-foreground">Annual tuition</p>
+                <p className="font-display text-xl font-bold text-foreground">{fmtMoney(annualTuition, currentFee?.currency)}</p>
+              </div>
+              <div>
+                <p className="text-xs text-muted-foreground">Scholarship discount</p>
+                <p className="font-display text-xl font-bold text-emerald-600">−{fmtMoney(annualTuition - afterScholarship, currentFee?.currency)}</p>
+              </div>
+              <div>
+                <p className="text-xs text-muted-foreground">You pay</p>
+                <p className="font-display text-xl font-bold text-foreground">{fmtMoney(afterScholarship, currentFee?.currency)}</p>
+              </div>
+              <div>
+                <p className="text-xs text-muted-foreground">Per installment (×4)</p>
+                <p className="font-display text-xl font-bold text-foreground">{fmtMoney(afterScholarship / 4, currentFee?.currency)}</p>
+              </div>
+            </div>
+          ) : (
+            <p className="mt-3 text-sm text-muted-foreground">Tuition pricing for your program has not been published yet.</p>
+          )}
+        </div>
+      )}
 
       {/* Stats */}
       <div className="mt-6 grid gap-4 grid-cols-2 lg:grid-cols-4">
