@@ -18,13 +18,16 @@ import {
   gradeToLetter,
   type TranscriptRow,
 } from "@/lib/transcript";
+import type { GradeDisplayMode } from "@/lib/grading";
 import { downloadTranscriptPdf } from "@/lib/transcriptPdf";
+import GradeDisplayToggle from "@/components/GradeDisplayToggle";
 
 const AdminTranscripts = () => {
   const [selectedUserId, setSelectedUserId] = useState<string | null>(null);
   const [searchTerm, setSearchTerm] = useState("");
   const [semesterFilter, setSemesterFilter] = useState<string>("all");
   const [yearFilter, setYearFilter] = useState<string>("all");
+  const [displayMode, setDisplayMode] = useState<GradeDisplayMode>("full");
 
   const { data: students = [], isLoading: loadingStudents } = useQuery({
     queryKey: ["admin-transcript-students"],
@@ -98,7 +101,20 @@ const AdminTranscripts = () => {
       },
       rows: filteredRows,
       summary,
+      displayMode,
     });
+  };
+
+  const renderGrade = (grade: number) => {
+    const alb = gradeToAlbanian(grade);
+    const letter = gradeToLetter(grade);
+    if (displayMode === "percent") return <span className="font-semibold">{grade.toFixed(1)}%</span>;
+    if (displayMode === "albanian") return <span className="font-semibold">{alb}</span>;
+    return (
+      <span className="font-semibold">
+        {grade.toFixed(1)}% <span className="text-xs text-muted-foreground">→ {alb} ({letter})</span>
+      </span>
+    );
   };
 
   const statusBadge = (status: TranscriptRow["status"]) => {
@@ -130,9 +146,9 @@ const AdminTranscripts = () => {
             </TableCell>
             <TableCell className="hidden sm:table-cell text-muted-foreground">{row.courseCode}</TableCell>
             <TableCell>
-              {row.grade !== null ? (
-                <span className="font-semibold">{row.grade.toFixed(1)}% <span className="text-xs text-muted-foreground">→ {gradeToAlbanian(row.grade)} ({gradeToLetter(row.grade)})</span></span>
-              ) : <span className="text-muted-foreground">—</span>}
+              {row.grade !== null
+                ? renderGrade(row.grade)
+                : <span className="text-muted-foreground">—</span>}
             </TableCell>
             <TableCell className="text-center">{row.ects}</TableCell>
             <TableCell className="hidden sm:table-cell">Y{row.year} / S{row.semester}</TableCell>
@@ -219,7 +235,7 @@ const AdminTranscripts = () => {
                 </CardContent></Card>
               </div>
 
-              <div className="flex flex-wrap gap-3">
+              <div className="flex flex-wrap items-center gap-3">
                 <Select value={yearFilter} onValueChange={setYearFilter}>
                   <SelectTrigger className="w-[130px]"><SelectValue placeholder="Year" /></SelectTrigger>
                   <SelectContent>
@@ -234,6 +250,10 @@ const AdminTranscripts = () => {
                     {semesters.map((s) => <SelectItem key={s} value={String(s)}>Semester {s}</SelectItem>)}
                   </SelectContent>
                 </Select>
+                <div className="ml-auto flex items-center gap-2">
+                  <span className="text-xs text-muted-foreground">Show:</span>
+                  <GradeDisplayToggle value={displayMode} onChange={setDisplayMode} />
+                </div>
               </div>
 
               {loadingTranscript ? (
