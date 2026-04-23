@@ -10,6 +10,8 @@ import {
 } from "lucide-react";
 import { Badge } from "@/components/ui/badge";
 import { Progress } from "@/components/ui/progress";
+import { computeAttendanceForEnrollment } from "@/lib/attendance";
+import { useAttendanceThreshold } from "@/hooks/useAttendanceThreshold";
 
 const gradeColor = (pct: number) => {
   if (pct >= 70) return "text-emerald-600";
@@ -139,11 +141,16 @@ const StudentCourseDetail = () => {
   };
 
   /* ─── derived ─── */
+  const threshold = useAttendanceThreshold();
+  const attStats = enrollment
+    ? computeAttendanceForEnrollment(enrollment.id, sessions as any, attendanceRecords as any, threshold)
+    : { attendedHours: 0, totalHours: 0, percentage: null as number | null, isEligible: true };
   const presentCount = attendanceRecords.filter((r) => r.status === "present").length;
   const excusedCount = attendanceRecords.filter((r) => r.status === "excused").length;
-  const absentCount = sessions.length - presentCount - excusedCount;
-  const attPct = sessions.length > 0 ? Math.round((presentCount / sessions.length) * 100) : null;
-  const examBlocked = attPct !== null && attPct < 75;
+  const recordedSessionCount = attendanceRecords.length;
+  const absentCount = recordedSessionCount - presentCount - excusedCount;
+  const attPct = attStats.percentage;
+  const examBlocked = attPct !== null && attPct < threshold;
 
   // Calculate per-component scores
   const componentScores = components.flatMap((comp) =>

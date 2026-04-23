@@ -312,7 +312,7 @@ const ProfessorCourseDetail = () => {
     : 0;
   const passingCount = enrollments.filter((e) => getStudentTotal(e.id) >= 50).length;
   const failingCount = enrollments.filter((e) => { const t = getStudentTotal(e.id); return t > 0 && t < 50; }).length;
-  const lowAttCount = enrollments.filter((e) => { const p = getAttPct(e.id); return p !== null && p < 75; }).length;
+  const lowAttCount = enrollments.filter((e) => { const p = getAttPct(e.id); return p !== null && p < threshold; }).length;
 
   /* ─── tab styling ─── */
   /* ─── materials queries ─── */
@@ -523,7 +523,7 @@ const ProfessorCourseDetail = () => {
                     {filteredEnrollments.map((enr, idx) => {
                       const attPct = getAttPct(enr.id);
                       const total = getStudentTotal(enr.id);
-                      const isLowAtt = attPct !== null && attPct < 75;
+                      const isLowAtt = attPct !== null && attPct < threshold;
                       const isFailing = total > 0 && total < 50;
                       return (
                         <tr key={enr.id} className={`border-b border-border last:border-0 ${idx % 2 === 0 ? "bg-card" : "bg-secondary/30"}`}>
@@ -933,7 +933,7 @@ const ProfessorCourseDetail = () => {
                       {filteredEnrollments.map((enr, idx) => {
                         const studentTotal = getStudentTotal(enr.id);
                         const attPctVal = getAttPct(enr.id);
-                        const isLowAtt = attPctVal !== null && attPctVal < 75;
+                        const isLowAtt = attPctVal !== null && attPctVal < threshold;
                         return (
                           <tr key={enr.id} className={`border-b border-border last:border-0 ${idx % 2 === 0 ? "bg-card" : "bg-secondary/30"}`}>
                             <td className={`sticky left-0 z-10 px-4 py-2 font-medium text-foreground ${idx % 2 === 0 ? "bg-card" : "bg-secondary/30"}`}>
