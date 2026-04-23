@@ -12,6 +12,7 @@ import {
   type TranscriptRow,
   type TranscriptSummary,
 } from "@/lib/transcript";
+import type { GradeDisplayMode } from "@/lib/grading";
 
 export interface TranscriptStudentMeta {
   full_name: string | null | undefined;
