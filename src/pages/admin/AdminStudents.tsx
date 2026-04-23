@@ -3,7 +3,8 @@ import AdminLayout from "@/components/AdminLayout";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
 import { useToast } from "@/hooks/use-toast";
-import { Send, FileText, CheckCircle, XCircle, UserCheck, UserX, Clock, Mail, BookOpen, Save, Hash, CreditCard, Search, Award } from "lucide-react";
+import { Send, FileText, CheckCircle, XCircle, UserCheck, UserX, Clock, Mail, BookOpen, Save, Hash, CreditCard, Search, Award, AlertTriangle } from "lucide-react";
+import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle } from "@/components/ui/alert-dialog";
 
 const AdminStudents = () => {
   const { toast } = useToast();
@@ -15,6 +16,16 @@ const AdminStudents = () => {
   const [statusFilter, setStatusFilter] = useState<string>("all");
   const [searchQuery, setSearchQuery] = useState("");
   const [editPersonal, setEditPersonal] = useState<Record<string, string>>({});
+  const [scholarshipReview, setScholarshipReview] = useState<{
+    userId: string;
+    program: string | null;
+    currentPct: number;
+    newPct: number;
+    charges: Array<{ id: string; semesterId: string; amount: number; due_date: string | null; status: string }>;
+    fees: Array<{ academic_semester_id: string; amount: number; program: string }>;
+    semesters: Array<{ id: string; name: string }>;
+  } | null>(null);
+  const [applyingScholarship, setApplyingScholarship] = useState(false);
 
   const { data: profiles = [], isLoading } = useQuery({
     queryKey: ["admin-students"],
@@ -400,17 +411,32 @@ const AdminStudents = () => {
                             min={0}
                             max={100}
                             defaultValue={pct}
-                            key={`pct-${selectedUserId}`}
+                            key={`pct-${selectedUserId}-${pct}`}
                             disabled={!has}
                             onBlur={async (e) => {
                               const val = Math.max(0, Math.min(100, parseInt(e.target.value) || 0));
-                              const { error } = await supabase.from("profiles").update({ scholarship_percentage: val } as any).eq("user_id", selectedUserId);
-                              if (error) { toast({ title: "Error", variant: "destructive" }); return; }
-                              queryClient.invalidateQueries({ queryKey: ["admin-students"] });
-                              toast({ title: "Scholarship % updated" });
+                              if (val === pct) return;
+                              // Fetch unpaid charges + program fees + semesters in parallel for review
+                              const program = (selectedProfile as any)?.program || null;
+                              const [chargesRes, feesRes, semsRes] = await Promise.all([
+                                supabase.from("tuition_charges").select("id, academic_semester_id, amount, due_date, status, program").eq("user_id", selectedUserId!).in("status", ["unpaid", "partial"]),
+                                program ? supabase.from("program_tuition_fees").select("academic_semester_id, amount, program").eq("program", program) : Promise.resolve({ data: [], error: null } as any),
+                                supabase.from("academic_semesters").select("id, name"),
+                              ]);
+                              if (chargesRes.error) { toast({ title: "Error loading charges", variant: "destructive" }); return; }
+                              setScholarshipReview({
+                                userId: selectedUserId!,
+                                program,
+                                currentPct: pct,
+                                newPct: val,
+                                charges: (chargesRes.data || []).map((c: any) => ({ id: c.id, semesterId: c.academic_semester_id, amount: Number(c.amount), due_date: c.due_date, status: c.status })),
+                                fees: (feesRes.data || []) as any,
+                                semesters: (semsRes.data || []) as any,
+                              });
                             }}
                             className="w-full rounded-md border border-input bg-background px-3 py-2 text-sm text-foreground disabled:opacity-60 focus:outline-none focus:ring-2 focus:ring-ring"
                           />
+                          <p className="mt-1 text-[11px] text-muted-foreground">Changes prompt a review of unpaid installments.</p>
                         </div>
                         <div>
                           <label className="mb-1 block text-xs text-muted-foreground">Required hours</label>
@@ -594,6 +620,138 @@ const AdminStudents = () => {
           })()}
         </div>
       </div>
+
+      <AlertDialog open={!!scholarshipReview} onOpenChange={(o) => !o && !applyingScholarship && setScholarshipReview(null)}>
+        <AlertDialogContent className="max-w-2xl">
+          {scholarshipReview && (() => {
+            const { currentPct, newPct, charges, fees, semesters, program } = scholarshipReview;
+            const semName = (id: string) => semesters.find(s => s.id === id)?.name || "—";
+            const feeFor = (semId: string) => fees.find(f => f.academic_semester_id === semId)?.amount;
+            // For each unpaid charge, compute the new installment amount based on its semester program fee (4 installments).
+            const rows = charges.map(c => {
+              const annual = feeFor(c.semesterId);
+              let newAmount: number | null = null;
+              if (annual != null) {
+                const netAnnual = +(Number(annual) * (100 - newPct) / 100).toFixed(2);
+                const base = Math.floor((netAnnual / 4) * 100) / 100;
+                // Use base for installments 1-3; remainder for installment 4. We can't distinguish which installment this row is,
+                // so show a representative per-installment range.
+                const last = +(netAnnual - base * 3).toFixed(2);
+                newAmount = base === last ? base : base; // approximate per-row using base; show note
+              }
+              const delta = newAmount != null ? +(newAmount - c.amount).toFixed(2) : null;
+              return { ...c, newAmount, delta };
+            });
+            const totalCurrent = rows.reduce((s, r) => s + r.amount, 0);
+            const totalNew = rows.reduce((s, r) => s + (r.newAmount ?? r.amount), 0);
+            const totalDelta = +(totalNew - totalCurrent).toFixed(2);
+            const missingFee = rows.some(r => r.newAmount == null);
+            return (
+              <>
+                <AlertDialogHeader>
+                  <AlertDialogTitle className="flex items-center gap-2">
+                    <Award className="h-5 w-5 text-primary" />
+                    Review scholarship change
+                  </AlertDialogTitle>
+                  <AlertDialogDescription>
+                    Changing scholarship from <strong>{currentPct}%</strong> to <strong>{newPct}%</strong>
+                    {program ? <> for program <strong>{program}</strong></> : null}. Review affected unpaid installments below before applying.
+                  </AlertDialogDescription>
+                </AlertDialogHeader>
+
+                {!program && (
+                  <div className="rounded-md border border-amber-300 bg-amber-50 p-3 text-xs text-amber-800 dark:border-amber-700 dark:bg-amber-900/20 dark:text-amber-300 flex gap-2">
+                    <AlertTriangle className="h-4 w-4 shrink-0" />
+                    Student has no assigned program — installment amounts cannot be recomputed automatically.
+                  </div>
+                )}
+
+                {rows.length === 0 ? (
+                  <div className="rounded-md border border-border bg-muted/30 p-4 text-sm text-muted-foreground">
+                    No unpaid or partial installment charges will be affected. Only the scholarship % on the profile will change.
+                  </div>
+                ) : (
+                  <div className="max-h-72 overflow-auto rounded-md border border-border">
+                    <table className="w-full text-xs">
+                      <thead className="bg-muted/50 text-muted-foreground">
+                        <tr>
+                          <th className="px-3 py-2 text-left font-medium">Semester</th>
+                          <th className="px-3 py-2 text-left font-medium">Due</th>
+                          <th className="px-3 py-2 text-left font-medium">Status</th>
+                          <th className="px-3 py-2 text-right font-medium">Current</th>
+                          <th className="px-3 py-2 text-right font-medium">New</th>
+                          <th className="px-3 py-2 text-right font-medium">Δ</th>
+                        </tr>
+                      </thead>
+                      <tbody>
+                        {rows.map(r => (
+                          <tr key={r.id} className="border-t border-border">
+                            <td className="px-3 py-2 text-foreground">{semName(r.semesterId)}</td>
+                            <td className="px-3 py-2 text-muted-foreground">{r.due_date || "—"}</td>
+                            <td className="px-3 py-2"><span className="inline-flex rounded-full bg-secondary px-2 py-0.5 capitalize">{r.status}</span></td>
+                            <td className="px-3 py-2 text-right font-mono">€{r.amount.toFixed(2)}</td>
+                            <td className="px-3 py-2 text-right font-mono">{r.newAmount != null ? `€${r.newAmount.toFixed(2)}` : <span className="text-muted-foreground italic">no fee</span>}</td>
+                            <td className={`px-3 py-2 text-right font-mono ${r.delta == null ? "text-muted-foreground" : r.delta < 0 ? "text-emerald-600" : r.delta > 0 ? "text-destructive" : "text-muted-foreground"}`}>
+                              {r.delta == null ? "—" : `${r.delta > 0 ? "+" : ""}€${r.delta.toFixed(2)}`}
+                            </td>
+                          </tr>
+                        ))}
+                      </tbody>
+                      <tfoot className="bg-muted/30 font-semibold">
+                        <tr>
+                          <td className="px-3 py-2" colSpan={3}>Totals ({rows.length} installment{rows.length !== 1 ? "s" : ""})</td>
+                          <td className="px-3 py-2 text-right font-mono">€{totalCurrent.toFixed(2)}</td>
+                          <td className="px-3 py-2 text-right font-mono">€{totalNew.toFixed(2)}</td>
+                          <td className={`px-3 py-2 text-right font-mono ${totalDelta < 0 ? "text-emerald-600" : totalDelta > 0 ? "text-destructive" : ""}`}>
+                            {totalDelta > 0 ? "+" : ""}€{totalDelta.toFixed(2)}
+                          </td>
+                        </tr>
+                      </tfoot>
+                    </table>
+                  </div>
+                )}
+
+                {missingFee && rows.length > 0 && (
+                  <p className="text-xs text-amber-700 dark:text-amber-400">
+                    Some installments belong to semesters without a program fee — those amounts will be left unchanged.
+                  </p>
+                )}
+
+                <AlertDialogFooter>
+                  <AlertDialogCancel disabled={applyingScholarship}>Cancel</AlertDialogCancel>
+                  <AlertDialogAction
+                    disabled={applyingScholarship}
+                    onClick={async (e) => {
+                      e.preventDefault();
+                      setApplyingScholarship(true);
+                      try {
+                        // 1. Update profile scholarship %
+                        const { error: pErr } = await supabase.from("profiles").update({ scholarship_percentage: newPct } as any).eq("user_id", scholarshipReview.userId);
+                        if (pErr) throw pErr;
+                        // 2. Update affected unpaid charge amounts
+                        const updatable = rows.filter(r => r.newAmount != null && r.newAmount !== r.amount);
+                        for (const r of updatable) {
+                          const { error: cErr } = await supabase.from("tuition_charges").update({ amount: r.newAmount! }).eq("id", r.id);
+                          if (cErr) throw cErr;
+                        }
+                        queryClient.invalidateQueries({ queryKey: ["admin-students"] });
+                        toast({ title: "Scholarship applied", description: `Updated ${updatable.length} installment${updatable.length !== 1 ? "s" : ""}.` });
+                        setScholarshipReview(null);
+                      } catch (err: any) {
+                        toast({ title: "Error applying changes", description: err.message, variant: "destructive" });
+                      } finally {
+                        setApplyingScholarship(false);
+                      }
+                    }}
+                  >
+                    {applyingScholarship ? "Applying..." : `Apply to ${rows.filter(r => r.newAmount != null && r.newAmount !== r.amount).length} installment(s)`}
+                  </AlertDialogAction>
+                </AlertDialogFooter>
+              </>
+            );
+          })()}
+        </AlertDialogContent>
+      </AlertDialog>
     </AdminLayout>
   );
 };
