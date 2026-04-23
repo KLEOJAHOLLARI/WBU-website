@@ -196,10 +196,7 @@ export async function downloadTranscriptPdf(opts: BuildTranscriptPdfOptions): Pr
       qrDataUrl = null;
     }
 
-    let signatureDataUrl: string | null = null;
-    if (config.signature_path) {
-      signatureDataUrl = await loadSignatureImage(config.signature_path);
-    }
+    // (Image-based signature removed — now rendered as styled text.)
 
     // Reserve room — push to bottom of page (with safe top margin from summary)
     const blockHeight = 50;
