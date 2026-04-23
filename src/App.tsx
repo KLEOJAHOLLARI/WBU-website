@@ -55,7 +55,7 @@ import ProfessorTranscripts from "./pages/professor/ProfessorTranscripts";
 import ChangePassword from "./pages/portal/ChangePassword";
 import StudentQuiz from "./pages/portal/StudentQuiz";
 import StudentExamSchedule from "./pages/portal/StudentExamSchedule";
-import DevToolbar from "./components/DevToolbar";
+
 import FacultyProfile from "./pages/FacultyProfile";
 import AdminTuition from "./pages/admin/AdminTuition";
 import StudentTuition from "./pages/portal/StudentTuition";
@@ -127,7 +127,6 @@ const App = () => (
             <Route path="/professor/profile" element={<ProfessorProfile />} />
             <Route path="*" element={<NotFound />} />
           </Routes>
-          <DevToolbar />
         </AuthProvider>
       </BrowserRouter>
     </TooltipProvider>
