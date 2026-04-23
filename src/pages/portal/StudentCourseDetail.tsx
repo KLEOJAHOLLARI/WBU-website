@@ -34,16 +34,12 @@ const progressColor = (pct: number) => {
   return "[&>div]:bg-destructive";
 };
 
-// Albanian academic grading scale (4 = fail, 10 = excellent)
-const toAlbanian = (pct: number): number => {
-  if (pct < 50) return 4;
-  if (pct < 60) return 5;
-  if (pct < 70) return 6;
-  if (pct < 80) return 7;
-  if (pct < 90) return 8;
-  if (pct < 95) return 9;
-  return 10;
-};
+// Albanian academic grading scale — uses the official conversion buckets
+// from the centralized grading module so this page stays in sync with the
+// transcript, GPA, scholarship logic, and admin reports.
+import { percentToAlbanian, percentToLetter } from "@/lib/grading";
+const toAlbanian = (pct: number): number => percentToAlbanian(pct);
+const toLetter = (pct: number): string => percentToLetter(pct);
 
 type GradingScale = "percent" | "albanian";
 
