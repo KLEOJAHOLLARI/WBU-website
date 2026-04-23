@@ -14,6 +14,8 @@ import ProfessorQuizTab from "@/components/professor/ProfessorQuizTab";
 import ProfessorBulkMessage from "@/components/professor/ProfessorBulkMessage";
 import { Badge } from "@/components/ui/badge";
 import { Progress } from "@/components/ui/progress";
+import { computeAttendanceForEnrollment } from "@/lib/attendance";
+import { useAttendanceThreshold } from "@/hooks/useAttendanceThreshold";
 
 /* ─── helpers ─── */
 const inputBase =
@@ -197,10 +199,15 @@ const ProfessorCourseDetail = () => {
 
   const [sessionDate, setSessionDate] = useState("");
   const [sessionWeek, setSessionWeek] = useState(sessions.length + 1);
+  const [sessionHours, setSessionHours] = useState<number>(2);
+  useEffect(() => {
+    if (course?.hours_per_week) setSessionHours(course.hours_per_week);
+  }, [course?.hours_per_week]);
   const addSession = useMutation({
     mutationFn: async () => {
       const { error } = await supabase.from("attendance_sessions").insert({
         course_id: courseId!, session_date: sessionDate, week_number: sessionWeek,
+        hours: Math.max(1, Number(sessionHours) || course?.hours_per_week || 2),
       });
       if (error) throw error;
     },
@@ -266,13 +273,17 @@ const ProfessorCourseDetail = () => {
 
   const getStudentName = (enr: any) => enr.profiles?.full_name || enr.profiles?.email || "Unknown";
 
+  const threshold = useAttendanceThreshold();
+
+  const getAttStats = useCallback(
+    (enrollmentId: string) =>
+      computeAttendanceForEnrollment(enrollmentId, sessions as any, attendanceRecords as any, threshold),
+    [attendanceRecords, sessions, threshold]
+  );
+
   const getAttPct = useCallback(
-    (enrollmentId: string) => {
-      if (sessions.length === 0) return null;
-      const present = attendanceRecords.filter((r) => r.enrollment_id === enrollmentId && r.status === "present").length;
-      return Math.round((present / sessions.length) * 100);
-    },
-    [attendanceRecords, sessions]
+    (enrollmentId: string) => getAttStats(enrollmentId).percentage,
+    [getAttStats]
   );
 
   const getStudentTotal = useCallback(
