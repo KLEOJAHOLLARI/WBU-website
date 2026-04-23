@@ -20,6 +20,7 @@ import {
 import { SCHOLARSHIP_GPA_THRESHOLD, type GradeDisplayMode } from "@/lib/grading";
 import { downloadTranscriptPdf } from "@/lib/transcriptPdf";
 import GradeDisplayToggle from "@/components/GradeDisplayToggle";
+import TranscriptDownloadDialog from "@/components/TranscriptDownloadDialog";
 
 const StudentTranscript = () => {
   const { user, profile } = useAuth();
@@ -91,7 +92,7 @@ const StudentTranscript = () => {
 
   const summary = useMemo(() => computeTranscriptSummary(transcriptRows), [transcriptRows]);
 
-  const handleDownloadPDF = async () => {
+  const handleDownloadPDF = async (mode: typeof displayMode = displayMode) => {
     await downloadTranscriptPdf({
       student: {
         full_name: profile?.full_name,
@@ -100,7 +101,7 @@ const StudentTranscript = () => {
       },
       rows: filteredRows,
       summary,
-      displayMode,
+      displayMode: mode,
     });
   };
 
@@ -181,10 +182,13 @@ const StudentTranscript = () => {
               {profile?.full_name} · {studentProgram || "No program assigned"}
             </p>
           </div>
-          <Button onClick={handleDownloadPDF} disabled={isLoading || transcriptRows.length === 0} className="gap-2">
-            <Download className="h-4 w-4" />
-            Download PDF
-          </Button>
+          <TranscriptDownloadDialog
+            mode={displayMode}
+            onModeChange={setDisplayMode}
+            rows={filteredRows}
+            onDownload={handleDownloadPDF}
+            disabled={isLoading || transcriptRows.length === 0}
+          />
         </div>
 
         {/* Summary Cards */}
