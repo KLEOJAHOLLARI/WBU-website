@@ -21,6 +21,7 @@ import {
 import type { GradeDisplayMode } from "@/lib/grading";
 import { downloadTranscriptPdf } from "@/lib/transcriptPdf";
 import GradeDisplayToggle from "@/components/GradeDisplayToggle";
+import TranscriptDownloadDialog from "@/components/TranscriptDownloadDialog";
 
 const AdminTranscripts = () => {
   const [selectedUserId, setSelectedUserId] = useState<string | null>(null);
