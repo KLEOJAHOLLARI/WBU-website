@@ -13,7 +13,7 @@ import { Download, FileText, GraduationCap, Award, BookOpen, Search, User } from
 import {
   buildTranscriptRows,
   computeTranscriptSummary,
-  gradeToLetter,
+  gradeToAlbanian,
   gradeToGPA,
   type TranscriptRow,
 } from "@/lib/transcript";
