@@ -63,7 +63,7 @@ export function describeGrade(pct: number): GradeInfo {
 /** Format a percentage with its Albanian-scale equivalent for display. */
 export function formatGradeWithAlbanian(pct: number | null | undefined): string {
   if (pct == null || Number.isNaN(pct)) return "—";
-  return `${Math.round(pct)}% → ${percentToAlbanian(pct)} (${percentToLetter(pct)})`;
+  return `${Math.round(pct)}% → ${percentToAlbanian(pct)}`;
 }
 
 export type ScholarshipReason = "ok" | "low_gpa" | "low_attendance" | "both" | "no_data";

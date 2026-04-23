@@ -148,7 +148,7 @@ export async function downloadTranscriptPdf(opts: BuildTranscriptPdfOptions): Pr
     r.courseName,
     r.courseCode,
     r.grade !== null
-      ? `${r.grade.toFixed(1)}% → ${gradeToAlbanian(r.grade)} (${gradeToLetter(r.grade)})`
+      ? `${r.grade.toFixed(1)}% → ${gradeToAlbanian(r.grade)}`
       : "—",
     r.ects.toString(),
     `Y${r.year}/S${r.semester}`,
