@@ -52,6 +52,7 @@ const AdminTuition = () => {
   const [bulkDialog, setBulkDialog] = useState<{ semesterId: string; program: string; skipExisting: boolean } | null>(null);
   const [lateFeeSettingsDraft, setLateFeeSettingsDraft] = useState<any | null>(null);
   const [applyLateFeesOpen, setApplyLateFeesOpen] = useState(false);
+  const [editLateFee, setEditLateFee] = useState<any | null>(null);
 
   const { data: semesters = [] } = useQuery({
     queryKey: ["adm-tuition-semesters"],
@@ -358,6 +359,36 @@ const AdminTuition = () => {
     },
     onSuccess: () => { qc.invalidateQueries({ queryKey: ["adm-late-fees"] }); toast.success("Late fee removed"); },
   });
+
+  const updateLateFeeNotes = useMutation({
+    mutationFn: async (lf: { id: string; reason: string; waive_note: string; waived: boolean }) => {
+      // Schema only has `reason`. Persist active reason and waive note in a single field
+      // using a clear separator so it round-trips on subsequent edits.
+      const SEP = "\n— Waive note: ";
+      const combined = lf.waived && lf.waive_note.trim()
+        ? `${lf.reason.trim()}${SEP}${lf.waive_note.trim()}`
+        : lf.reason.trim();
+      const { error } = await supabase.from("tuition_late_fees")
+        .update({ reason: combined })
+        .eq("id", lf.id);
+      if (error) throw error;
+    },
+    onSuccess: () => {
+      qc.invalidateQueries({ queryKey: ["adm-late-fees"] });
+      setEditLateFee(null);
+      toast.success("Late fee updated");
+    },
+    onError: (e: any) => toast.error(e.message),
+  });
+
+  const splitLateFeeReason = (raw: string | null) => {
+    const SEP = "\n— Waive note: ";
+    if (!raw) return { reason: "", waive_note: "" };
+    const idx = raw.indexOf(SEP);
+    if (idx === -1) return { reason: raw, waive_note: "" };
+    return { reason: raw.slice(0, idx), waive_note: raw.slice(idx + SEP.length) };
+  };
+
   const totalCharged = charges.reduce((s, c) => s + Number(c.amount), 0);
   const verifiedPayments = payments.filter((p) => p.verification_status === "verified");
   const totalCollected = verifiedPayments.reduce((s, p) => s + Number(p.amount), 0);
@@ -703,6 +734,7 @@ const AdminTuition = () => {
                 {lateFees.length === 0 && <TableRow><TableCell colSpan={6} className="text-center text-muted-foreground">No late fees applied yet.</TableCell></TableRow>}
                 {lateFees.map((lf: any) => {
                   const st = studentMap[lf.user_id];
+                  const parsed = splitLateFeeReason(lf.reason);
                   return (
                     <TableRow key={lf.id}>
                       <TableCell>
@@ -711,13 +743,25 @@ const AdminTuition = () => {
                       </TableCell>
                       <TableCell className="text-sm">{new Date(lf.applied_at).toLocaleDateString()}</TableCell>
                       <TableCell className="font-medium">{fmtMoney(Number(lf.amount), lf.currency)}</TableCell>
-                      <TableCell className="text-sm text-muted-foreground">{lf.reason || "—"}</TableCell>
+                      <TableCell className="text-sm text-muted-foreground">
+                        <div>{parsed.reason || "—"}</div>
+                        {lf.waived && parsed.waive_note && (
+                          <div className="mt-1 text-xs italic">Waive note: {parsed.waive_note}</div>
+                        )}
+                      </TableCell>
                       <TableCell>
                         {lf.waived
                           ? <Badge variant="secondary">Waived</Badge>
                           : <Badge variant="destructive">Active</Badge>}
                       </TableCell>
                       <TableCell className="text-right space-x-1">
+                        <Button
+                          size="sm"
+                          variant="outline"
+                          onClick={() => setEditLateFee({ ...lf, ...parsed })}
+                        >
+                          Edit
+                        </Button>
                         {!lf.waived && (
                           <Button size="sm" variant="outline" onClick={() => waiveLateFee.mutate(lf.id)}>
                             <Undo2 className="h-3.5 w-3.5 mr-1" /> Waive
@@ -811,6 +855,63 @@ const AdminTuition = () => {
           </AlertDialogFooter>
         </AlertDialogContent>
       </AlertDialog>
+
+      {/* Edit late fee reason / waive note dialog */}
+      <Dialog open={!!editLateFee} onOpenChange={(o) => !o && setEditLateFee(null)}>
+        <DialogContent>
+          <DialogHeader>
+            <DialogTitle>Edit Late Fee {editLateFee?.waived ? "(Waived)" : ""}</DialogTitle>
+          </DialogHeader>
+          {editLateFee && (
+            <div className="space-y-4">
+              <div className="rounded-lg border border-border bg-muted/30 p-3 text-sm">
+                <div className="text-muted-foreground">Student</div>
+                <div className="font-medium text-foreground">
+                  {studentMap[editLateFee.user_id]?.full_name || "—"}
+                </div>
+                <div className="mt-2 text-muted-foreground">Amount</div>
+                <div className="font-medium text-foreground">
+                  {fmtMoney(Number(editLateFee.amount), editLateFee.currency)}
+                </div>
+              </div>
+              <div>
+                <Label>Reason</Label>
+                <Textarea
+                  rows={3}
+                  value={editLateFee.reason ?? ""}
+                  onChange={(e) => setEditLateFee({ ...editLateFee, reason: e.target.value })}
+                  placeholder="Why this late fee was applied"
+                />
+              </div>
+              {editLateFee.waived && (
+                <div>
+                  <Label>Waive note</Label>
+                  <Textarea
+                    rows={3}
+                    value={editLateFee.waive_note ?? ""}
+                    onChange={(e) => setEditLateFee({ ...editLateFee, waive_note: e.target.value })}
+                    placeholder="Why this fee was waived (visible to admins)"
+                  />
+                </div>
+              )}
+            </div>
+          )}
+          <DialogFooter>
+            <Button variant="outline" onClick={() => setEditLateFee(null)}>Cancel</Button>
+            <Button
+              onClick={() => editLateFee && updateLateFeeNotes.mutate({
+                id: editLateFee.id,
+                reason: editLateFee.reason ?? "",
+                waive_note: editLateFee.waive_note ?? "",
+                waived: !!editLateFee.waived,
+              })}
+              disabled={updateLateFeeNotes.isPending}
+            >
+              Save
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
 
       {/* Fee Dialog */}
       <Dialog open={!!feeDialog} onOpenChange={(o) => !o && setFeeDialog(null)}>
