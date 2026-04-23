@@ -9,6 +9,9 @@ import {
 } from "lucide-react";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Sheet, SheetContent, SheetTrigger } from "@/components/ui/sheet";
+import ThemeToggle from "@/components/ThemeToggle";
+import NotificationBell from "@/components/NotificationBell";
+import GlobalSearch from "@/components/GlobalSearch";
 
 const navGroups = [
   {
@@ -149,10 +152,13 @@ const StudentLayout = ({ children }: { children: ReactNode }) => {
               {sidebarContent}
             </SheetContent>
           </Sheet>
-          <div className="hidden md:block" />
+          <div className="hidden md:block flex-1" />
 
-          <div className="flex items-center gap-3">
-            <div className="text-right hidden sm:block">
+          <div className="flex items-center gap-2">
+            <GlobalSearch />
+            <NotificationBell />
+            <ThemeToggle />
+            <div className="text-right hidden sm:block ml-2">
               <p className="text-sm font-medium text-foreground leading-tight">{profile?.full_name || "Student"}</p>
               <p className="text-xs text-muted-foreground">Student</p>
             </div>
