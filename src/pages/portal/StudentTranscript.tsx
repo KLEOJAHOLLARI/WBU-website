@@ -17,8 +17,9 @@ import {
   gradeToAlbanian,
   type TranscriptRow,
 } from "@/lib/transcript";
-import { SCHOLARSHIP_GPA_THRESHOLD } from "@/lib/grading";
+import { SCHOLARSHIP_GPA_THRESHOLD, type GradeDisplayMode } from "@/lib/grading";
 import { downloadTranscriptPdf } from "@/lib/transcriptPdf";
+import GradeDisplayToggle from "@/components/GradeDisplayToggle";
 
 const StudentTranscript = () => {
   const { user, profile } = useAuth();
