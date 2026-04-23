@@ -323,6 +323,13 @@ const NotificationBell = () => {
 
   const [open, setOpen] = useState(false);
 
+  const bumpLastSeen = () => {
+    if (!lastSeenKey) return;
+    const now = Date.now();
+    localStorage.setItem(lastSeenKey, String(now));
+    setLastSeen(now);
+  };
+
   const markOneRead = async (n: NotificationItem) => {
     if (n.read) return;
 
@@ -353,7 +360,17 @@ const NotificationBell = () => {
       { queryKey: ["notifications"] },
       (old) => (old ? old.map((it) => ({ ...it, read: true })) : old)
     );
+    bumpLastSeen();
     markAllRead.mutate();
+  };
+
+  const handleOpenChange = (next: boolean) => {
+    setOpen(next);
+    // When opening the bell, immediately clear the badge for admin/professor
+    // (they have no per-row read flag) and persist the timestamp.
+    if (next && (isAdmin || isProfessor)) {
+      bumpLastSeen();
+    }
   };
 
   return (
