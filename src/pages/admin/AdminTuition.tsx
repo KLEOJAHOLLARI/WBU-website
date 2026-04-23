@@ -352,12 +352,16 @@ const AdminTuition = () => {
             <div className="flex flex-wrap items-center justify-between gap-2 border-b border-border p-4">
               <h2 className="font-semibold text-foreground">Student Charges</h2>
               <div className="flex gap-2">
-                <Select onValueChange={(v) => generateForSemester.mutate(v)}>
-                  <SelectTrigger className="w-[260px]"><SelectValue placeholder="Generate charges for semester…" /></SelectTrigger>
-                  <SelectContent>
-                    {semesters.map((s: any) => <SelectItem key={s.id} value={s.id}>{s.name}</SelectItem>)}
-                  </SelectContent>
-                </Select>
+                <Button
+                  variant="outline"
+                  onClick={() => {
+                    const current = semesters.find((s: any) => s.is_current) || semesters[0];
+                    if (!current) { toast.error("Create an academic semester first"); return; }
+                    setBulkDialog({ semesterId: current.id, program: "all", skipExisting: true });
+                  }}
+                >
+                  <Plus className="h-4 w-4 mr-1" /> Bulk Generate
+                </Button>
                 <Button onClick={() => setChargeDialog({})}><Plus className="h-4 w-4 mr-1" /> New Charge</Button>
               </div>
             </div>
