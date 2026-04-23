@@ -77,6 +77,18 @@ const StudentTuition = () => {
       return data || [];
     },
   });
+
+  const { data: lateFees = [] } = useQuery({
+    queryKey: ["student-late-fees", user?.id],
+    queryFn: async () => {
+      const { data } = await supabase.from("tuition_late_fees").select("*").eq("user_id", user!.id).order("applied_at", { ascending: false });
+      return data || [];
+    },
+    enabled: !!user,
+  });
+  const lateFeeByCharge = Object.fromEntries(lateFees.map((lf: any) => [lf.charge_id, lf]));
+  const activeLateFees = lateFees.filter((lf: any) => !lf.waived);
+  const totalLateFees = activeLateFees.reduce((s: number, lf: any) => s + Number(lf.amount), 0);
   const semMap = Object.fromEntries(semesters.map((s: any) => [s.id, s]));
 
   const scholarshipPct = Math.max(0, Math.min(100, Number(profile?.scholarship_percentage || 0)));
