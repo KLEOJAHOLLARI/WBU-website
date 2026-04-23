@@ -101,7 +101,7 @@ const ProfessorTranscripts = () => {
   const inProgressRows = useMemo(() => filteredRows.filter((r) => !r.isComplete), [filteredRows]);
   const summary = useMemo(() => computeTranscriptSummary(transcriptRows), [transcriptRows]);
 
-  const handleDownloadPDF = async () => {
+  const handleDownloadPDF = async (mode: typeof displayMode = displayMode) => {
     if (!selectedStudent) return;
     await downloadTranscriptPdf({
       student: {
@@ -111,7 +111,7 @@ const ProfessorTranscripts = () => {
       },
       rows: filteredRows,
       summary,
-      displayMode,
+      displayMode: mode,
     });
   };
 
