@@ -366,6 +366,42 @@ const AdminTuition = () => {
     onSuccess: () => { qc.invalidateQueries({ queryKey: ["adm-late-fees"] }); toast.success("Late fee removed"); },
   });
 
+  const bulkWaiveLateFees = useMutation({
+    mutationFn: async (ids: string[]) => {
+      if (ids.length === 0) return { count: 0 };
+      const { error } = await supabase.from("tuition_late_fees")
+        .update({ waived: true, waived_at: new Date().toISOString() })
+        .in("id", ids)
+        .eq("waived", false);
+      if (error) throw error;
+      return { count: ids.length };
+    },
+    onSuccess: ({ count }) => {
+      qc.invalidateQueries({ queryKey: ["adm-late-fees"] });
+      setBulkLfDialog(null);
+      setLfSelected(new Set());
+      toast.success(`Waived ${count} late fee${count !== 1 ? "s" : ""}`);
+    },
+    onError: (e: any) => toast.error(e.message),
+  });
+
+  const bulkDeleteLateFees = useMutation({
+    mutationFn: async (ids: string[]) => {
+      if (ids.length === 0) return { count: 0 };
+      const { error } = await supabase.from("tuition_late_fees").delete().in("id", ids);
+      if (error) throw error;
+      return { count: ids.length };
+    },
+    onSuccess: ({ count }) => {
+      qc.invalidateQueries({ queryKey: ["adm-late-fees"] });
+      setBulkLfDialog(null);
+      setLfSelected(new Set());
+      toast.success(`Removed ${count} late fee${count !== 1 ? "s" : ""}`);
+    },
+    onError: (e: any) => toast.error(e.message),
+  });
+
+
   const updateLateFeeNotes = useMutation({
     mutationFn: async (lf: { id: string; reason: string; waive_note: string; waived: boolean }) => {
       // Schema only has `reason`. Persist active reason and waive note in a single field
