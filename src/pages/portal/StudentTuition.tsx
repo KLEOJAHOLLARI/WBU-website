@@ -211,6 +211,19 @@ const StudentTuition = () => {
         </div>
       </div>
 
+      {/* Late fees banner */}
+      {totalLateFees > 0 && (
+        <div className="mt-6 rounded-xl border border-destructive/30 bg-destructive/5 p-4 flex items-center gap-3">
+          <AlertTriangle className="h-5 w-5 text-destructive shrink-0" />
+          <div className="flex-1 min-w-0">
+            <p className="text-sm font-semibold text-destructive">Late fees applied</p>
+            <p className="text-xs text-destructive/80">
+              {activeLateFees.length} late fee{activeLateFees.length !== 1 ? "s" : ""} totalling {fmtMoney(totalLateFees, activeLateFees[0]?.currency)} have been added to your overdue charges.
+            </p>
+          </div>
+        </div>
+      )}
+
       {/* Overdue alert */}
       {overdue.length > 0 && (
         <div className="mt-6 rounded-xl border border-destructive/30 bg-destructive/5 p-5">
