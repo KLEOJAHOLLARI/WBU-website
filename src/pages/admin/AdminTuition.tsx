@@ -19,6 +19,7 @@ import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@
 import { toast } from "sonner";
 import { CreditCard, Plus, Trash2, CheckCircle2, XCircle, AlertCircle, Wallet, Receipt, FileDown, Gavel, Settings2, Undo2 } from "lucide-react";
 import { Switch } from "@/components/ui/switch";
+import { useHighlightParam, highlightClasses } from "@/hooks/useHighlightParam";
 
 type Charge = {
   id: string; user_id: string; academic_semester_id: string; program: string;
@@ -437,6 +438,13 @@ const AdminTuition = () => {
   const overdueCount = charges.filter((c) => c.due_date && new Date(c.due_date) < new Date() && c.status !== "paid" && c.status !== "waived").length;
   const pendingReceipts = payments.filter((p) => p.verification_status === "pending").length;
 
+  const chargeHighlight = useHighlightParam("charge", "charge", charges.length > 0, (id) => {
+    const c = charges.find((x: any) => x.id === id);
+    const st = c ? studentMap[c.user_id] : null;
+    if (c) setViewCharge({ charge: c, student: st });
+  });
+  const paymentHighlight = useHighlightParam("payment", "payment", payments.length > 0);
+
   const downloadReceipt = async (path: string) => {
     const { data, error } = await supabase.storage.from("payment-receipts").createSignedUrl(path, 60);
     if (error || !data) { toast.error("Could not load receipt"); return; }
@@ -592,7 +600,7 @@ const AdminTuition = () => {
                     const sem = semesterMap[c.academic_semester_id];
                     const paid = verifiedPayments.filter((p) => p.charge_id === c.id).reduce((s, p) => s + Number(p.amount), 0);
                     return (
-                      <TableRow key={c.id} className="cursor-pointer" onClick={() => setViewCharge({ charge: c, student: st })}>
+                      <TableRow key={c.id} id={`charge-${c.id}`} className={`cursor-pointer ${chargeHighlight.isHighlighted(c.id) ? highlightClasses : ""}`} onClick={() => setViewCharge({ charge: c, student: st })}>
                         <TableCell>
                           <div className="font-medium text-foreground">{st?.full_name || "—"}</div>
                           <div className="text-xs text-muted-foreground">{st?.student_id || st?.email}</div>
@@ -639,7 +647,7 @@ const AdminTuition = () => {
                   {payments.map((p) => {
                     const st = studentMap[p.user_id];
                     return (
-                      <TableRow key={p.id}>
+                      <TableRow key={p.id} id={`payment-${p.id}`} className={paymentHighlight.isHighlighted(p.id) ? highlightClasses : ""}>
                         <TableCell>
                           <div className="font-medium text-foreground">{st?.full_name || "—"}</div>
                           <div className="text-xs text-muted-foreground">{st?.student_id || st?.email}</div>
