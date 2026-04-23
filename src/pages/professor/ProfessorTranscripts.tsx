@@ -19,7 +19,9 @@ import {
   gradeToLetter,
   type TranscriptRow,
 } from "@/lib/transcript";
+import type { GradeDisplayMode } from "@/lib/grading";
 import { downloadTranscriptPdf } from "@/lib/transcriptPdf";
+import GradeDisplayToggle from "@/components/GradeDisplayToggle";
 
 const ProfessorTranscripts = () => {
   const { user } = useAuth();
