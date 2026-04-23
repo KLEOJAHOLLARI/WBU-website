@@ -205,26 +205,36 @@ const NotificationBell = () => {
     refetchInterval: 30000,
   });
 
-  // Per-user "last seen" timestamp persisted in localStorage. Used for admin/professor
-  // notifications (which have no per-row read flag) so the badge clears when the bell
-  // is opened, and re-appears only for items newer than the last view.
+  // Per-user "last seen" timestamp persisted in localStorage.
+  // - Admin/professor notifications use this because they have no per-row read flag.
+  // - Student client-side alerts (like tuition reminders) also use this so "Mark all read"
+  //   clears them instead of bouncing the badge back after refetch.
   const lastSeenKey = user ? `notif-last-seen-${user.id}` : "";
   const [lastSeen, setLastSeen] = useState<number>(() => {
     if (typeof window === "undefined" || !lastSeenKey) return 0;
     return Number(localStorage.getItem(lastSeenKey) || 0);
   });
 
-  // Re-hydrate when the user changes
   useEffect(() => {
     if (!lastSeenKey) return;
     setLastSeen(Number(localStorage.getItem(lastSeenKey) || 0));
   }, [lastSeenKey]);
 
-  const unreadCount = useMemo(() => {
+  const isClientSideNotification = (n: NotificationItem) => n.type !== "grade" && n.type !== "message";
+  const isUnreadNotification = (n: NotificationItem) => {
     if (isAdmin || isProfessor) {
-      return notifications.filter((n) => new Date(n.createdAt).getTime() > lastSeen).length;
+      return new Date(n.createdAt).getTime() > lastSeen;
     }
-    return notifications.filter((n) => !n.read).length;
+
+    if (!isClientSideNotification(n)) {
+      return !n.read;
+    }
+
+    return new Date(n.createdAt).getTime() > lastSeen;
+  };
+
+  const unreadCount = useMemo(() => {
+    return notifications.filter(isUnreadNotification).length;
   }, [notifications, isAdmin, isProfessor, lastSeen]);
 
   // Realtime: refresh notifications instantly when grades or messages change for this student
@@ -331,10 +341,13 @@ const NotificationBell = () => {
   };
 
   const markOneRead = async (n: NotificationItem) => {
-    if (n.read) return;
+    if (!isUnreadNotification(n)) return;
 
-    // Optimistic update across all matching notification caches so the badge
-    // and list update immediately without waiting for a refetch.
+    if (isClientSideNotification(n)) {
+      bumpLastSeen();
+      return;
+    }
+
     queryClient.setQueriesData<NotificationItem[]>(
       { queryKey: ["notifications"] },
       (old) => (old ? old.map((it) => (it.id === n.id ? { ...it, read: true } : it)) : old)
@@ -354,11 +367,14 @@ const NotificationBell = () => {
     }
   };
 
-  // Optimistic mark-all-read for instant badge update
   const handleMarkAllRead = () => {
     queryClient.setQueriesData<NotificationItem[]>(
       { queryKey: ["notifications"] },
-      (old) => (old ? old.map((it) => ({ ...it, read: true })) : old)
+      (old) => (
+        old
+          ? old.map((it) => (isClientSideNotification(it) ? it : { ...it, read: true }))
+          : old
+      )
     );
     bumpLastSeen();
     markAllRead.mutate();
@@ -366,8 +382,6 @@ const NotificationBell = () => {
 
   const handleOpenChange = (next: boolean) => {
     setOpen(next);
-    // When opening the bell, immediately clear the badge for admin/professor
-    // (they have no per-row read flag) and persist the timestamp.
     if (next && (isAdmin || isProfessor)) {
       bumpLastSeen();
     }
@@ -412,31 +426,35 @@ const NotificationBell = () => {
             </div>
           ) : (
             <div className="divide-y divide-border">
-              {notifications.map((n) => (
-                <Link
-                  key={n.id}
-                  to={n.href}
-                  onClick={() => {
-                    setOpen(false);
-                    markOneRead(n);
-                  }}
-                  className={`flex gap-3 px-4 py-3 transition-colors hover:bg-muted/50 ${
-                    !n.read ? "bg-primary/5" : ""
-                  }`}
-                >
-                  <div className="mt-0.5 flex h-8 w-8 shrink-0 items-center justify-center rounded-full bg-primary/10">
-                    {iconFor(n.type)}
-                  </div>
-                  <div className="min-w-0 flex-1">
-                    <p className="text-sm font-medium text-foreground truncate">{n.title}</p>
-                    <p className="text-xs text-muted-foreground truncate">{n.description}</p>
-                    <p className="mt-0.5 text-[10px] text-muted-foreground/70">
-                      {formatDistanceToNow(new Date(n.createdAt), { addSuffix: true })}
-                    </p>
-                  </div>
-                  {!n.read && <div className="mt-2 h-2 w-2 shrink-0 rounded-full bg-primary" />}
-                </Link>
-              ))}
+              {notifications.map((n) => {
+                const isUnread = isUnreadNotification(n);
+
+                return (
+                  <Link
+                    key={n.id}
+                    to={n.href}
+                    onClick={() => {
+                      setOpen(false);
+                      markOneRead(n);
+                    }}
+                    className={`flex gap-3 px-4 py-3 transition-colors hover:bg-muted/50 ${
+                      isUnread ? "bg-primary/5" : ""
+                    }`}
+                  >
+                    <div className="mt-0.5 flex h-8 w-8 shrink-0 items-center justify-center rounded-full bg-primary/10">
+                      {iconFor(n.type)}
+                    </div>
+                    <div className="min-w-0 flex-1">
+                      <p className="text-sm font-medium text-foreground truncate">{n.title}</p>
+                      <p className="text-xs text-muted-foreground truncate">{n.description}</p>
+                      <p className="mt-0.5 text-[10px] text-muted-foreground/70">
+                        {formatDistanceToNow(new Date(n.createdAt), { addSuffix: true })}
+                      </p>
+                    </div>
+                    {isUnread && <div className="mt-2 h-2 w-2 shrink-0 rounded-full bg-primary" />}
+                  </Link>
+                );
+              })}
             </div>
           )}
         </ScrollArea>
