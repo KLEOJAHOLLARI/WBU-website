@@ -135,6 +135,46 @@ const StudentTuition = () => {
       </div>
       <p className="mt-1 text-muted-foreground">Track your tuition fees, payments, and upload payment receipts.</p>
 
+      {/* Tuition summary (program-based pricing + scholarship) */}
+      {profile?.program && (
+        <div className="mt-6 rounded-xl border border-border bg-card p-5">
+          <div className="flex flex-wrap items-start justify-between gap-3">
+            <div>
+              <p className="text-xs uppercase tracking-wider text-muted-foreground">Your program</p>
+              <h2 className="font-display text-lg font-bold text-foreground">{programInfo?.title || profile.program}</h2>
+              {currentSem && <p className="text-xs text-muted-foreground mt-0.5">For {currentSem.name}</p>}
+            </div>
+            {scholarshipPct > 0 && (
+              <Badge className="bg-emerald-500/15 text-emerald-700 border-emerald-500/20 dark:text-emerald-400">
+                {scholarshipPct}% Scholarship
+              </Badge>
+            )}
+          </div>
+          {annualTuition > 0 ? (
+            <div className="mt-4 grid gap-3 grid-cols-2 md:grid-cols-4">
+              <div>
+                <p className="text-xs text-muted-foreground">Annual tuition</p>
+                <p className="font-display text-xl font-bold text-foreground">{fmtMoney(annualTuition, currentFee?.currency)}</p>
+              </div>
+              <div>
+                <p className="text-xs text-muted-foreground">Scholarship discount</p>
+                <p className="font-display text-xl font-bold text-emerald-600">−{fmtMoney(annualTuition - afterScholarship, currentFee?.currency)}</p>
+              </div>
+              <div>
+                <p className="text-xs text-muted-foreground">You pay</p>
+                <p className="font-display text-xl font-bold text-foreground">{fmtMoney(afterScholarship, currentFee?.currency)}</p>
+              </div>
+              <div>
+                <p className="text-xs text-muted-foreground">Per installment (×4)</p>
+                <p className="font-display text-xl font-bold text-foreground">{fmtMoney(afterScholarship / 4, currentFee?.currency)}</p>
+              </div>
+            </div>
+          ) : (
+            <p className="mt-3 text-sm text-muted-foreground">Tuition pricing for your program has not been published yet.</p>
+          )}
+        </div>
+      )}
+
       {/* Stats */}
       <div className="mt-6 grid gap-4 grid-cols-2 lg:grid-cols-4">
         <div className="rounded-xl border border-border bg-card p-5">
