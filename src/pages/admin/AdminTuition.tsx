@@ -52,6 +52,7 @@ const AdminTuition = () => {
   const [bulkDialog, setBulkDialog] = useState<{ semesterId: string; program: string; skipExisting: boolean } | null>(null);
   const [lateFeeSettingsDraft, setLateFeeSettingsDraft] = useState<any | null>(null);
   const [applyLateFeesOpen, setApplyLateFeesOpen] = useState(false);
+  const [editLateFee, setEditLateFee] = useState<any | null>(null);
 
   const { data: semesters = [] } = useQuery({
     queryKey: ["adm-tuition-semesters"],
