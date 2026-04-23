@@ -185,7 +185,11 @@ const StudentExamSchedule = () => {
                 No exams scheduled
               </TableCell></TableRow>
             ) : displayed.map((exam) => (
-              <TableRow key={exam.id} className={exam.exam_date < today ? "opacity-60" : ""}>
+              <TableRow
+                key={exam.id}
+                className={`cursor-pointer hover:bg-muted/40 transition-colors ${exam.exam_date < today ? "opacity-60" : ""}`}
+                onClick={() => navigate(`/portal/exams/${exam.id}`)}
+              >
                 <TableCell className="font-medium">
                   {exam.courses?.name || (exam.program && "Program-wide")}
                   {exam.courses?.code && <span className="ml-1 text-xs text-muted-foreground">({exam.courses.code})</span>}
