@@ -365,6 +365,13 @@ const AdminStudents = () => {
                 </div>
 
                 {/* Scholarship */}
+                <AdminScholarshipPanel
+                  selectedUserId={selectedUserId!}
+                  selectedProfile={selectedProfile}
+                  setScholarshipReview={setScholarshipReview}
+                  queryClient={queryClient}
+                  toast={toast}
+                />
                 {(() => {
                   const sp = selectedProfile as any;
                   const has = !!sp?.has_scholarship;
