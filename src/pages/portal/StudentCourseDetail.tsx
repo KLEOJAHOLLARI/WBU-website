@@ -410,12 +410,14 @@ const StudentCourseDetail = () => {
                       {cs.hasScore ? (
                         <div className="flex flex-col items-end">
                           <span className={`font-display text-lg font-bold ${gradeColor(cs.pct!)}`}>
-                            {gradingScale === "albanian" ? toAlbanian(cs.pct!) : `${cs.score}/${cs.maxScore}`}
+                            {gradingScale === "albanian"
+                              ? `${toAlbanian(cs.pct!)} (${toLetter(cs.pct!)})`
+                              : `${cs.score}/${cs.maxScore}`}
                           </span>
                           <span className="text-xs text-muted-foreground">
                             {gradingScale === "albanian"
                               ? `${cs.score}/${cs.maxScore} · ${cs.pct!.toFixed(0)}%`
-                              : `${cs.pct!.toFixed(0)}%`}
+                              : `${cs.pct!.toFixed(0)}% → ${toAlbanian(cs.pct!)} (${toLetter(cs.pct!)})`}
                           </span>
                         </div>
                       ) : (
@@ -442,8 +444,12 @@ const StudentCourseDetail = () => {
                     <span className={`font-display text-3xl font-bold ${gradeColor(roundedTotal)}`}>
                       {formatGrade(roundedTotal)}
                     </span>
-                    {gradingScale === "albanian" && roundedTotal > 0 && (
-                      <p className="mt-0.5 text-xs text-muted-foreground">{roundedTotal}%</p>
+                    {roundedTotal > 0 && (
+                      <p className="mt-0.5 text-xs text-muted-foreground">
+                        {gradingScale === "albanian"
+                          ? `${roundedTotal}% · ${toLetter(roundedTotal)}`
+                          : `${toAlbanian(roundedTotal)} (${toLetter(roundedTotal)})`}
+                      </p>
                     )}
                   </td>
                 </tr>
@@ -473,12 +479,14 @@ const StudentCourseDetail = () => {
                     {cs.hasScore ? (
                       <>
                         <span className={`font-display text-base font-bold ${gradeColor(cs.pct!)}`}>
-                          {gradingScale === "albanian" ? toAlbanian(cs.pct!) : `${cs.score}/${cs.maxScore}`}
+                          {gradingScale === "albanian"
+                            ? `${toAlbanian(cs.pct!)} (${toLetter(cs.pct!)})`
+                            : `${cs.score}/${cs.maxScore}`}
                         </span>
                         <span className="text-[11px] text-muted-foreground">
                           {gradingScale === "albanian"
                             ? `${cs.score}/${cs.maxScore}`
-                            : `${cs.pct!.toFixed(0)}%`}
+                            : `${cs.pct!.toFixed(0)}% · ${toAlbanian(cs.pct!)}`}
                         </span>
                       </>
                     ) : (
