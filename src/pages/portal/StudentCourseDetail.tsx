@@ -271,7 +271,7 @@ const StudentCourseDetail = () => {
             <BarChart3 className="h-4 w-4" /> Total Grade
           </div>
           <p className={`text-3xl font-bold ${gradeColor(roundedTotal)}`}>
-            {roundedTotal > 0 ? `${roundedTotal}%` : "—"}
+            {formatGrade(roundedTotal)}
           </p>
           {roundedTotal > 0 && (
             <Progress value={roundedTotal} className={`mt-2 h-2 ${progressColor(roundedTotal)}`} />
