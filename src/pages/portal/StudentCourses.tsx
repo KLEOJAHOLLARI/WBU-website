@@ -522,14 +522,16 @@ const StudentCourses = () => {
       {/* Enrolled Courses */}
       <div className="mt-8">
         <div className="flex items-center gap-2 mb-4">
-          <h2 className="font-display text-lg font-semibold text-foreground">Enrolled Courses</h2>
+          <h2 className="font-display text-lg font-semibold text-foreground">Courses</h2>
           <Badge variant="secondary" className="text-xs">{enrollments.length}</Badge>
         </div>
-        <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
+        <div className="flex flex-col gap-3">
           {isLoading ? (
-            <p className="text-muted-foreground col-span-full">Loading...</p>
+            <div className="rounded-xl border border-border bg-card p-6 text-center text-sm text-muted-foreground">
+              Loading your courses...
+            </div>
           ) : enrollments.length === 0 ? (
-            <div className="col-span-full rounded-xl border border-border bg-card p-8 text-center">
+            <div className="rounded-xl border border-border bg-card p-8 text-center">
               <BookOpen className="mx-auto mb-3 h-10 w-10 text-muted-foreground/40" />
               <p className="text-muted-foreground">You are not enrolled in any courses yet.</p>
               {profile?.program && availableCourses.length > 0 && (
@@ -539,7 +541,7 @@ const StudentCourses = () => {
               )}
             </div>
           ) : (
-            enrollments.map(renderEnrolledCard)
+            enrollments.map((enr, i) => renderEnrolledRow(enr, i))
           )}
         </div>
       </div>
