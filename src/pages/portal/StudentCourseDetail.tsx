@@ -416,8 +416,11 @@ const StudentCourseDetail = () => {
                   <td className="px-5 py-4" />
                   <td className="px-5 py-4 text-right">
                     <span className={`font-display text-3xl font-bold ${gradeColor(roundedTotal)}`}>
-                      {roundedTotal > 0 ? `${roundedTotal}%` : "—"}
+                      {formatGrade(roundedTotal)}
                     </span>
+                    {gradingScale === "albanian" && roundedTotal > 0 && (
+                      <p className="mt-0.5 text-xs text-muted-foreground">{roundedTotal}%</p>
+                    )}
                   </td>
                 </tr>
               </tfoot>
