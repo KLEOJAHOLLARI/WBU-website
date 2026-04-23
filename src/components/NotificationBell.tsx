@@ -1,4 +1,4 @@
-import { useMemo } from "react";
+import { useMemo, useState } from "react";
 import { Link } from "react-router-dom";
 import { Bell, GraduationCap, Mail, FileText, Check, AlertTriangle } from "lucide-react";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
@@ -46,7 +46,7 @@ const NotificationBell = () => {
             type: "application",
             title: "New application",
             description: `${a.full_name} — ${a.program}`,
-            href: "/admin/applications",
+            href: `/admin/applications?focus=${a.id}`,
             createdAt: a.created_at,
             read: false,
           });
@@ -76,7 +76,7 @@ const NotificationBell = () => {
               type: "tuition",
               title: "Tuition overdue",
               description: `${p?.full_name || "Student"} — ${new Intl.NumberFormat("en-US", { style: "currency", currency: c.currency }).format(Number(c.amount))} · ${days}d late`,
-              href: "/admin/tuition",
+              href: `/admin/tuition?charge=${c.id}&user=${c.user_id}`,
               createdAt: c.due_date!,
               read: false,
             });
@@ -97,7 +97,7 @@ const NotificationBell = () => {
             type: "tuition",
             title: "Receipt awaiting review",
             description: `${new Intl.NumberFormat("en-US", { style: "currency", currency: r.currency }).format(Number(r.amount))} pending verification`,
-            href: "/admin/tuition",
+            href: `/admin/tuition?payment=${r.id}&user=${r.user_id}`,
             createdAt: r.created_at,
             read: false,
           });
@@ -128,7 +128,7 @@ const NotificationBell = () => {
                 type: "enrollment",
                 title: "Enrollment request",
                 description: "A student requested to enroll",
-                href: "/professor/advisor",
+                href: `/professor/advisor?request=${r.id}`,
                 createdAt: r.created_at,
                 read: false,
               });
@@ -149,7 +149,7 @@ const NotificationBell = () => {
             type: "grade",
             title: `Grade posted — ${g.course_name}`,
             description: `${g.component_name}: ${g.score ?? "-"} / ${g.max_score}`,
-            href: "/portal/transcript",
+            href: `/portal/transcript?highlight=${encodeURIComponent(g.course_name)}`,
             createdAt: g.created_at,
             read: g.is_read,
           });
@@ -167,7 +167,7 @@ const NotificationBell = () => {
             type: "message",
             title: "New message",
             description: m.subject,
-            href: "/portal/messages",
+            href: `/portal/messages?msg=${m.id}`,
             createdAt: m.created_at,
             read: m.is_read,
           });
@@ -190,7 +190,7 @@ const NotificationBell = () => {
             type: "tuition",
             title: "Tuition overdue",
             description: `${new Intl.NumberFormat("en-US", { style: "currency", currency: c.currency }).format(Number(c.amount))} · ${days} day${days !== 1 ? "s" : ""} late`,
-            href: "/portal/tuition",
+            href: `/portal/tuition?charge=${c.id}`,
             createdAt: c.due_date!,
             read: false,
           });
@@ -246,8 +246,23 @@ const NotificationBell = () => {
     }
   };
 
+  const [open, setOpen] = useState(false);
+
+  const markOneRead = async (n: NotificationItem) => {
+    if (n.read) return;
+    if (n.id.startsWith("grade-")) {
+      const id = n.id.slice("grade-".length);
+      await supabase.from("grade_notifications").update({ is_read: true }).eq("id", id);
+    } else if (n.id.startsWith("msg-")) {
+      const id = n.id.slice("msg-".length);
+      await supabase.from("student_messages").update({ is_read: true }).eq("id", id);
+    }
+    queryClient.invalidateQueries({ queryKey: ["notifications"] });
+    queryClient.invalidateQueries({ queryKey: ["student-unread-messages"] });
+  };
+
   return (
-    <Popover>
+    <Popover open={open} onOpenChange={setOpen}>
       <PopoverTrigger asChild>
         <Button variant="ghost" size="icon" className="relative h-9 w-9" aria-label="Notifications">
           <Bell className="h-4 w-4" />
@@ -289,6 +304,10 @@ const NotificationBell = () => {
                 <Link
                   key={n.id}
                   to={n.href}
+                  onClick={() => {
+                    setOpen(false);
+                    markOneRead(n);
+                  }}
                   className={`flex gap-3 px-4 py-3 transition-colors hover:bg-muted/50 ${
                     !n.read ? "bg-primary/5" : ""
                   }`}
