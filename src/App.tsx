@@ -57,6 +57,8 @@ import StudentQuiz from "./pages/portal/StudentQuiz";
 import StudentExamSchedule from "./pages/portal/StudentExamSchedule";
 import DevToolbar from "./components/DevToolbar";
 import FacultyProfile from "./pages/FacultyProfile";
+import AdminTuition from "./pages/admin/AdminTuition";
+import StudentTuition from "./pages/portal/StudentTuition";
 
 const queryClient = new QueryClient();
 
@@ -98,6 +100,7 @@ const App = () => (
             <Route path="/admin/analytics" element={<AdminAnalytics />} />
             <Route path="/admin/graduation" element={<AdminGraduation />} />
             <Route path="/admin/semesters" element={<AdminSemesters />} />
+            <Route path="/admin/tuition" element={<AdminTuition />} />
             <Route path="/portal/login" element={<StudentLogin />} />
             <Route path="/portal/register" element={<StudentRegister />} />
             <Route path="/portal" element={<StudentDashboard />} />
@@ -111,6 +114,7 @@ const App = () => (
             <Route path="/portal/transcript" element={<StudentTranscript />} />
             <Route path="/portal/change-password" element={<ChangePassword />} />
             <Route path="/portal/exams" element={<StudentExamSchedule />} />
+            <Route path="/portal/tuition" element={<StudentTuition />} />
             <Route path="/portal/quiz/:quizId" element={<StudentQuiz />} />
             <Route path="/professor" element={<ProfessorDashboard />} />
             <Route path="/professor/courses" element={<ProfessorCourses />} />
