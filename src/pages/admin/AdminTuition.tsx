@@ -101,8 +101,25 @@ const AdminTuition = () => {
     },
   });
 
+  const { data: lateFeeSettings } = useQuery({
+    queryKey: ["adm-late-fee-settings"],
+    queryFn: async () => {
+      const { data } = await supabase.from("tuition_late_fee_settings").select("*").order("updated_at", { ascending: false }).limit(1).maybeSingle();
+      return data;
+    },
+  });
+
+  const { data: lateFees = [] } = useQuery({
+    queryKey: ["adm-late-fees"],
+    queryFn: async () => {
+      const { data } = await supabase.from("tuition_late_fees").select("*").order("applied_at", { ascending: false });
+      return data || [];
+    },
+  });
+
   const studentMap = Object.fromEntries(students.map((s: any) => [s.user_id, s]));
   const semesterMap = Object.fromEntries(semesters.map((s: any) => [s.id, s]));
+  const lateFeeByCharge = Object.fromEntries(lateFees.map((lf: any) => [lf.charge_id, lf]));
 
   // Mutations
   const upsertFee = useMutation({
