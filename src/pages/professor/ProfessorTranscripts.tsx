@@ -110,7 +110,20 @@ const ProfessorTranscripts = () => {
       },
       rows: filteredRows,
       summary,
+      displayMode,
     });
+  };
+
+  const renderGrade = (grade: number) => {
+    const alb = gradeToAlbanian(grade);
+    const letter = gradeToLetter(grade);
+    if (displayMode === "percent") return <span className="font-semibold">{grade.toFixed(1)}%</span>;
+    if (displayMode === "albanian") return <span className="font-semibold">{alb}</span>;
+    return (
+      <span className="font-semibold">
+        {grade.toFixed(1)}% <span className="text-xs text-muted-foreground">→ {alb} ({letter})</span>
+      </span>
+    );
   };
 
   const statusBadge = (status: TranscriptRow["status"]) => {
