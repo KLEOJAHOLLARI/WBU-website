@@ -8,6 +8,7 @@ import { Badge } from "@/components/ui/badge";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Input } from "@/components/ui/input";
 import { CalendarDays, Search } from "lucide-react";
+import { useNavigate } from "react-router-dom";
 
 type ExamRow = {
   id: string;
