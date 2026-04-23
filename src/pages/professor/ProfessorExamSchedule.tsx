@@ -136,7 +136,11 @@ const ProfessorExamSchedule = () => {
             ) : filtered.length === 0 ? (
               <TableRow><TableCell colSpan={6} className="text-center py-8 text-muted-foreground">No exams scheduled</TableCell></TableRow>
             ) : filtered.map((e) => (
-              <TableRow key={e.id} className={e.exam_date < today ? "opacity-60" : ""}>
+              <TableRow
+                key={e.id}
+                className={`cursor-pointer hover:bg-muted/40 transition-colors ${e.exam_date < today ? "opacity-60" : ""}`}
+                onClick={() => navigate(`/portal/exams/${e.id}`)}
+              >
                 <TableCell className="font-medium">
                   {e.courses?.name || "—"}
                   {e.courses?.code && <span className="ml-1 text-xs text-muted-foreground">({e.courses.code})</span>}
