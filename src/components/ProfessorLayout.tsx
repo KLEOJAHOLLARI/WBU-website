@@ -77,9 +77,7 @@ const ProfessorLayout = ({ children }: { children: ReactNode }) => {
   const sidebarContent = (
     <>
       <div className="flex h-16 shrink-0 items-center gap-2.5 border-b border-border px-5">
-        <div className="flex h-8 w-8 items-center justify-center rounded-lg bg-primary">
-          <GraduationCap className="h-4 w-4 text-primary-foreground" />
-        </div>
+        <img src="/favicon.png" alt="WBU" className="h-8 w-auto" />
         <span className="font-display text-base font-semibold text-foreground">Professor</span>
       </div>
 

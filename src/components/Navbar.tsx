@@ -1,9 +1,10 @@
 import { useState, useEffect } from "react";
 import { Link, useLocation } from "react-router-dom";
-import { Menu, X, GraduationCap, ArrowRight } from "lucide-react";
+import { Menu, X, ArrowRight } from "lucide-react";
 import { motion, AnimatePresence } from "framer-motion";
 import { useTranslation } from "react-i18next";
 import LanguageSwitcher from "./LanguageSwitcher";
+import wbuLogo from "@/assets/wbu-logo.png";
 
 const navKeys = [
   { to: "/", key: "nav.home" },
@@ -42,11 +43,12 @@ const Navbar = () => {
   return (
     <header className={`fixed top-0 left-0 right-0 z-50 transition-all duration-300 ${navBg}`}>
       <div className="container flex h-16 items-center justify-between lg:h-18">
-        <Link to="/" className="flex items-center gap-2.5">
-          <GraduationCap className={`h-8 w-8 ${logoColor} transition-colors`} />
-          <span className={`font-display text-xl font-bold ${logoColor} transition-colors`}>
-            WBU<span className="text-accent">.</span>
-          </span>
+        <Link to="/" className="flex items-center gap-2.5" aria-label="Western Balkans University">
+          <img
+            src={wbuLogo}
+            alt="Western Balkans University"
+            className={`h-9 w-auto transition-all ${scrolled || !isHome ? "" : "brightness-0 invert"}`}
+          />
         </Link>
 
         {/* Desktop */}
