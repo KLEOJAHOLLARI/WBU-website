@@ -238,6 +238,8 @@ const NotificationBell = () => {
         return <GraduationCap className="h-4 w-4 text-primary" />;
       case "message":
         return <Mail className="h-4 w-4 text-primary" />;
+      case "tuition":
+        return <AlertTriangle className="h-4 w-4 text-destructive" />;
       case "application":
       case "enrollment":
         return <FileText className="h-4 w-4 text-primary" />;
