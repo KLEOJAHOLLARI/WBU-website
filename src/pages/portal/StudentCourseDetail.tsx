@@ -466,6 +466,12 @@ const StudentCourseDetail = () => {
                         {cs.hasScore ? `+${cs.weighted!.toFixed(1)}% weighted` : "Awaiting grade"}
                       </span>
                     </div>
+                    {cs.hasScore && (
+                      <div className="mt-1 flex items-center gap-1 text-[11px] text-muted-foreground">
+                        <Calendar className="h-3 w-3" />
+                        <span>Graded {formatGradedAt(cs.gradedAt)}</span>
+                      </div>
+                    )}
                   </div>
                   <div className="flex flex-col items-end flex-shrink-0">
                     {cs.hasScore ? (
