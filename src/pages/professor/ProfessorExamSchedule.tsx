@@ -34,6 +34,7 @@ const typeColors: Record<string, string> = {
 
 const ProfessorExamSchedule = () => {
   const { user } = useAuth();
+  const navigate = useNavigate();
   const [filter, setFilter] = useState<string>("upcoming");
   const [type, setType] = useState<string>("all");
   const [search, setSearch] = useState("");
