@@ -21,6 +21,37 @@ const StudentTuition = () => {
   const qc = useQueryClient();
   const [uploadFor, setUploadFor] = useState<any | null>(null);
 
+  const { data: profile } = useQuery({
+    queryKey: ["student-tuition-profile", user?.id],
+    queryFn: async () => {
+      const { data } = await supabase
+        .from("profiles")
+        .select("program, scholarship_percentage, has_scholarship, full_name, student_id")
+        .eq("user_id", user!.id)
+        .maybeSingle();
+      return data;
+    },
+    enabled: !!user,
+  });
+
+  const { data: programInfo } = useQuery({
+    queryKey: ["student-tuition-program", profile?.program],
+    queryFn: async () => {
+      const { data } = await supabase.from("programs").select("slug, title").eq("slug", profile!.program!).maybeSingle();
+      return data;
+    },
+    enabled: !!profile?.program,
+  });
+
+  const { data: programFees = [] } = useQuery({
+    queryKey: ["student-tuition-program-fees", profile?.program],
+    queryFn: async () => {
+      const { data } = await supabase.from("program_tuition_fees").select("*").eq("program", profile!.program!);
+      return data || [];
+    },
+    enabled: !!profile?.program,
+  });
+
   const { data: charges = [] } = useQuery({
     queryKey: ["student-charges", user?.id],
     queryFn: async () => {
@@ -42,11 +73,17 @@ const StudentTuition = () => {
   const { data: semesters = [] } = useQuery({
     queryKey: ["student-tuition-semesters"],
     queryFn: async () => {
-      const { data } = await supabase.from("academic_semesters").select("id, name");
+      const { data } = await supabase.from("academic_semesters").select("id, name, is_current").order("year", { ascending: false });
       return data || [];
     },
   });
   const semMap = Object.fromEntries(semesters.map((s: any) => [s.id, s]));
+
+  const scholarshipPct = Math.max(0, Math.min(100, Number(profile?.scholarship_percentage || 0)));
+  const currentSem = semesters.find((s: any) => s.is_current);
+  const currentFee = programFees.find((f: any) => f.academic_semester_id === currentSem?.id) || programFees[0];
+  const annualTuition = Number(currentFee?.amount || 0);
+  const afterScholarship = +(annualTuition * (100 - scholarshipPct) / 100).toFixed(2);
 
   const totalCharged = charges.reduce((s, c) => s + Number(c.amount), 0);
   const verifiedPaid = payments.filter((p) => p.verification_status === "verified").reduce((s, p) => s + Number(p.amount), 0);
