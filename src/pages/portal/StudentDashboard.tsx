@@ -8,6 +8,7 @@ import { Badge } from "@/components/ui/badge";
 import { Progress } from "@/components/ui/progress";
 import { Link } from "react-router-dom";
 import SemesterBadge from "@/components/SemesterBadge";
+import ScholarshipCard from "@/components/ScholarshipCard";
 
 const StudentDashboard = () => {
   const { user } = useAuth();
@@ -323,6 +324,17 @@ const StudentDashboard = () => {
           </p>
         </div>
       </div>
+
+      {/* Scholarship */}
+      {(profile as any)?.has_scholarship && (
+        <div className="mt-6">
+          <ScholarshipCard
+            percentage={(profile as any)?.scholarship_percentage ?? 100}
+            required={(profile as any)?.required_open_lecture_hours ?? 18}
+            completed={(profile as any)?.completed_open_lecture_hours ?? 0}
+          />
+        </div>
+      )}
 
       {/* Attendance Alerts */}
       {attendanceAlerts.length > 0 && (
