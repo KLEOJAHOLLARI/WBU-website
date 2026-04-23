@@ -60,6 +60,8 @@ import FacultyProfile from "./pages/FacultyProfile";
 import AdminTuition from "./pages/admin/AdminTuition";
 import StudentTuition from "./pages/portal/StudentTuition";
 import StudentTuitionEstimate from "./pages/portal/StudentTuitionEstimate";
+import AdminExamSchedule from "./pages/admin/AdminExamSchedule";
+import ProfessorExamSchedule from "./pages/professor/ProfessorExamSchedule";
 
 const queryClient = new QueryClient();
 
