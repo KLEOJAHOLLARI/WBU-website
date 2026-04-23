@@ -271,7 +271,7 @@ const StudentCourseDetail = () => {
           <AlertTriangle className="h-5 w-5 text-destructive flex-shrink-0" />
           <div>
             <p className="text-sm font-semibold text-destructive">Exam Access Blocked</p>
-            <p className="text-xs text-destructive/80">Your attendance is below the required 75% threshold.</p>
+            <p className="text-xs text-destructive/80">Your attendance is below the required {threshold}% threshold.</p>
           </div>
         </div>
       )}
@@ -492,18 +492,22 @@ const StudentCourseDetail = () => {
               </div>
 
               {/* Summary stats */}
-              <div className="mt-4 grid gap-3 grid-cols-3">
+              <div className="mt-4 grid gap-3 grid-cols-2 sm:grid-cols-4">
                 <div className="rounded-xl border border-border bg-card p-3 text-center">
-                  <p className="text-xl font-bold text-emerald-600">{presentCount}</p>
-                  <p className="text-xs text-muted-foreground">Present</p>
+                  <p className="text-xl font-bold text-emerald-600">{attStats.attendedHours}h</p>
+                  <p className="text-xs text-muted-foreground">Attended</p>
                 </div>
                 <div className="rounded-xl border border-border bg-card p-3 text-center">
-                  <p className="text-xl font-bold text-destructive">{absentCount}</p>
-                  <p className="text-xs text-muted-foreground">Absent</p>
+                  <p className="text-xl font-bold text-destructive">{Math.max(0, attStats.totalHours - attStats.attendedHours)}h</p>
+                  <p className="text-xs text-muted-foreground">Missed</p>
+                </div>
+                <div className="rounded-xl border border-border bg-card p-3 text-center">
+                  <p className="text-xl font-bold text-foreground">{attStats.totalHours}h</p>
+                  <p className="text-xs text-muted-foreground">Recorded</p>
                 </div>
                 <div className="rounded-xl border border-border bg-card p-3 text-center">
                   <p className="text-xl font-bold text-foreground">{sessions.length}</p>
-                  <p className="text-xs text-muted-foreground">Total Sessions</p>
+                  <p className="text-xs text-muted-foreground">Sessions</p>
                 </div>
               </div>
             </>
