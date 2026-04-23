@@ -1,3 +1,4 @@
+import { useEffect, useState } from "react";
 import { useParams, Link } from "react-router-dom";
 import StudentLayout from "@/components/StudentLayout";
 import { useQuery } from "@tanstack/react-query";
@@ -33,9 +34,38 @@ const progressColor = (pct: number) => {
   return "[&>div]:bg-destructive";
 };
 
+// Albanian academic grading scale (4 = fail, 10 = excellent)
+const toAlbanian = (pct: number): number => {
+  if (pct < 50) return 4;
+  if (pct < 60) return 5;
+  if (pct < 70) return 6;
+  if (pct < 80) return 7;
+  if (pct < 90) return 8;
+  if (pct < 95) return 9;
+  return 10;
+};
+
+type GradingScale = "percent" | "albanian";
+
+const GRADING_SCALE_KEY = "wbu.gradingScale";
+
 const StudentCourseDetail = () => {
   const { id: courseId } = useParams<{ id: string }>();
   const { user } = useAuth();
+  const [gradingScale, setGradingScale] = useState<GradingScale>(() => {
+    if (typeof window === "undefined") return "percent";
+    return (localStorage.getItem(GRADING_SCALE_KEY) as GradingScale) || "percent";
+  });
+
+  useEffect(() => {
+    localStorage.setItem(GRADING_SCALE_KEY, gradingScale);
+  }, [gradingScale]);
+
+  const formatGrade = (pct: number | null): string => {
+    if (pct === null || pct <= 0) return "—";
+    if (gradingScale === "albanian") return String(toAlbanian(pct));
+    return `${Math.round(pct)}%`;
+  };
 
   const { data: course, isLoading: loadingCourse } = useQuery({
     queryKey: ["course", courseId],
@@ -241,7 +271,7 @@ const StudentCourseDetail = () => {
             <BarChart3 className="h-4 w-4" /> Total Grade
           </div>
           <p className={`text-3xl font-bold ${gradeColor(roundedTotal)}`}>
-            {roundedTotal > 0 ? `${roundedTotal}%` : "—"}
+            {formatGrade(roundedTotal)}
           </p>
           {roundedTotal > 0 && (
             <Progress value={roundedTotal} className={`mt-2 h-2 ${progressColor(roundedTotal)}`} />
@@ -278,11 +308,44 @@ const StudentCourseDetail = () => {
 
       {/* ─── GRADES TABLE ─── */}
       <div className="mb-8">
-        <div className="mb-4 flex items-center justify-between gap-3">
+        <div className="mb-4 flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
           <h2 className="flex items-center gap-2 font-display text-lg font-semibold text-foreground">
             <BarChart3 className="h-5 w-5 text-primary" />
             Grades for {course.name} ({course.code})
           </h2>
+          {/* Grading scale toggle */}
+          <div
+            role="tablist"
+            aria-label="Grading scale"
+            className="inline-flex w-full sm:w-auto items-center rounded-lg border border-border bg-muted/40 p-0.5"
+          >
+            <button
+              type="button"
+              role="tab"
+              aria-selected={gradingScale === "percent"}
+              onClick={() => setGradingScale("percent")}
+              className={`flex-1 sm:flex-none rounded-md px-3 py-1.5 text-xs font-medium transition-colors ${
+                gradingScale === "percent"
+                  ? "bg-card text-foreground shadow-sm"
+                  : "text-muted-foreground hover:text-foreground"
+              }`}
+            >
+              Percent (0–100%)
+            </button>
+            <button
+              type="button"
+              role="tab"
+              aria-selected={gradingScale === "albanian"}
+              onClick={() => setGradingScale("albanian")}
+              className={`flex-1 sm:flex-none rounded-md px-3 py-1.5 text-xs font-medium transition-colors ${
+                gradingScale === "albanian"
+                  ? "bg-card text-foreground shadow-sm"
+                  : "text-muted-foreground hover:text-foreground"
+              }`}
+            >
+              Albanian (4–10)
+            </button>
+          </div>
         </div>
 
         {components.length === 0 ? (
@@ -324,9 +387,13 @@ const StudentCourseDetail = () => {
                       {cs.hasScore ? (
                         <div className="flex flex-col items-end">
                           <span className={`font-display text-lg font-bold ${gradeColor(cs.pct!)}`}>
-                            {cs.score}/{cs.maxScore}
+                            {gradingScale === "albanian" ? toAlbanian(cs.pct!) : `${cs.score}/${cs.maxScore}`}
                           </span>
-                          <span className="text-xs text-muted-foreground">{cs.pct!.toFixed(0)}%</span>
+                          <span className="text-xs text-muted-foreground">
+                            {gradingScale === "albanian"
+                              ? `${cs.score}/${cs.maxScore} · ${cs.pct!.toFixed(0)}%`
+                              : `${cs.pct!.toFixed(0)}%`}
+                          </span>
                         </div>
                       ) : (
                         <span className="text-sm text-muted-foreground">—</span>
@@ -349,8 +416,11 @@ const StudentCourseDetail = () => {
                   <td className="px-5 py-4" />
                   <td className="px-5 py-4 text-right">
                     <span className={`font-display text-3xl font-bold ${gradeColor(roundedTotal)}`}>
-                      {roundedTotal > 0 ? `${roundedTotal}%` : "—"}
+                      {formatGrade(roundedTotal)}
                     </span>
+                    {gradingScale === "albanian" && roundedTotal > 0 && (
+                      <p className="mt-0.5 text-xs text-muted-foreground">{roundedTotal}%</p>
+                    )}
                   </td>
                 </tr>
               </tfoot>
@@ -373,9 +443,13 @@ const StudentCourseDetail = () => {
                     {cs.hasScore ? (
                       <>
                         <span className={`font-display text-base font-bold ${gradeColor(cs.pct!)}`}>
-                          {cs.score}/{cs.maxScore}
+                          {gradingScale === "albanian" ? toAlbanian(cs.pct!) : `${cs.score}/${cs.maxScore}`}
                         </span>
-                        <span className="text-[11px] text-muted-foreground">{cs.pct!.toFixed(0)}%</span>
+                        <span className="text-[11px] text-muted-foreground">
+                          {gradingScale === "albanian"
+                            ? `${cs.score}/${cs.maxScore}`
+                            : `${cs.pct!.toFixed(0)}%`}
+                        </span>
                       </>
                     ) : (
                       <span className="text-sm text-muted-foreground">—</span>
@@ -394,7 +468,7 @@ const StudentCourseDetail = () => {
                   </p>
                 </div>
                 <span className={`font-display text-2xl font-bold ${gradeColor(roundedTotal)}`}>
-                  {roundedTotal > 0 ? `${roundedTotal}%` : "—"}
+                  {formatGrade(roundedTotal)}
                 </span>
               </div>
             </div>
