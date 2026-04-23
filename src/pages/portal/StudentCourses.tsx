@@ -21,6 +21,8 @@ const StudentCourses = () => {
   const navigate = useNavigate();
   const [showAddCourses, setShowAddCourses] = useState(false);
   const [collapsedFaculties, setCollapsedFaculties] = useState<Record<string, boolean>>({});
+  const [modal, setModal] = useState<{ kind: "syllabus" | "grades" | "attendance"; enrollment: any } | null>(null);
+  const closeModal = () => setModal(null);
 
   const { data: profile } = useQuery({
     queryKey: ["student-profile-program", user?.id],
