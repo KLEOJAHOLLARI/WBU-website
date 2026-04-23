@@ -6,7 +6,7 @@ import { useToast } from "@/hooks/use-toast";
 import { Plus, Pencil, Trash2, X, Search, Filter, RotateCcw, CheckSquare, Square, UserCog, ChevronLeft, ChevronRight, ChevronsLeft, ChevronsRight } from "lucide-react";
 import { Badge } from "@/components/ui/badge";
 
-const emptyCourse = { name: "", code: "", program: "", semester: 1, year: 1, professor_id: "", is_shared: false, shared_programs: [] as string[] };
+const emptyCourse = { name: "", code: "", program: "", semester: 1, year: 1, hours_per_week: 2, professor_id: "", is_shared: false, shared_programs: [] as string[] };
 
 const AdminCourses = () => {
   const { toast } = useToast();
@@ -225,6 +225,7 @@ const AdminCourses = () => {
         program: form.program,
         semester: parseInt(form.semester) || 1,
         year: parseInt(form.year) || 1,
+        hours_per_week: Math.max(1, parseInt(form.hours_per_week) || 2),
         professor_id: form.professor_id || null,
         is_shared: !!form.is_shared,
       };
@@ -324,6 +325,10 @@ const AdminCourses = () => {
               </select>
               <input type="number" min={1} placeholder="Year" value={editing?.year ?? 1} onChange={(e) => setEditing({ ...editing, year: e.target.value })} className={inputCls} />
               <input type="number" min={1} placeholder="Semester" value={editing?.semester ?? 1} onChange={(e) => setEditing({ ...editing, semester: e.target.value })} className={inputCls} />
+              <div>
+                <label className="mb-1 block text-xs font-medium text-muted-foreground">Lecture hours per week</label>
+                <input type="number" min={1} max={12} placeholder="2" value={editing?.hours_per_week ?? 2} onChange={(e) => setEditing({ ...editing, hours_per_week: e.target.value })} className={inputCls} />
+              </div>
               <label className="flex items-center gap-2 cursor-pointer">
                 <input type="checkbox" checked={!!editing?.is_shared} onChange={(e) => setEditing({ ...editing, is_shared: e.target.checked, shared_programs: e.target.checked ? editing?.shared_programs || [] : [] })} className="h-4 w-4 rounded border-input accent-primary" />
                 <span className="text-sm text-foreground">Shared / Common Course</span>

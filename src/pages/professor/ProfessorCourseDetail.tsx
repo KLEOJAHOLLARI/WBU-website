@@ -14,6 +14,8 @@ import ProfessorQuizTab from "@/components/professor/ProfessorQuizTab";
 import ProfessorBulkMessage from "@/components/professor/ProfessorBulkMessage";
 import { Badge } from "@/components/ui/badge";
 import { Progress } from "@/components/ui/progress";
+import { computeAttendanceForEnrollment } from "@/lib/attendance";
+import { useAttendanceThreshold } from "@/hooks/useAttendanceThreshold";
 
 /* ─── helpers ─── */
 const inputBase =
@@ -197,10 +199,15 @@ const ProfessorCourseDetail = () => {
 
   const [sessionDate, setSessionDate] = useState("");
   const [sessionWeek, setSessionWeek] = useState(sessions.length + 1);
+  const [sessionHours, setSessionHours] = useState<number>(2);
+  useEffect(() => {
+    if (course?.hours_per_week) setSessionHours(course.hours_per_week);
+  }, [course?.hours_per_week]);
   const addSession = useMutation({
     mutationFn: async () => {
       const { error } = await supabase.from("attendance_sessions").insert({
         course_id: courseId!, session_date: sessionDate, week_number: sessionWeek,
+        hours: Math.max(1, Number(sessionHours) || course?.hours_per_week || 2),
       });
       if (error) throw error;
     },
@@ -266,13 +273,17 @@ const ProfessorCourseDetail = () => {
 
   const getStudentName = (enr: any) => enr.profiles?.full_name || enr.profiles?.email || "Unknown";
 
+  const threshold = useAttendanceThreshold();
+
+  const getAttStats = useCallback(
+    (enrollmentId: string) =>
+      computeAttendanceForEnrollment(enrollmentId, sessions as any, attendanceRecords as any, threshold),
+    [attendanceRecords, sessions, threshold]
+  );
+
   const getAttPct = useCallback(
-    (enrollmentId: string) => {
-      if (sessions.length === 0) return null;
-      const present = attendanceRecords.filter((r) => r.enrollment_id === enrollmentId && r.status === "present").length;
-      return Math.round((present / sessions.length) * 100);
-    },
-    [attendanceRecords, sessions]
+    (enrollmentId: string) => getAttStats(enrollmentId).percentage,
+    [getAttStats]
   );
 
   const getStudentTotal = useCallback(
@@ -301,7 +312,7 @@ const ProfessorCourseDetail = () => {
     : 0;
   const passingCount = enrollments.filter((e) => getStudentTotal(e.id) >= 50).length;
   const failingCount = enrollments.filter((e) => { const t = getStudentTotal(e.id); return t > 0 && t < 50; }).length;
-  const lowAttCount = enrollments.filter((e) => { const p = getAttPct(e.id); return p !== null && p < 75; }).length;
+  const lowAttCount = enrollments.filter((e) => { const p = getAttPct(e.id); return p !== null && p < threshold; }).length;
 
   /* ─── tab styling ─── */
   /* ─── materials queries ─── */
@@ -512,7 +523,7 @@ const ProfessorCourseDetail = () => {
                     {filteredEnrollments.map((enr, idx) => {
                       const attPct = getAttPct(enr.id);
                       const total = getStudentTotal(enr.id);
-                      const isLowAtt = attPct !== null && attPct < 75;
+                      const isLowAtt = attPct !== null && attPct < threshold;
                       const isFailing = total > 0 && total < 50;
                       return (
                         <tr key={enr.id} className={`border-b border-border last:border-0 ${idx % 2 === 0 ? "bg-card" : "bg-secondary/30"}`}>
@@ -664,6 +675,7 @@ const ProfessorCourseDetail = () => {
             {/* Add session form */}
             <div className="rounded-xl border border-border bg-card p-4">
               <h3 className="mb-3 text-sm font-semibold text-foreground">New Attendance Session</h3>
+              <p className="mb-3 text-xs text-muted-foreground">Course default: {course?.hours_per_week ?? 2}h/week. You can override the hours for any individual session.</p>
               <div className="flex flex-wrap gap-3 items-end">
                 <div className="min-w-[160px]">
                   <label className="mb-1 block text-xs font-medium text-muted-foreground">Date</label>
@@ -672,6 +684,10 @@ const ProfessorCourseDetail = () => {
                 <div className="w-24">
                   <label className="mb-1 block text-xs font-medium text-muted-foreground">Week #</label>
                   <input type="number" value={sessionWeek} onChange={(e) => setSessionWeek(Number(e.target.value))} className={inputBase} min={1} />
+                </div>
+                <div className="w-24">
+                  <label className="mb-1 block text-xs font-medium text-muted-foreground">Hours</label>
+                  <input type="number" value={sessionHours} onChange={(e) => setSessionHours(Number(e.target.value))} className={inputBase} min={1} max={12} />
                 </div>
                 <button
                   onClick={() => addSession.mutate()}
@@ -724,6 +740,7 @@ const ProfessorCourseDetail = () => {
                             <div className="flex flex-col items-center gap-0.5">
                               <span className="text-xs font-semibold text-foreground">W{s.week_number}</span>
                               <span className="text-[10px] text-muted-foreground">{new Date(s.session_date + "T00:00:00").toLocaleDateString("en", { month: "short", day: "numeric" })}</span>
+                              <span className="text-[10px] font-medium text-primary">{(s as any).hours ?? course?.hours_per_week ?? 2}h</span>
                               <div className="flex items-center gap-0.5 mt-0.5">
                                 <button
                                   onClick={() => {
@@ -751,14 +768,18 @@ const ProfessorCourseDetail = () => {
                           </th>
                         ))}
                         <th className="px-4 py-3 text-center text-xs font-semibold uppercase tracking-wider text-muted-foreground">
+                          Hours
+                        </th>
+                        <th className="px-4 py-3 text-center text-xs font-semibold uppercase tracking-wider text-muted-foreground">
                           Rate
                         </th>
                       </tr>
                     </thead>
                     <tbody>
                       {enrollments.map((enr, idx) => {
-                        const pct = getAttPct(enr.id);
-                        const isLow = pct !== null && pct < 75;
+                        const stats = getAttStats(enr.id);
+                        const pct = stats.percentage;
+                        const isLow = pct !== null && pct < threshold;
                         return (
                           <tr key={enr.id} className={`border-b border-border last:border-0 ${isLow ? "bg-red-500/5" : idx % 2 === 0 ? "bg-card" : "bg-secondary/30"}`}>
                             <td className={`sticky left-0 z-10 px-4 py-2.5 font-medium text-foreground ${isLow ? "bg-red-500/5" : idx % 2 === 0 ? "bg-card" : "bg-secondary/30"}`}>
@@ -801,9 +822,12 @@ const ProfessorCourseDetail = () => {
                                 </td>
                               );
                             })}
+                            <td className="px-4 py-2.5 text-center text-xs text-muted-foreground">
+                              {stats.attendedHours}/{stats.totalHours}h
+                            </td>
                             <td className="px-4 py-2.5 text-center">
                               <span className={`inline-block min-w-[48px] rounded-full px-2.5 py-0.5 text-xs font-bold ${
-                                isLow ? "bg-destructive/15 text-destructive" : "bg-emerald-500/15 text-emerald-700"
+                                isLow ? "bg-destructive/15 text-destructive" : pct !== null ? "bg-emerald-500/15 text-emerald-700" : "bg-secondary text-muted-foreground"
                               }`}>
                                 {pct !== null ? `${pct}%` : "—"}
                               </span>
@@ -818,20 +842,20 @@ const ProfessorCourseDetail = () => {
                 {/* Summary stats */}
                 <div className="grid gap-3 sm:grid-cols-3">
                   <div className="rounded-xl border border-border bg-card p-4 text-center">
-                    <p className="text-2xl font-bold text-foreground">{sessions.length}</p>
-                    <p className="text-xs text-muted-foreground">Sessions</p>
+                    <p className="text-2xl font-bold text-foreground">{sessions.reduce((s: number, x: any) => s + (Number(x.hours) || course?.hours_per_week || 2), 0)}h</p>
+                    <p className="text-xs text-muted-foreground">Recorded Hours · {sessions.length} sessions</p>
                   </div>
                   <div className="rounded-xl border border-border bg-card p-4 text-center">
                     <p className="text-2xl font-bold text-emerald-600">
-                      {enrollments.filter((e) => { const p = getAttPct(e.id); return p !== null && p >= 75; }).length}
+                      {enrollments.filter((e) => { const p = getAttPct(e.id); return p !== null && p >= threshold; }).length}
                     </p>
-                    <p className="text-xs text-muted-foreground">Above 75%</p>
+                    <p className="text-xs text-muted-foreground">Eligible (≥{threshold}%)</p>
                   </div>
                   <div className="rounded-xl border border-border bg-card p-4 text-center">
                     <p className="text-2xl font-bold text-destructive">
-                      {enrollments.filter((e) => { const p = getAttPct(e.id); return p !== null && p < 75; }).length}
+                      {enrollments.filter((e) => { const p = getAttPct(e.id); return p !== null && p < threshold; }).length}
                     </p>
-                    <p className="text-xs text-muted-foreground">Below 75%</p>
+                    <p className="text-xs text-muted-foreground">Below {threshold}%</p>
                   </div>
                 </div>
               </>
@@ -909,7 +933,7 @@ const ProfessorCourseDetail = () => {
                       {filteredEnrollments.map((enr, idx) => {
                         const studentTotal = getStudentTotal(enr.id);
                         const attPctVal = getAttPct(enr.id);
-                        const isLowAtt = attPctVal !== null && attPctVal < 75;
+                        const isLowAtt = attPctVal !== null && attPctVal < threshold;
                         return (
                           <tr key={enr.id} className={`border-b border-border last:border-0 ${idx % 2 === 0 ? "bg-card" : "bg-secondary/30"}`}>
                             <td className={`sticky left-0 z-10 px-4 py-2 font-medium text-foreground ${idx % 2 === 0 ? "bg-card" : "bg-secondary/30"}`}>

@@ -10,6 +10,8 @@ import {
 } from "lucide-react";
 import { Badge } from "@/components/ui/badge";
 import { Progress } from "@/components/ui/progress";
+import { computeAttendanceForEnrollment } from "@/lib/attendance";
+import { useAttendanceThreshold } from "@/hooks/useAttendanceThreshold";
 
 const gradeColor = (pct: number) => {
   if (pct >= 70) return "text-emerald-600";
@@ -139,11 +141,16 @@ const StudentCourseDetail = () => {
   };
 
   /* ─── derived ─── */
+  const threshold = useAttendanceThreshold();
+  const attStats = enrollment
+    ? computeAttendanceForEnrollment(enrollment.id, sessions as any, attendanceRecords as any, threshold)
+    : { attendedHours: 0, totalHours: 0, percentage: null as number | null, isEligible: true };
   const presentCount = attendanceRecords.filter((r) => r.status === "present").length;
   const excusedCount = attendanceRecords.filter((r) => r.status === "excused").length;
-  const absentCount = sessions.length - presentCount - excusedCount;
-  const attPct = sessions.length > 0 ? Math.round((presentCount / sessions.length) * 100) : null;
-  const examBlocked = attPct !== null && attPct < 75;
+  const recordedSessionCount = attendanceRecords.length;
+  const absentCount = recordedSessionCount - presentCount - excusedCount;
+  const attPct = attStats.percentage;
+  const examBlocked = attPct !== null && attPct < threshold;
 
   // Calculate per-component scores
   const componentScores = components.flatMap((comp) =>
@@ -223,9 +230,9 @@ const StudentCourseDetail = () => {
             {attPct !== null ? `${attPct}%` : "—"}
           </p>
           {attPct !== null && (
-            <Progress value={attPct} className={`mt-2 h-2 ${attPct < 75 ? progressColor(0) : progressColor(attPct)}`} />
+            <Progress value={attPct} className={`mt-2 h-2 ${attPct < threshold ? progressColor(0) : progressColor(attPct)}`} />
           )}
-          <p className="mt-1.5 text-xs text-muted-foreground">{presentCount}/{sessions.length} sessions</p>
+          <p className="mt-1.5 text-xs text-muted-foreground">{attStats.attendedHours}h of {attStats.totalHours}h attended</p>
         </div>
 
         {/* Total Grade card */}
@@ -253,7 +260,7 @@ const StudentCourseDetail = () => {
             {examBlocked ? "Exam Blocked" : "Eligible"}
           </p>
           <p className="mt-1 text-xs text-muted-foreground">
-            {examBlocked ? "Attendance below 75%" : "All requirements met"}
+            {examBlocked ? `Attendance below ${threshold}%` : "All requirements met"}
           </p>
         </div>
       </div>
@@ -264,7 +271,7 @@ const StudentCourseDetail = () => {
           <AlertTriangle className="h-5 w-5 text-destructive flex-shrink-0" />
           <div>
             <p className="text-sm font-semibold text-destructive">Exam Access Blocked</p>
-            <p className="text-xs text-destructive/80">Your attendance is below the required 75% threshold.</p>
+            <p className="text-xs text-destructive/80">Your attendance is below the required {threshold}% threshold.</p>
           </div>
         </div>
       )}
@@ -369,12 +376,12 @@ const StudentCourseDetail = () => {
                 <div className="mb-4 rounded-xl border border-border bg-card p-4">
                   <div className="flex items-center justify-between mb-2">
                     <span className="text-sm font-medium text-muted-foreground">Overall Attendance</span>
-                    <span className={`text-2xl font-bold ${attPct < 75 ? "text-destructive" : "text-emerald-600"}`}>{attPct}%</span>
+                    <span className={`text-2xl font-bold ${attPct < threshold ? "text-destructive" : "text-emerald-600"}`}>{attPct}%</span>
                   </div>
-                  <Progress value={attPct} className={`h-3 ${attPct < 75 ? progressColor(0) : progressColor(attPct)}`} />
+                  <Progress value={attPct} className={`h-3 ${attPct < threshold ? progressColor(0) : progressColor(attPct)}`} />
                   <div className="mt-2 flex items-center justify-between text-xs text-muted-foreground">
-                    <span>{presentCount} of {sessions.length} sessions attended</span>
-                    {attPct < 75 && <span className="text-destructive font-medium">⚠ Below 75% threshold</span>}
+                    <span>{attStats.attendedHours}h attended of {attStats.totalHours}h recorded</span>
+                    {attPct < threshold && <span className="text-destructive font-medium">⚠ Below {threshold}% threshold</span>}
                   </div>
                 </div>
               )}
@@ -485,18 +492,22 @@ const StudentCourseDetail = () => {
               </div>
 
               {/* Summary stats */}
-              <div className="mt-4 grid gap-3 grid-cols-3">
+              <div className="mt-4 grid gap-3 grid-cols-2 sm:grid-cols-4">
                 <div className="rounded-xl border border-border bg-card p-3 text-center">
-                  <p className="text-xl font-bold text-emerald-600">{presentCount}</p>
-                  <p className="text-xs text-muted-foreground">Present</p>
+                  <p className="text-xl font-bold text-emerald-600">{attStats.attendedHours}h</p>
+                  <p className="text-xs text-muted-foreground">Attended</p>
                 </div>
                 <div className="rounded-xl border border-border bg-card p-3 text-center">
-                  <p className="text-xl font-bold text-destructive">{absentCount}</p>
-                  <p className="text-xs text-muted-foreground">Absent</p>
+                  <p className="text-xl font-bold text-destructive">{Math.max(0, attStats.totalHours - attStats.attendedHours)}h</p>
+                  <p className="text-xs text-muted-foreground">Missed</p>
+                </div>
+                <div className="rounded-xl border border-border bg-card p-3 text-center">
+                  <p className="text-xl font-bold text-foreground">{attStats.totalHours}h</p>
+                  <p className="text-xs text-muted-foreground">Recorded</p>
                 </div>
                 <div className="rounded-xl border border-border bg-card p-3 text-center">
                   <p className="text-xl font-bold text-foreground">{sessions.length}</p>
-                  <p className="text-xs text-muted-foreground">Total Sessions</p>
+                  <p className="text-xs text-muted-foreground">Sessions</p>
                 </div>
               </div>
             </>
