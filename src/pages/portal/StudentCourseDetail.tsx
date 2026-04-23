@@ -308,11 +308,44 @@ const StudentCourseDetail = () => {
 
       {/* ─── GRADES TABLE ─── */}
       <div className="mb-8">
-        <div className="mb-4 flex items-center justify-between gap-3">
+        <div className="mb-4 flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
           <h2 className="flex items-center gap-2 font-display text-lg font-semibold text-foreground">
             <BarChart3 className="h-5 w-5 text-primary" />
             Grades for {course.name} ({course.code})
           </h2>
+          {/* Grading scale toggle */}
+          <div
+            role="tablist"
+            aria-label="Grading scale"
+            className="inline-flex w-full sm:w-auto items-center rounded-lg border border-border bg-muted/40 p-0.5"
+          >
+            <button
+              type="button"
+              role="tab"
+              aria-selected={gradingScale === "percent"}
+              onClick={() => setGradingScale("percent")}
+              className={`flex-1 sm:flex-none rounded-md px-3 py-1.5 text-xs font-medium transition-colors ${
+                gradingScale === "percent"
+                  ? "bg-card text-foreground shadow-sm"
+                  : "text-muted-foreground hover:text-foreground"
+              }`}
+            >
+              Percent (0–100%)
+            </button>
+            <button
+              type="button"
+              role="tab"
+              aria-selected={gradingScale === "albanian"}
+              onClick={() => setGradingScale("albanian")}
+              className={`flex-1 sm:flex-none rounded-md px-3 py-1.5 text-xs font-medium transition-colors ${
+                gradingScale === "albanian"
+                  ? "bg-card text-foreground shadow-sm"
+                  : "text-muted-foreground hover:text-foreground"
+              }`}
+            >
+              Albanian (4–10)
+            </button>
+          </div>
         </div>
 
         {components.length === 0 ? (
