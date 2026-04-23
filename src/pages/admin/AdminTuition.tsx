@@ -410,6 +410,9 @@ const AdminTuition = () => {
           <TabsTrigger value="charges">Charges</TabsTrigger>
           <TabsTrigger value="payments">All Payments</TabsTrigger>
           <TabsTrigger value="fees">Program Fees</TabsTrigger>
+          <TabsTrigger value="latefees">
+            Late Fees {lateFeeSettings?.enabled && eligibleForLateFee.length > 0 && <Badge variant="destructive" className="ml-2">{eligibleForLateFee.length}</Badge>}
+          </TabsTrigger>
         </TabsList>
 
         {/* RECEIPT QUEUE TAB */}
