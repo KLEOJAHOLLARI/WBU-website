@@ -242,8 +242,8 @@ const StudentTranscript = () => {
           </Card>
         </div>
 
-        {/* Filters */}
-        <div className="flex flex-wrap gap-3">
+        {/* Filters + display mode */}
+        <div className="flex flex-wrap items-center gap-3">
           <Select value={yearFilter} onValueChange={setYearFilter}>
             <SelectTrigger className="w-[140px]"><SelectValue placeholder="Year" /></SelectTrigger>
             <SelectContent>
@@ -258,6 +258,10 @@ const StudentTranscript = () => {
               {semesters.map((s) => <SelectItem key={s} value={String(s)}>Semester {s}</SelectItem>)}
             </SelectContent>
           </Select>
+          <div className="ml-auto flex items-center gap-2">
+            <span className="text-xs text-muted-foreground">Show:</span>
+            <GradeDisplayToggle value={displayMode} onChange={setDisplayMode} />
+          </div>
         </div>
 
         {/* Loading state */}
