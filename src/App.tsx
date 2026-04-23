@@ -119,6 +119,7 @@ const App = () => (
             <Route path="/portal/transcript" element={<StudentTranscript />} />
             <Route path="/portal/change-password" element={<ChangePassword />} />
             <Route path="/portal/exams" element={<StudentExamSchedule />} />
+            <Route path="/portal/exams/:id" element={<ExamDetail />} />
             <Route path="/portal/tuition" element={<StudentTuition />} />
             <Route path="/portal/tuition/estimate" element={<StudentTuitionEstimate />} />
             <Route path="/portal/quiz/:quizId" element={<StudentQuiz />} />
