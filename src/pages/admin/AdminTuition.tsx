@@ -41,6 +41,8 @@ const AdminTuition = () => {
   const [chargeDialog, setChargeDialog] = useState<any | null>(null);
   const [payDialog, setPayDialog] = useState<{ charge: Charge; student: any } | null>(null);
   const [viewCharge, setViewCharge] = useState<{ charge: Charge; student: any } | null>(null);
+  const [reviewDialog, setReviewDialog] = useState<{ payment: Payment; mode: "verify" | "reject" } | null>(null);
+  const [reviewNote, setReviewNote] = useState("");
 
   const { data: semesters = [] } = useQuery({
     queryKey: ["adm-tuition-semesters"],
@@ -247,12 +249,80 @@ const AdminTuition = () => {
         </div>
       </div>
 
-      <Tabs defaultValue="charges" className="mt-8">
+      <Tabs defaultValue="queue" className="mt-8">
         <TabsList>
+          <TabsTrigger value="queue">
+            Receipt Queue {pendingReceipts > 0 && <Badge className="ml-2">{pendingReceipts}</Badge>}
+          </TabsTrigger>
           <TabsTrigger value="charges">Charges</TabsTrigger>
-          <TabsTrigger value="payments">Payments {pendingReceipts > 0 && <Badge className="ml-2">{pendingReceipts}</Badge>}</TabsTrigger>
+          <TabsTrigger value="payments">All Payments</TabsTrigger>
           <TabsTrigger value="fees">Program Fees</TabsTrigger>
         </TabsList>
+
+        {/* RECEIPT QUEUE TAB */}
+        <TabsContent value="queue" className="mt-4">
+          <div className="rounded-xl border border-border bg-card">
+            <div className="border-b border-border p-4">
+              <h2 className="font-semibold text-foreground">Student-Uploaded Receipts — Pending Review</h2>
+              <p className="text-sm text-muted-foreground mt-1">Approve or reject student proof-of-payment uploads. Approved payments automatically apply to the charge.</p>
+            </div>
+            <div className="overflow-auto">
+              <Table>
+                <TableHeader>
+                  <TableRow>
+                    <TableHead>Student</TableHead>
+                    <TableHead>Submitted</TableHead>
+                    <TableHead>Payment Date</TableHead>
+                    <TableHead>Amount</TableHead>
+                    <TableHead>Method</TableHead>
+                    <TableHead>Reference</TableHead>
+                    <TableHead>Receipt</TableHead>
+                    <TableHead className="text-right">Action</TableHead>
+                  </TableRow>
+                </TableHeader>
+                <TableBody>
+                  {payments.filter((p) => p.uploaded_by_student && p.verification_status === "pending").length === 0 && (
+                    <TableRow><TableCell colSpan={8} className="text-center text-muted-foreground py-8">No receipts awaiting review. 🎉</TableCell></TableRow>
+                  )}
+                  {payments.filter((p) => p.uploaded_by_student && p.verification_status === "pending").map((p) => {
+                    const st = studentMap[p.user_id];
+                    const charge = charges.find((c) => c.id === p.charge_id);
+                    const sem = charge ? semesterMap[charge.academic_semester_id] : null;
+                    return (
+                      <TableRow key={p.id}>
+                        <TableCell>
+                          <div className="font-medium text-foreground">{st?.full_name || "—"}</div>
+                          <div className="text-xs text-muted-foreground">{st?.student_id || st?.email}</div>
+                          {sem && <div className="text-xs text-muted-foreground mt-0.5">{sem.name}</div>}
+                        </TableCell>
+                        <TableCell className="text-sm">{new Date(p.created_at).toLocaleDateString()}</TableCell>
+                        <TableCell className="text-sm">{new Date(p.payment_date).toLocaleDateString()}</TableCell>
+                        <TableCell className="font-medium">{fmtMoney(Number(p.amount), p.currency)}</TableCell>
+                        <TableCell className="text-sm capitalize">{p.method.replace("_", " ")}</TableCell>
+                        <TableCell className="text-sm text-muted-foreground">{p.reference || "—"}</TableCell>
+                        <TableCell>
+                          {p.receipt_path ? (
+                            <Button size="sm" variant="outline" onClick={() => downloadReceipt(p.receipt_path!)}>
+                              <FileDown className="h-3.5 w-3.5 mr-1" /> View
+                            </Button>
+                          ) : <span className="text-xs text-muted-foreground">No file</span>}
+                        </TableCell>
+                        <TableCell className="text-right space-x-1">
+                          <Button size="sm" className="bg-emerald-600 hover:bg-emerald-700 text-white" onClick={() => { setReviewNote(p.admin_note || ""); setReviewDialog({ payment: p, mode: "verify" }); }}>
+                            <CheckCircle2 className="h-3.5 w-3.5 mr-1" /> Approve
+                          </Button>
+                          <Button size="sm" variant="destructive" onClick={() => { setReviewNote(p.admin_note || ""); setReviewDialog({ payment: p, mode: "reject" }); }}>
+                            <XCircle className="h-3.5 w-3.5 mr-1" /> Reject
+                          </Button>
+                        </TableCell>
+                      </TableRow>
+                    );
+                  })}
+                </TableBody>
+              </Table>
+            </div>
+          </div>
+        </TabsContent>
 
         {/* CHARGES TAB */}
         <TabsContent value="charges" className="mt-4">
@@ -357,8 +427,8 @@ const AdminTuition = () => {
                           )}
                           {p.verification_status === "pending" && (
                             <>
-                              <Button size="sm" variant="outline" onClick={() => verifyPayment.mutate({ id: p.id, status: "verified" })}><CheckCircle2 className="h-3.5 w-3.5 text-emerald-600" /></Button>
-                              <Button size="sm" variant="outline" onClick={() => { const note = prompt("Reason for rejection (optional):") || ""; verifyPayment.mutate({ id: p.id, status: "rejected", note }); }}><XCircle className="h-3.5 w-3.5 text-destructive" /></Button>
+                              <Button size="sm" variant="outline" onClick={() => { setReviewNote(p.admin_note || ""); setReviewDialog({ payment: p, mode: "verify" }); }}><CheckCircle2 className="h-3.5 w-3.5 text-emerald-600" /></Button>
+                              <Button size="sm" variant="outline" onClick={() => { setReviewNote(p.admin_note || ""); setReviewDialog({ payment: p, mode: "reject" }); }}><XCircle className="h-3.5 w-3.5 text-destructive" /></Button>
                             </>
                           )}
                           <Button size="sm" variant="ghost" onClick={() => { if (confirm("Delete payment?")) deletePayment.mutate(p.id); }}><Trash2 className="h-3.5 w-3.5" /></Button>
@@ -555,6 +625,79 @@ const AdminTuition = () => {
               </div>
             </div>
           )}
+        </DialogContent>
+      </Dialog>
+
+      {/* Receipt review dialog */}
+      <Dialog open={!!reviewDialog} onOpenChange={(o) => { if (!o) { setReviewDialog(null); setReviewNote(""); } }}>
+        <DialogContent>
+          <DialogHeader>
+            <DialogTitle>{reviewDialog?.mode === "verify" ? "Approve Payment Receipt" : "Reject Payment Receipt"}</DialogTitle>
+          </DialogHeader>
+          {reviewDialog && (() => {
+            const p = reviewDialog.payment;
+            const st = studentMap[p.user_id];
+            const charge = charges.find((c) => c.id === p.charge_id);
+            const sem = charge ? semesterMap[charge.academic_semester_id] : null;
+            return (
+              <div className="space-y-4">
+                <div className="rounded-lg bg-muted p-3 text-sm space-y-1">
+                  <p className="font-medium text-foreground">{st?.full_name || "—"}</p>
+                  <p className="text-xs text-muted-foreground">{st?.student_id || st?.email}</p>
+                  {sem && <p className="text-xs text-muted-foreground">Semester: {sem.name}</p>}
+                  <div className="flex flex-wrap gap-x-4 gap-y-1 pt-2 text-xs">
+                    <span><span className="text-muted-foreground">Amount:</span> <span className="font-semibold text-foreground">{fmtMoney(Number(p.amount), p.currency)}</span></span>
+                    <span><span className="text-muted-foreground">Date:</span> {new Date(p.payment_date).toLocaleDateString()}</span>
+                    <span><span className="text-muted-foreground">Method:</span> <span className="capitalize">{p.method.replace("_", " ")}</span></span>
+                    {p.reference && <span><span className="text-muted-foreground">Ref:</span> {p.reference}</span>}
+                  </div>
+                </div>
+                {p.receipt_path && (
+                  <Button variant="outline" className="w-full" onClick={() => downloadReceipt(p.receipt_path!)}>
+                    <FileDown className="h-4 w-4 mr-2" /> View Uploaded Receipt
+                  </Button>
+                )}
+                <div>
+                  <Label>{reviewDialog.mode === "verify" ? "Admin note (optional)" : "Reason for rejection"}</Label>
+                  <Textarea
+                    value={reviewNote}
+                    onChange={(e) => setReviewNote(e.target.value)}
+                    placeholder={reviewDialog.mode === "verify" ? "e.g. Verified against bank statement" : "e.g. Receipt unreadable, wrong amount, etc."}
+                    rows={3}
+                  />
+                </div>
+              </div>
+            );
+          })()}
+          <DialogFooter>
+            <Button variant="outline" onClick={() => { setReviewDialog(null); setReviewNote(""); }}>Cancel</Button>
+            {reviewDialog?.mode === "verify" ? (
+              <Button
+                className="bg-emerald-600 hover:bg-emerald-700 text-white"
+                onClick={() => {
+                  verifyPayment.mutate(
+                    { id: reviewDialog.payment.id, status: "verified", note: reviewNote || undefined },
+                    { onSuccess: () => { setReviewDialog(null); setReviewNote(""); } }
+                  );
+                }}
+              >
+                <CheckCircle2 className="h-4 w-4 mr-1" /> Approve Payment
+              </Button>
+            ) : (
+              <Button
+                variant="destructive"
+                disabled={!reviewNote.trim()}
+                onClick={() => {
+                  verifyPayment.mutate(
+                    { id: reviewDialog!.payment.id, status: "rejected", note: reviewNote },
+                    { onSuccess: () => { setReviewDialog(null); setReviewNote(""); } }
+                  );
+                }}
+              >
+                <XCircle className="h-4 w-4 mr-1" /> Reject Payment
+              </Button>
+            )}
+          </DialogFooter>
         </DialogContent>
       </Dialog>
     </AdminLayout>
