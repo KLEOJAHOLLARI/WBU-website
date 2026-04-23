@@ -29,6 +29,7 @@ const navGroups = [
       { to: "/portal/timetable", label: "Timetable", icon: CalendarDays },
       { to: "/portal/exams", label: "Exam Schedule", icon: ClipboardList },
       { to: "/portal/tuition", label: "Tuition", icon: CreditCard },
+      { to: "/portal/tuition/estimate", label: "Tuition Estimate", icon: Calculator },
       { to: "/portal/documents", label: "Documents", icon: Upload },
     ],
   },
