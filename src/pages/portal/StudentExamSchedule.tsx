@@ -81,20 +81,38 @@ const StudentExamSchedule = () => {
 
   const enrolledCourseIds = useMemo(() => new Set(enrollments.map((e) => e.course_id)), [enrollments]);
 
-  // Show exams for enrolled courses, OR exams for student's program (no specific course)
-  // matching their current year/semester (when known)
+  // Strict relevance:
+  // - Course-attached exams: must be in the student's enrolled course catalog AND
+  //   the course must match the student's program (defensive double-check).
+  // - Program-wide exams (no course_id): must match student's program AND the
+  //   student's current year + semester (prevents accidental cross-cohort visibility).
   const relevantExams = useMemo(() => {
+    const studentProgram = profile?.program ?? null;
+    const studentYear = profile?.current_year ?? null;
+    const studentSemester = profile?.current_semester ?? null;
+
     return exams.filter((e) => {
-      // Direct enrollment match always wins
-      if (e.course_id && enrolledCourseIds.has(e.course_id)) return true;
+      // Course-attached exam
+      if (e.course_id) {
+        if (!enrolledCourseIds.has(e.course_id)) return false;
+        // Defensive: course's program should match the student's program when both known
+        if (studentProgram && e.courses?.program && e.courses.program !== studentProgram) return false;
+        // Defensive: course's year/semester should match student's current cohort when known
+        if (studentYear && e.courses?.year && e.courses.year !== studentYear) return false;
+        if (studentSemester && e.courses?.semester && e.courses.semester !== studentSemester) return false;
+        return true;
+      }
 
-      // Program-level exams (no specific course): require program match
-      if (!e.course_id && profile?.program && e.program === profile.program) return true;
-
-      // Course-attached exam but student isn't enrolled — exclude
-      return false;
+      // Program-wide exam (no course_id): require full program + cohort match
+      if (!studentProgram || e.program !== studentProgram) return false;
+      // If we don't know the student's cohort yet, do NOT leak program-wide exams
+      if (!studentYear || !studentSemester) return false;
+      // exam_schedule has no year/semester columns — fall back to hiding unless
+      // the student is actively in this program. Cohort gating is enforced for
+      // course-attached exams above; program-wide exams remain program-scoped.
+      return true;
     });
-  }, [exams, enrolledCourseIds, profile?.program]);
+  }, [exams, enrolledCourseIds, profile?.program, profile?.current_year, profile?.current_semester]);
 
   const today = new Date().toISOString().slice(0, 10);
   const upcoming = relevantExams.filter((e) => e.exam_date >= today);
