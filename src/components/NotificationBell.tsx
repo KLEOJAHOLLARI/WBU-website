@@ -15,7 +15,7 @@ import { formatDistanceToNow } from "date-fns";
 
 type NotificationItem = {
   id: string;
-  type: "grade" | "message" | "application" | "enrollment";
+  type: "grade" | "message" | "application" | "enrollment" | "tuition";
   title: string;
   description: string;
   href: string;
