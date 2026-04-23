@@ -204,9 +204,14 @@ const AdminTranscripts = () => {
                   <h2 className="text-lg font-bold text-foreground">{selectedStudent?.full_name}</h2>
                   <p className="text-sm text-muted-foreground">{selectedStudent?.email} · {selectedStudent?.program || "No program"}</p>
                 </div>
-                <Button onClick={handleDownloadPDF} disabled={loadingTranscript || transcriptRows.length === 0} size="sm" className="gap-2">
-                  <Download className="h-4 w-4" /> Download PDF
-                </Button>
+                <TranscriptDownloadDialog
+                  mode={displayMode}
+                  onModeChange={setDisplayMode}
+                  rows={filteredRows}
+                  onDownload={handleDownloadPDF}
+                  disabled={loadingTranscript || transcriptRows.length === 0}
+                  buttonSize="sm"
+                />
               </div>
 
               <div className="grid grid-cols-2 gap-3 sm:grid-cols-4">
