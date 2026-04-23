@@ -648,6 +648,20 @@ const StudentCourses = () => {
           <p className="mt-1 text-sm text-muted-foreground">Contact administration to get assigned to a program.</p>
         </div>
       )}
+
+      {/* Course detail modal */}
+      <CourseModal
+        modal={modal}
+        onClose={closeModal}
+        onOpenFull={(courseId, tab) => {
+          closeModal();
+          navigate(`/portal/courses/${courseId}?tab=${tab}`);
+        }}
+        attendanceData={attendanceData}
+        allSessions={allSessions}
+        gradesData={gradesData}
+        getProfessor={getProfessor}
+      />
     </StudentLayout>
   );
 };
