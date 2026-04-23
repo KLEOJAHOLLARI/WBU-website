@@ -123,30 +123,46 @@ const AdminTuition = () => {
   });
 
   const generateForSemester = useMutation({
-    mutationFn: async (semesterId: string) => {
-      const semFees = fees.filter((f: any) => f.academic_semester_id === semesterId);
-      if (!semFees.length) throw new Error("No program fees defined for this semester");
+    mutationFn: async ({ semesterId, program, skipExisting }: { semesterId: string; program: string; skipExisting: boolean }) => {
+      const semFees = fees.filter((f: any) =>
+        f.academic_semester_id === semesterId && (program === "all" || f.program === program)
+      );
+      if (!semFees.length) throw new Error("No program fees defined for this selection");
+
+      // Existing charges to skip
+      const existingKeys = new Set(
+        skipExisting
+          ? charges
+              .filter((c) => c.academic_semester_id === semesterId)
+              .map((c) => `${c.user_id}|${c.program}`)
+          : []
+      );
+
       const rows: any[] = [];
       for (const fee of semFees) {
         const targets = students.filter((s: any) => s.program === fee.program);
         for (const s of targets) {
+          if (skipExisting && existingKeys.has(`${s.user_id}|${fee.program}`)) continue;
           rows.push({
             user_id: s.user_id, academic_semester_id: semesterId, program: fee.program,
             amount: fee.amount, currency: fee.currency, due_date: fee.due_date,
           });
         }
       }
-      if (!rows.length) return 0;
-      // Insert one-by-one to skip dup conflicts
-      let created = 0;
+      if (!rows.length) return { created: 0, skipped: 0 };
+      let created = 0, skipped = 0;
       for (const r of rows) {
         const { error } = await supabase.from("tuition_charges").insert(r);
-        if (!error) created++;
+        if (error) skipped++; else created++;
       }
-      return created;
+      return { created, skipped };
     },
-    onSuccess: (n) => { qc.invalidateQueries({ queryKey: ["adm-tuition-charges"] }); toast.success(`${n} charges generated`); },
-    onError: (e: any) => toast.error(e.message),
+    onSuccess: ({ created, skipped }) => {
+      qc.invalidateQueries({ queryKey: ["adm-tuition-charges"] });
+      setBulkDialog(null);
+      toast.success(`${created} charges generated${skipped ? ` · ${skipped} skipped` : ""}`);
+    },
+    onError: (e: any) => { toast.error(e.message); },
   });
 
   const upsertCharge = useMutation({
