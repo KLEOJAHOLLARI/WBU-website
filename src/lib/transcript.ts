@@ -143,8 +143,9 @@ export interface TranscriptSummary {
   totalECTS: number; // passed ECTS (earned)
   totalInstitutionalCredits: number; // sum of ECTS across all rows (enrolled)
   totalTransferCredits: number;
-  cgpa: number;
-  weightedAvg: number;
+  cgpa: number;            // 0.00 – 4.00 (US-style)
+  gpaAlbanian: number;     // 4.00 – 10.00 (Albanian scale, ECTS-weighted average of converted grades)
+  weightedAvg: number;     // 0 – 100 (raw weighted percentage)
   totalCourses: number;
   passedCourses: number;
   completedCourses: number;
@@ -163,6 +164,7 @@ export function computeTranscriptSummary(
 
   let cgpa = 0;
   let weightedAvg = 0;
+  let gpaAlbanian = 0;
   if (completed.length > 0) {
     const totalEctsGraded = completed.reduce((s, r) => s + r.ects, 0);
     if (totalEctsGraded > 0) {
@@ -171,6 +173,9 @@ export function computeTranscriptSummary(
         totalEctsGraded;
       weightedAvg =
         completed.reduce((s, r) => s + r.grade! * r.ects, 0) / totalEctsGraded;
+      gpaAlbanian =
+        completed.reduce((s, r) => s + gradeToAlbanian(r.grade!) * r.ects, 0) /
+        totalEctsGraded;
     }
   }
 
@@ -179,6 +184,7 @@ export function computeTranscriptSummary(
     totalInstitutionalCredits: totalCredits,
     totalTransferCredits: 0,
     cgpa: Math.round(cgpa * 100) / 100,
+    gpaAlbanian: Math.round(gpaAlbanian * 100) / 100,
     weightedAvg: Math.round(weightedAvg * 100) / 100,
     totalCourses: rows.length,
     passedCourses: passed.length,
