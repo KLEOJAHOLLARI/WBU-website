@@ -15,6 +15,7 @@ import {
   computeTranscriptSummary,
   gradeToAlbanian,
   gradeToGPA,
+  gradeToLetter,
   type TranscriptRow,
 } from "@/lib/transcript";
 import { downloadTranscriptPdf } from "@/lib/transcriptPdf";
