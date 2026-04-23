@@ -205,10 +205,27 @@ const NotificationBell = () => {
     refetchInterval: 30000,
   });
 
-  const unreadCount = useMemo(
-    () => notifications.filter((n) => !n.read).length,
-    [notifications]
-  );
+  // Per-user "last seen" timestamp persisted in localStorage. Used for admin/professor
+  // notifications (which have no per-row read flag) so the badge clears when the bell
+  // is opened, and re-appears only for items newer than the last view.
+  const lastSeenKey = user ? `notif-last-seen-${user.id}` : "";
+  const [lastSeen, setLastSeen] = useState<number>(() => {
+    if (typeof window === "undefined" || !lastSeenKey) return 0;
+    return Number(localStorage.getItem(lastSeenKey) || 0);
+  });
+
+  // Re-hydrate when the user changes
+  useEffect(() => {
+    if (!lastSeenKey) return;
+    setLastSeen(Number(localStorage.getItem(lastSeenKey) || 0));
+  }, [lastSeenKey]);
+
+  const unreadCount = useMemo(() => {
+    if (isAdmin || isProfessor) {
+      return notifications.filter((n) => new Date(n.createdAt).getTime() > lastSeen).length;
+    }
+    return notifications.filter((n) => !n.read).length;
+  }, [notifications, isAdmin, isProfessor, lastSeen]);
 
   // Realtime: refresh notifications instantly when grades or messages change for this student
   useEffect(() => {
@@ -306,6 +323,13 @@ const NotificationBell = () => {
 
   const [open, setOpen] = useState(false);
 
+  const bumpLastSeen = () => {
+    if (!lastSeenKey) return;
+    const now = Date.now();
+    localStorage.setItem(lastSeenKey, String(now));
+    setLastSeen(now);
+  };
+
   const markOneRead = async (n: NotificationItem) => {
     if (n.read) return;
 
@@ -336,11 +360,21 @@ const NotificationBell = () => {
       { queryKey: ["notifications"] },
       (old) => (old ? old.map((it) => ({ ...it, read: true })) : old)
     );
+    bumpLastSeen();
     markAllRead.mutate();
   };
 
+  const handleOpenChange = (next: boolean) => {
+    setOpen(next);
+    // When opening the bell, immediately clear the badge for admin/professor
+    // (they have no per-row read flag) and persist the timestamp.
+    if (next && (isAdmin || isProfessor)) {
+      bumpLastSeen();
+    }
+  };
+
   return (
-    <Popover open={open} onOpenChange={setOpen}>
+    <Popover open={open} onOpenChange={handleOpenChange}>
       <PopoverTrigger asChild>
         <Button variant="ghost" size="icon" className="relative h-9 w-9" aria-label="Notifications">
           <Bell className="h-4 w-4" />
