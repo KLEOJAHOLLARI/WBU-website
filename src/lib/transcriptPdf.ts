@@ -107,6 +107,8 @@ export interface BuildTranscriptPdfOptions {
   signatureConfig?: TranscriptSignatureConfig;
   /** Override the computed file name (without extension). */
   fileName?: string;
+  /** How to render each grade in the table (defaults to "full"). */
+  displayMode?: GradeDisplayMode;
 }
 
 /**
