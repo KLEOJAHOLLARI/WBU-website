@@ -374,7 +374,7 @@ const NotificationBell = () => {
   };
 
   return (
-    <Popover open={open} onOpenChange={setOpen}>
+    <Popover open={open} onOpenChange={handleOpenChange}>
       <PopoverTrigger asChild>
         <Button variant="ghost" size="icon" className="relative h-9 w-9" aria-label="Notifications">
           <Bell className="h-4 w-4" />
