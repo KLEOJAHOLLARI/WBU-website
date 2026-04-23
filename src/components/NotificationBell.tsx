@@ -1,4 +1,4 @@
-import { useMemo, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import { Link } from "react-router-dom";
 import { Bell, GraduationCap, Mail, FileText, Check, AlertTriangle } from "lucide-react";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
@@ -209,6 +209,32 @@ const NotificationBell = () => {
     () => notifications.filter((n) => !n.read).length,
     [notifications]
   );
+
+  // Realtime: refresh notifications instantly when grades or messages change for this student
+  useEffect(() => {
+    if (!user || isAdmin || isProfessor) return;
+    const channel = supabase
+      .channel(`notif-${user.id}`)
+      .on(
+        "postgres_changes",
+        { event: "*", schema: "public", table: "grade_notifications", filter: `user_id=eq.${user.id}` },
+        () => {
+          queryClient.invalidateQueries({ queryKey: ["notifications"] });
+        }
+      )
+      .on(
+        "postgres_changes",
+        { event: "*", schema: "public", table: "student_messages", filter: `user_id=eq.${user.id}` },
+        () => {
+          queryClient.invalidateQueries({ queryKey: ["notifications"] });
+          queryClient.invalidateQueries({ queryKey: ["student-unread-messages"] });
+        }
+      )
+      .subscribe();
+    return () => {
+      supabase.removeChannel(channel);
+    };
+  }, [user?.id, isAdmin, isProfessor, queryClient]);
 
   const markAllRead = useMutation({
     mutationFn: async () => {
