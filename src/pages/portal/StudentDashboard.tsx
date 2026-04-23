@@ -108,7 +108,10 @@ const StudentDashboard = () => {
     enabled: !!user,
   });
 
-  // Fetch GPA data
+  // Fetch GPA data — returns both 4.0 GPA and Albanian (10-scale) GPA.
+  // Computed only over courses where ALL components have at least one grade
+  // (matches the transcript "Completed" definition) so the scholarship check
+  // stays consistent across the app.
   const { data: gpaData } = useQuery({
     queryKey: ["student-gpa", user?.id],
     queryFn: async () => {
@@ -116,7 +119,7 @@ const StudentDashboard = () => {
         .from("enrollments")
         .select("id, course_id")
         .eq("user_id", user!.id);
-      if (!enrollments?.length) return { gpa: null, gradedCourses: 0 };
+      if (!enrollments?.length) return { gpa: null, gpaAlbanian: null, gradedCourses: 0 };
 
       const enrollmentIds = enrollments.map((e) => e.id);
       const courseIds = [...new Set(enrollments.map((e) => e.course_id))];
@@ -127,7 +130,7 @@ const StudentDashboard = () => {
         supabase.from("courses").select("id, ects").in("id", courseIds),
       ]);
 
-      if (!grades?.length || !components?.length) return { gpa: null, gradedCourses: 0 };
+      if (!grades?.length || !components?.length) return { gpa: null, gpaAlbanian: null, gradedCourses: 0 };
 
       const ectsMap = Object.fromEntries((courses || []).map((c) => [c.id, c.ects]));
       const compsByCourse: Record<string, typeof components> = {};
@@ -136,6 +139,7 @@ const StudentDashboard = () => {
       }
 
       let totalWeightedGpa = 0;
+      let totalWeightedAlbanian = 0;
       let totalEcts = 0;
       let gradedCourses = 0;
 
@@ -145,26 +149,35 @@ const StudentDashboard = () => {
         const courseGrades = grades.filter((g) => g.enrollment_id === enrollment.id);
         if (!courseGrades.length) continue;
 
-        let coursePercent = 0;
+        // Build a weighted percentage only over components that have at least one score,
+        // then require every component to be graded (matches transcript "Completed").
+        let weightedSum = 0;
         let totalWeight = 0;
+        let gradedComponentCount = 0;
         for (const comp of courseComps) {
-          const compGrades = courseGrades.filter((g) => g.grade_component_id === comp.id);
+          const compGrades = courseGrades.filter((g) => g.grade_component_id === comp.id && g.score !== null);
           if (!compGrades.length) continue;
-          const avg = compGrades.reduce((sum, g) => sum + ((g.score ?? 0) / g.max_score) * 100, 0) / compGrades.length;
-          coursePercent += avg * Number(comp.weight) / 100;
+          gradedComponentCount += 1;
+          const avgPct = compGrades.reduce((sum, g) => sum + (Number(g.score) / Number(g.max_score || 100)) * 100, 0) / compGrades.length;
+          weightedSum += avgPct * Number(comp.weight);
           totalWeight += Number(comp.weight);
         }
-        if (totalWeight === 0) continue;
-        const normalized = (coursePercent / totalWeight) * 100;
-        const courseGpa = Math.min(4.0, (normalized / 100) * 4.0);
+        if (gradedComponentCount !== courseComps.length || totalWeight === 0) continue;
+
+        const coursePct = weightedSum / totalWeight; // 0–100
         const ects = ectsMap[enrollment.course_id] ?? 6;
-        totalWeightedGpa += courseGpa * ects;
+        totalWeightedGpa += percentToGPA(coursePct) * ects;
+        totalWeightedAlbanian += percentToAlbanian(coursePct) * ects;
         totalEcts += ects;
         gradedCourses++;
       }
 
-      if (totalEcts === 0) return { gpa: null, gradedCourses: 0 };
-      return { gpa: Math.round((totalWeightedGpa / totalEcts) * 100) / 100, gradedCourses };
+      if (totalEcts === 0) return { gpa: null, gpaAlbanian: null, gradedCourses: 0 };
+      return {
+        gpa: Math.round((totalWeightedGpa / totalEcts) * 100) / 100,
+        gpaAlbanian: Math.round((totalWeightedAlbanian / totalEcts) * 100) / 100,
+        gradedCourses,
+      };
     },
     enabled: !!user,
   });
