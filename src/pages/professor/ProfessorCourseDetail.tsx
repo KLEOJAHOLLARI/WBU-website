@@ -675,6 +675,7 @@ const ProfessorCourseDetail = () => {
             {/* Add session form */}
             <div className="rounded-xl border border-border bg-card p-4">
               <h3 className="mb-3 text-sm font-semibold text-foreground">New Attendance Session</h3>
+              <p className="mb-3 text-xs text-muted-foreground">Course default: {course?.hours_per_week ?? 2}h/week. You can override the hours for any individual session.</p>
               <div className="flex flex-wrap gap-3 items-end">
                 <div className="min-w-[160px]">
                   <label className="mb-1 block text-xs font-medium text-muted-foreground">Date</label>
@@ -683,6 +684,10 @@ const ProfessorCourseDetail = () => {
                 <div className="w-24">
                   <label className="mb-1 block text-xs font-medium text-muted-foreground">Week #</label>
                   <input type="number" value={sessionWeek} onChange={(e) => setSessionWeek(Number(e.target.value))} className={inputBase} min={1} />
+                </div>
+                <div className="w-24">
+                  <label className="mb-1 block text-xs font-medium text-muted-foreground">Hours</label>
+                  <input type="number" value={sessionHours} onChange={(e) => setSessionHours(Number(e.target.value))} className={inputBase} min={1} max={12} />
                 </div>
                 <button
                   onClick={() => addSession.mutate()}
