@@ -734,6 +734,7 @@ const AdminTuition = () => {
                 {lateFees.length === 0 && <TableRow><TableCell colSpan={6} className="text-center text-muted-foreground">No late fees applied yet.</TableCell></TableRow>}
                 {lateFees.map((lf: any) => {
                   const st = studentMap[lf.user_id];
+                  const parsed = splitLateFeeReason(lf.reason);
                   return (
                     <TableRow key={lf.id}>
                       <TableCell>
@@ -742,13 +743,25 @@ const AdminTuition = () => {
                       </TableCell>
                       <TableCell className="text-sm">{new Date(lf.applied_at).toLocaleDateString()}</TableCell>
                       <TableCell className="font-medium">{fmtMoney(Number(lf.amount), lf.currency)}</TableCell>
-                      <TableCell className="text-sm text-muted-foreground">{lf.reason || "—"}</TableCell>
+                      <TableCell className="text-sm text-muted-foreground">
+                        <div>{parsed.reason || "—"}</div>
+                        {lf.waived && parsed.waive_note && (
+                          <div className="mt-1 text-xs italic">Waive note: {parsed.waive_note}</div>
+                        )}
+                      </TableCell>
                       <TableCell>
                         {lf.waived
                           ? <Badge variant="secondary">Waived</Badge>
                           : <Badge variant="destructive">Active</Badge>}
                       </TableCell>
                       <TableCell className="text-right space-x-1">
+                        <Button
+                          size="sm"
+                          variant="outline"
+                          onClick={() => setEditLateFee({ ...lf, ...parsed })}
+                        >
+                          Edit
+                        </Button>
                         {!lf.waived && (
                           <Button size="sm" variant="outline" onClick={() => waiveLateFee.mutate(lf.id)}>
                             <Undo2 className="h-3.5 w-3.5 mr-1" /> Waive
