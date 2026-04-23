@@ -740,6 +740,7 @@ const ProfessorCourseDetail = () => {
                             <div className="flex flex-col items-center gap-0.5">
                               <span className="text-xs font-semibold text-foreground">W{s.week_number}</span>
                               <span className="text-[10px] text-muted-foreground">{new Date(s.session_date + "T00:00:00").toLocaleDateString("en", { month: "short", day: "numeric" })}</span>
+                              <span className="text-[10px] font-medium text-primary">{(s as any).hours ?? course?.hours_per_week ?? 2}h</span>
                               <div className="flex items-center gap-0.5 mt-0.5">
                                 <button
                                   onClick={() => {
@@ -767,14 +768,18 @@ const ProfessorCourseDetail = () => {
                           </th>
                         ))}
                         <th className="px-4 py-3 text-center text-xs font-semibold uppercase tracking-wider text-muted-foreground">
+                          Hours
+                        </th>
+                        <th className="px-4 py-3 text-center text-xs font-semibold uppercase tracking-wider text-muted-foreground">
                           Rate
                         </th>
                       </tr>
                     </thead>
                     <tbody>
                       {enrollments.map((enr, idx) => {
-                        const pct = getAttPct(enr.id);
-                        const isLow = pct !== null && pct < 75;
+                        const stats = getAttStats(enr.id);
+                        const pct = stats.percentage;
+                        const isLow = pct !== null && pct < threshold;
                         return (
                           <tr key={enr.id} className={`border-b border-border last:border-0 ${isLow ? "bg-red-500/5" : idx % 2 === 0 ? "bg-card" : "bg-secondary/30"}`}>
                             <td className={`sticky left-0 z-10 px-4 py-2.5 font-medium text-foreground ${isLow ? "bg-red-500/5" : idx % 2 === 0 ? "bg-card" : "bg-secondary/30"}`}>
@@ -817,9 +822,12 @@ const ProfessorCourseDetail = () => {
                                 </td>
                               );
                             })}
+                            <td className="px-4 py-2.5 text-center text-xs text-muted-foreground">
+                              {stats.attendedHours}/{stats.totalHours}h
+                            </td>
                             <td className="px-4 py-2.5 text-center">
                               <span className={`inline-block min-w-[48px] rounded-full px-2.5 py-0.5 text-xs font-bold ${
-                                isLow ? "bg-destructive/15 text-destructive" : "bg-emerald-500/15 text-emerald-700"
+                                isLow ? "bg-destructive/15 text-destructive" : pct !== null ? "bg-emerald-500/15 text-emerald-700" : "bg-secondary text-muted-foreground"
                               }`}>
                                 {pct !== null ? `${pct}%` : "—"}
                               </span>
@@ -834,20 +842,20 @@ const ProfessorCourseDetail = () => {
                 {/* Summary stats */}
                 <div className="grid gap-3 sm:grid-cols-3">
                   <div className="rounded-xl border border-border bg-card p-4 text-center">
-                    <p className="text-2xl font-bold text-foreground">{sessions.length}</p>
-                    <p className="text-xs text-muted-foreground">Sessions</p>
+                    <p className="text-2xl font-bold text-foreground">{sessions.reduce((s: number, x: any) => s + (Number(x.hours) || course?.hours_per_week || 2), 0)}h</p>
+                    <p className="text-xs text-muted-foreground">Recorded Hours · {sessions.length} sessions</p>
                   </div>
                   <div className="rounded-xl border border-border bg-card p-4 text-center">
                     <p className="text-2xl font-bold text-emerald-600">
-                      {enrollments.filter((e) => { const p = getAttPct(e.id); return p !== null && p >= 75; }).length}
+                      {enrollments.filter((e) => { const p = getAttPct(e.id); return p !== null && p >= threshold; }).length}
                     </p>
-                    <p className="text-xs text-muted-foreground">Above 75%</p>
+                    <p className="text-xs text-muted-foreground">Eligible (≥{threshold}%)</p>
                   </div>
                   <div className="rounded-xl border border-border bg-card p-4 text-center">
                     <p className="text-2xl font-bold text-destructive">
-                      {enrollments.filter((e) => { const p = getAttPct(e.id); return p !== null && p < 75; }).length}
+                      {enrollments.filter((e) => { const p = getAttPct(e.id); return p !== null && p < threshold; }).length}
                     </p>
-                    <p className="text-xs text-muted-foreground">Below 75%</p>
+                    <p className="text-xs text-muted-foreground">Below {threshold}%</p>
                   </div>
                 </div>
               </>
