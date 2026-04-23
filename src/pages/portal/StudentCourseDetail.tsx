@@ -34,9 +34,38 @@ const progressColor = (pct: number) => {
   return "[&>div]:bg-destructive";
 };
 
+// Albanian academic grading scale (4 = fail, 10 = excellent)
+const toAlbanian = (pct: number): number => {
+  if (pct < 50) return 4;
+  if (pct < 60) return 5;
+  if (pct < 70) return 6;
+  if (pct < 80) return 7;
+  if (pct < 90) return 8;
+  if (pct < 95) return 9;
+  return 10;
+};
+
+type GradingScale = "percent" | "albanian";
+
+const GRADING_SCALE_KEY = "wbu.gradingScale";
+
 const StudentCourseDetail = () => {
   const { id: courseId } = useParams<{ id: string }>();
   const { user } = useAuth();
+  const [gradingScale, setGradingScale] = useState<GradingScale>(() => {
+    if (typeof window === "undefined") return "percent";
+    return (localStorage.getItem(GRADING_SCALE_KEY) as GradingScale) || "percent";
+  });
+
+  useEffect(() => {
+    localStorage.setItem(GRADING_SCALE_KEY, gradingScale);
+  }, [gradingScale]);
+
+  const formatGrade = (pct: number | null): string => {
+    if (pct === null || pct <= 0) return "—";
+    if (gradingScale === "albanian") return String(toAlbanian(pct));
+    return `${Math.round(pct)}%`;
+  };
 
   const { data: course, isLoading: loadingCourse } = useQuery({
     queryKey: ["course", courseId],
