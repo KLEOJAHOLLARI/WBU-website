@@ -376,6 +376,9 @@ const StudentCourseDetail = () => {
                     Evaluation Type
                   </th>
                   <th className="px-5 py-3 text-xs font-semibold uppercase tracking-wider text-muted-foreground">
+                    Date
+                  </th>
+                  <th className="px-5 py-3 text-xs font-semibold uppercase tracking-wider text-muted-foreground">
                     Weight
                   </th>
                   <th className="px-5 py-3 text-right text-xs font-semibold uppercase tracking-wider text-muted-foreground">
