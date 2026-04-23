@@ -25,6 +25,11 @@ export interface TranscriptSignatureConfig {
   admin_name: string;
   title: string;
   label: string;
+  /** Text rendered as the stylised signature. Falls back to admin_name. */
+  signature_text?: string;
+  /** Font style for the signature text. */
+  signature_font?: "script" | "italic" | "bold";
+  /** Legacy — image-based signature (kept for backwards compat, no longer used). */
   signature_path: string | null;
 }
 
@@ -34,6 +39,8 @@ const DEFAULT_SIGNATURE_CONFIG: TranscriptSignatureConfig = {
   admin_name: "",
   title: "Registrar",
   label: "Verified by Administration",
+  signature_text: "",
+  signature_font: "script",
   signature_path: null,
 };
 
