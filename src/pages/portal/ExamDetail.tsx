@@ -9,7 +9,7 @@ import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import {
   ArrowLeft, CalendarDays, Clock, MapPin, User, BookOpen,
-  GraduationCap, FileText, AlertCircle,
+  GraduationCap, FileText, AlertCircle, Pencil,
 } from "lucide-react";
 
 type ExamRow = {
