@@ -250,15 +250,35 @@ const NotificationBell = () => {
 
   const markOneRead = async (n: NotificationItem) => {
     if (n.read) return;
-    if (n.id.startsWith("grade-")) {
-      const id = n.id.slice("grade-".length);
-      await supabase.from("grade_notifications").update({ is_read: true }).eq("id", id);
-    } else if (n.id.startsWith("msg-")) {
-      const id = n.id.slice("msg-".length);
-      await supabase.from("student_messages").update({ is_read: true }).eq("id", id);
+
+    // Optimistic update across all matching notification caches so the badge
+    // and list update immediately without waiting for a refetch.
+    queryClient.setQueriesData<NotificationItem[]>(
+      { queryKey: ["notifications"] },
+      (old) => (old ? old.map((it) => (it.id === n.id ? { ...it, read: true } : it)) : old)
+    );
+
+    try {
+      if (n.id.startsWith("grade-")) {
+        const id = n.id.slice("grade-".length);
+        await supabase.from("grade_notifications").update({ is_read: true }).eq("id", id);
+      } else if (n.id.startsWith("msg-")) {
+        const id = n.id.slice("msg-".length);
+        await supabase.from("student_messages").update({ is_read: true }).eq("id", id);
+      }
+    } finally {
+      queryClient.invalidateQueries({ queryKey: ["notifications"] });
+      queryClient.invalidateQueries({ queryKey: ["student-unread-messages"] });
     }
-    queryClient.invalidateQueries({ queryKey: ["notifications"] });
-    queryClient.invalidateQueries({ queryKey: ["student-unread-messages"] });
+  };
+
+  // Optimistic mark-all-read for instant badge update
+  const handleMarkAllRead = () => {
+    queryClient.setQueriesData<NotificationItem[]>(
+      { queryKey: ["notifications"] },
+      (old) => (old ? old.map((it) => ({ ...it, read: true })) : old)
+    );
+    markAllRead.mutate();
   };
 
   return (
