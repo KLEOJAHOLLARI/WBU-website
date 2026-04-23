@@ -826,7 +826,8 @@ const AdminTuition = () => {
                       </TableCell>
                     </TableRow>
                   );
-                })}
+                  });
+                })()}
               </TableBody>
             </Table>
           </div>
