@@ -459,6 +459,7 @@ const ProfessorCourseDetail = () => {
     { key: "attendance", label: "Attendance", icon: CalendarDays },
     { key: "grades", label: "Grades", icon: ClipboardCheck },
     { key: "quizzes", label: "Quizzes", icon: HelpCircle },
+    { key: "syllabus", label: "Syllabus", icon: BookOpen },
     { key: "materials", label: "Materials", icon: FileText },
     { key: "messages", label: "Messages", icon: Mail },
     { key: "analytics", label: "Analytics", icon: PieChartIcon },
