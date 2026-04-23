@@ -1159,6 +1159,92 @@ export type Database = {
         }
         Relationships: []
       }
+      tuition_late_fee_settings: {
+        Row: {
+          amount: number
+          currency: string
+          enabled: boolean
+          fee_type: string
+          grace_days: number
+          id: string
+          max_fee: number | null
+          updated_at: string
+          updated_by: string | null
+        }
+        Insert: {
+          amount?: number
+          currency?: string
+          enabled?: boolean
+          fee_type?: string
+          grace_days?: number
+          id?: string
+          max_fee?: number | null
+          updated_at?: string
+          updated_by?: string | null
+        }
+        Update: {
+          amount?: number
+          currency?: string
+          enabled?: boolean
+          fee_type?: string
+          grace_days?: number
+          id?: string
+          max_fee?: number | null
+          updated_at?: string
+          updated_by?: string | null
+        }
+        Relationships: []
+      }
+      tuition_late_fees: {
+        Row: {
+          amount: number
+          applied_at: string
+          charge_id: string
+          created_by: string | null
+          currency: string
+          id: string
+          reason: string | null
+          user_id: string
+          waived: boolean
+          waived_at: string | null
+          waived_by: string | null
+        }
+        Insert: {
+          amount?: number
+          applied_at?: string
+          charge_id: string
+          created_by?: string | null
+          currency?: string
+          id?: string
+          reason?: string | null
+          user_id: string
+          waived?: boolean
+          waived_at?: string | null
+          waived_by?: string | null
+        }
+        Update: {
+          amount?: number
+          applied_at?: string
+          charge_id?: string
+          created_by?: string | null
+          currency?: string
+          id?: string
+          reason?: string | null
+          user_id?: string
+          waived?: boolean
+          waived_at?: string | null
+          waived_by?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "tuition_late_fees_charge_id_fkey"
+            columns: ["charge_id"]
+            isOneToOne: true
+            referencedRelation: "tuition_charges"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       tuition_payments: {
         Row: {
           admin_note: string | null

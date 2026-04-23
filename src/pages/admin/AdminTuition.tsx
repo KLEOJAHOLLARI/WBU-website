@@ -17,7 +17,8 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import { Checkbox } from "@/components/ui/checkbox";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { toast } from "sonner";
-import { CreditCard, Plus, Trash2, CheckCircle2, XCircle, AlertCircle, Wallet, Receipt, FileDown } from "lucide-react";
+import { CreditCard, Plus, Trash2, CheckCircle2, XCircle, AlertCircle, Wallet, Receipt, FileDown, Gavel, Settings2, Undo2 } from "lucide-react";
+import { Switch } from "@/components/ui/switch";
 
 type Charge = {
   id: string; user_id: string; academic_semester_id: string; program: string;
@@ -49,6 +50,8 @@ const AdminTuition = () => {
   const [reviewDialog, setReviewDialog] = useState<{ payment: Payment; mode: "verify" | "reject" } | null>(null);
   const [reviewNote, setReviewNote] = useState("");
   const [bulkDialog, setBulkDialog] = useState<{ semesterId: string; program: string; skipExisting: boolean } | null>(null);
+  const [lateFeeSettingsDraft, setLateFeeSettingsDraft] = useState<any | null>(null);
+  const [applyLateFeesOpen, setApplyLateFeesOpen] = useState(false);
 
   const { data: semesters = [] } = useQuery({
     queryKey: ["adm-tuition-semesters"],
@@ -98,8 +101,25 @@ const AdminTuition = () => {
     },
   });
 
+  const { data: lateFeeSettings } = useQuery({
+    queryKey: ["adm-late-fee-settings"],
+    queryFn: async () => {
+      const { data } = await supabase.from("tuition_late_fee_settings").select("*").order("updated_at", { ascending: false }).limit(1).maybeSingle();
+      return data;
+    },
+  });
+
+  const { data: lateFees = [] } = useQuery({
+    queryKey: ["adm-late-fees"],
+    queryFn: async () => {
+      const { data } = await supabase.from("tuition_late_fees").select("*").order("applied_at", { ascending: false });
+      return data || [];
+    },
+  });
+
   const studentMap = Object.fromEntries(students.map((s: any) => [s.user_id, s]));
   const semesterMap = Object.fromEntries(semesters.map((s: any) => [s.id, s]));
+  const lateFeeByCharge = Object.fromEntries(lateFees.map((lf: any) => [lf.charge_id, lf]));
 
   // Mutations
   const upsertFee = useMutation({
@@ -244,7 +264,100 @@ const AdminTuition = () => {
     },
   });
 
-  // Stats
+  // ===== LATE FEE LOGIC =====
+  const computeLateFee = (chargeAmount: number, settings: any) => {
+    if (!settings || !settings.enabled) return 0;
+    const raw = settings.fee_type === "percent"
+      ? +(Number(chargeAmount) * Number(settings.amount) / 100).toFixed(2)
+      : Number(settings.amount);
+    const capped = settings.max_fee != null ? Math.min(raw, Number(settings.max_fee)) : raw;
+    return Math.max(0, +capped.toFixed(2));
+  };
+
+  // For preview: which charges would get a NEW late fee right now
+  const eligibleForLateFee = (() => {
+    if (!lateFeeSettings?.enabled) return [];
+    const grace = Number(lateFeeSettings.grace_days || 0);
+    const cutoff = Date.now() - grace * 24 * 60 * 60 * 1000;
+    return charges.filter((c) => {
+      if (!c.due_date) return false;
+      if (c.status === "paid" || c.status === "waived") return false;
+      if (new Date(c.due_date).getTime() > cutoff) return false;
+      const existing = lateFeeByCharge[c.id];
+      return !existing || existing.waived; // re-apply only if previously waived? skip — only if none exists
+    }).filter((c) => !lateFeeByCharge[c.id]); // never duplicate; UNIQUE on charge_id
+  })();
+
+  const eligiblePreviewTotal = eligibleForLateFee.reduce((s, c) => s + computeLateFee(Number(c.amount), lateFeeSettings), 0);
+
+  const saveLateFeeSettings = useMutation({
+    mutationFn: async (s: any) => {
+      const payload = {
+        enabled: !!s.enabled,
+        fee_type: s.fee_type === "percent" ? "percent" : "fixed",
+        amount: Number(s.amount) || 0,
+        grace_days: Math.max(0, Math.floor(Number(s.grace_days) || 0)),
+        max_fee: s.max_fee === "" || s.max_fee == null ? null : Number(s.max_fee),
+        currency: s.currency || "EUR",
+        updated_at: new Date().toISOString(),
+      };
+      if (s.id) {
+        const { error } = await supabase.from("tuition_late_fee_settings").update(payload).eq("id", s.id);
+        if (error) throw error;
+      } else {
+        const { error } = await supabase.from("tuition_late_fee_settings").insert(payload);
+        if (error) throw error;
+      }
+    },
+    onSuccess: () => {
+      qc.invalidateQueries({ queryKey: ["adm-late-fee-settings"] });
+      setLateFeeSettingsDraft(null);
+      toast.success("Late fee settings saved");
+    },
+    onError: (e: any) => toast.error(e.message),
+  });
+
+  const applyLateFees = useMutation({
+    mutationFn: async () => {
+      if (!lateFeeSettings?.enabled) throw new Error("Late fees are disabled");
+      let applied = 0, skipped = 0;
+      for (const c of eligibleForLateFee) {
+        const fee = computeLateFee(Number(c.amount), lateFeeSettings);
+        if (fee <= 0) { skipped++; continue; }
+        const reason = `${lateFeeSettings.fee_type === "percent" ? `${lateFeeSettings.amount}% of ${fmtMoney(Number(c.amount), c.currency)}` : `Flat fee`} after ${lateFeeSettings.grace_days}-day grace period`;
+        const { error } = await supabase.from("tuition_late_fees").insert({
+          charge_id: c.id, user_id: c.user_id, amount: fee, currency: c.currency, reason,
+        });
+        if (error) skipped++; else applied++;
+      }
+      return { applied, skipped };
+    },
+    onSuccess: ({ applied, skipped }) => {
+      qc.invalidateQueries({ queryKey: ["adm-late-fees"] });
+      setApplyLateFeesOpen(false);
+      toast.success(`Applied ${applied} late fee${applied !== 1 ? "s" : ""}${skipped ? ` · ${skipped} skipped` : ""}`);
+    },
+    onError: (e: any) => toast.error(e.message),
+  });
+
+  const waiveLateFee = useMutation({
+    mutationFn: async (id: string) => {
+      const { error } = await supabase.from("tuition_late_fees")
+        .update({ waived: true, waived_at: new Date().toISOString() })
+        .eq("id", id);
+      if (error) throw error;
+    },
+    onSuccess: () => { qc.invalidateQueries({ queryKey: ["adm-late-fees"] }); toast.success("Late fee waived"); },
+    onError: (e: any) => toast.error(e.message),
+  });
+
+  const deleteLateFee = useMutation({
+    mutationFn: async (id: string) => {
+      const { error } = await supabase.from("tuition_late_fees").delete().eq("id", id);
+      if (error) throw error;
+    },
+    onSuccess: () => { qc.invalidateQueries({ queryKey: ["adm-late-fees"] }); toast.success("Late fee removed"); },
+  });
   const totalCharged = charges.reduce((s, c) => s + Number(c.amount), 0);
   const verifiedPayments = payments.filter((p) => p.verification_status === "verified");
   const totalCollected = verifiedPayments.reduce((s, p) => s + Number(p.amount), 0);
@@ -297,6 +410,9 @@ const AdminTuition = () => {
           <TabsTrigger value="charges">Charges</TabsTrigger>
           <TabsTrigger value="payments">All Payments</TabsTrigger>
           <TabsTrigger value="fees">Program Fees</TabsTrigger>
+          <TabsTrigger value="latefees">
+            Late Fees {lateFeeSettings?.enabled && eligibleForLateFee.length > 0 && <Badge variant="destructive" className="ml-2">{eligibleForLateFee.length}</Badge>}
+          </TabsTrigger>
         </TabsList>
 
         {/* RECEIPT QUEUE TAB */}
@@ -525,7 +641,176 @@ const AdminTuition = () => {
             </Table>
           </div>
         </TabsContent>
+
+        {/* LATE FEES TAB */}
+        <TabsContent value="latefees" className="mt-4 space-y-4">
+          <div className="rounded-xl border border-border bg-card p-5">
+            <div className="flex flex-wrap items-start justify-between gap-3">
+              <div className="flex items-start gap-3">
+                <Settings2 className="h-5 w-5 text-primary mt-0.5" />
+                <div>
+                  <h2 className="font-semibold text-foreground">Late Fee Settings</h2>
+                  <p className="text-sm text-muted-foreground">
+                    {lateFeeSettings?.enabled ? (
+                      <>
+                        <span className="text-emerald-600 font-medium">Enabled</span> — {lateFeeSettings.fee_type === "percent"
+                          ? `${lateFeeSettings.amount}% of charge`
+                          : `${fmtMoney(Number(lateFeeSettings.amount), lateFeeSettings.currency)} flat`} after a {lateFeeSettings.grace_days}-day grace period
+                        {lateFeeSettings.max_fee != null && ` (max ${fmtMoney(Number(lateFeeSettings.max_fee), lateFeeSettings.currency)})`}
+                      </>
+                    ) : <span className="text-muted-foreground">Late fees are currently disabled.</span>}
+                  </p>
+                </div>
+              </div>
+              <Button variant="outline" onClick={() => setLateFeeSettingsDraft(lateFeeSettings || { enabled: false, fee_type: "fixed", amount: 25, grace_days: 7, currency: "EUR" })}>
+                <Settings2 className="h-4 w-4 mr-1" /> Configure
+              </Button>
+            </div>
+          </div>
+
+          {lateFeeSettings?.enabled && (
+            <div className="rounded-xl border border-amber-500/30 bg-amber-500/5 p-5">
+              <div className="flex flex-wrap items-center justify-between gap-3">
+                <div>
+                  <h3 className="font-semibold text-foreground flex items-center gap-2"><Gavel className="h-4 w-4" /> Apply Late Fees Now</h3>
+                  <p className="text-sm text-muted-foreground mt-1">
+                    {eligibleForLateFee.length} overdue charge{eligibleForLateFee.length !== 1 ? "s" : ""} eligible · estimated {fmtMoney(eligiblePreviewTotal, lateFeeSettings.currency)} in fees
+                  </p>
+                </div>
+                <Button onClick={() => setApplyLateFeesOpen(true)} disabled={eligibleForLateFee.length === 0}>
+                  <Gavel className="h-4 w-4 mr-1" /> Apply to {eligibleForLateFee.length} Charge{eligibleForLateFee.length !== 1 ? "s" : ""}
+                </Button>
+              </div>
+            </div>
+          )}
+
+          <div className="rounded-xl border border-border bg-card">
+            <div className="border-b border-border p-4">
+              <h2 className="font-semibold text-foreground">Applied Late Fees</h2>
+            </div>
+            <Table>
+              <TableHeader>
+                <TableRow>
+                  <TableHead>Student</TableHead>
+                  <TableHead>Applied</TableHead>
+                  <TableHead>Amount</TableHead>
+                  <TableHead>Reason</TableHead>
+                  <TableHead>Status</TableHead>
+                  <TableHead></TableHead>
+                </TableRow>
+              </TableHeader>
+              <TableBody>
+                {lateFees.length === 0 && <TableRow><TableCell colSpan={6} className="text-center text-muted-foreground">No late fees applied yet.</TableCell></TableRow>}
+                {lateFees.map((lf: any) => {
+                  const st = studentMap[lf.user_id];
+                  return (
+                    <TableRow key={lf.id}>
+                      <TableCell>
+                        <div className="font-medium text-foreground">{st?.full_name || "—"}</div>
+                        <div className="text-xs text-muted-foreground">{st?.student_id || st?.email}</div>
+                      </TableCell>
+                      <TableCell className="text-sm">{new Date(lf.applied_at).toLocaleDateString()}</TableCell>
+                      <TableCell className="font-medium">{fmtMoney(Number(lf.amount), lf.currency)}</TableCell>
+                      <TableCell className="text-sm text-muted-foreground">{lf.reason || "—"}</TableCell>
+                      <TableCell>
+                        {lf.waived
+                          ? <Badge variant="secondary">Waived</Badge>
+                          : <Badge variant="destructive">Active</Badge>}
+                      </TableCell>
+                      <TableCell className="text-right space-x-1">
+                        {!lf.waived && (
+                          <Button size="sm" variant="outline" onClick={() => waiveLateFee.mutate(lf.id)}>
+                            <Undo2 className="h-3.5 w-3.5 mr-1" /> Waive
+                          </Button>
+                        )}
+                        <Button size="sm" variant="ghost" onClick={() => { if (confirm("Remove this late fee record?")) deleteLateFee.mutate(lf.id); }}>
+                          <Trash2 className="h-3.5 w-3.5" />
+                        </Button>
+                      </TableCell>
+                    </TableRow>
+                  );
+                })}
+              </TableBody>
+            </Table>
+          </div>
+        </TabsContent>
       </Tabs>
+
+      {/* Late fee settings dialog */}
+      <Dialog open={!!lateFeeSettingsDraft} onOpenChange={(o) => !o && setLateFeeSettingsDraft(null)}>
+        <DialogContent>
+          <DialogHeader><DialogTitle>Late Fee Settings</DialogTitle></DialogHeader>
+          {lateFeeSettingsDraft && (
+            <div className="space-y-4">
+              <div className="flex items-center justify-between rounded-lg border border-border p-3">
+                <div>
+                  <Label className="text-sm">Enable late fees</Label>
+                  <p className="text-xs text-muted-foreground">When on, you can apply fees to overdue charges.</p>
+                </div>
+                <Switch checked={!!lateFeeSettingsDraft.enabled} onCheckedChange={(v) => setLateFeeSettingsDraft({ ...lateFeeSettingsDraft, enabled: v })} />
+              </div>
+              <div className="grid grid-cols-2 gap-3">
+                <div>
+                  <Label>Fee type</Label>
+                  <Select value={lateFeeSettingsDraft.fee_type} onValueChange={(v) => setLateFeeSettingsDraft({ ...lateFeeSettingsDraft, fee_type: v })}>
+                    <SelectTrigger><SelectValue /></SelectTrigger>
+                    <SelectContent>
+                      <SelectItem value="fixed">Fixed amount</SelectItem>
+                      <SelectItem value="percent">Percentage of charge</SelectItem>
+                    </SelectContent>
+                  </Select>
+                </div>
+                <div>
+                  <Label>{lateFeeSettingsDraft.fee_type === "percent" ? "Percent (%)" : "Amount"}</Label>
+                  <Input type="number" step="0.01" value={lateFeeSettingsDraft.amount ?? ""} onChange={(e) => setLateFeeSettingsDraft({ ...lateFeeSettingsDraft, amount: e.target.value })} />
+                </div>
+              </div>
+              <div className="grid grid-cols-2 gap-3">
+                <div>
+                  <Label>Grace period (days)</Label>
+                  <Input type="number" min="0" value={lateFeeSettingsDraft.grace_days ?? 0} onChange={(e) => setLateFeeSettingsDraft({ ...lateFeeSettingsDraft, grace_days: e.target.value })} />
+                </div>
+                <div>
+                  <Label>Max fee (optional cap)</Label>
+                  <Input type="number" step="0.01" value={lateFeeSettingsDraft.max_fee ?? ""} onChange={(e) => setLateFeeSettingsDraft({ ...lateFeeSettingsDraft, max_fee: e.target.value })} placeholder="No cap" />
+                </div>
+              </div>
+              <div>
+                <Label>Currency</Label>
+                <Input value={lateFeeSettingsDraft.currency || "EUR"} onChange={(e) => setLateFeeSettingsDraft({ ...lateFeeSettingsDraft, currency: e.target.value })} />
+              </div>
+            </div>
+          )}
+          <DialogFooter>
+            <Button variant="outline" onClick={() => setLateFeeSettingsDraft(null)}>Cancel</Button>
+            <Button onClick={() => saveLateFeeSettings.mutate(lateFeeSettingsDraft)} disabled={saveLateFeeSettings.isPending}>Save</Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
+
+      {/* Apply late fees confirmation */}
+      <AlertDialog open={applyLateFeesOpen} onOpenChange={setApplyLateFeesOpen}>
+        <AlertDialogContent>
+          <AlertDialogHeader>
+            <AlertDialogTitle>Apply late fees?</AlertDialogTitle>
+            <AlertDialogDescription asChild>
+              <div className="space-y-2 text-sm text-muted-foreground">
+                <p>
+                  This will apply a late fee to <span className="font-semibold text-foreground">{eligibleForLateFee.length}</span> overdue charge{eligibleForLateFee.length !== 1 ? "s" : ""} that are past the {lateFeeSettings?.grace_days}-day grace period.
+                </p>
+                <p>
+                  Estimated total: <span className="font-semibold text-foreground">{fmtMoney(eligiblePreviewTotal, lateFeeSettings?.currency)}</span>
+                </p>
+                <p className="text-xs">Charges that already have a late fee will be skipped (one fee per charge).</p>
+              </div>
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+          <AlertDialogFooter>
+            <AlertDialogCancel>Cancel</AlertDialogCancel>
+            <AlertDialogAction onClick={() => applyLateFees.mutate()}>Apply Late Fees</AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
 
       {/* Fee Dialog */}
       <Dialog open={!!feeDialog} onOpenChange={(o) => !o && setFeeDialog(null)}>

@@ -77,6 +77,18 @@ const StudentTuition = () => {
       return data || [];
     },
   });
+
+  const { data: lateFees = [] } = useQuery({
+    queryKey: ["student-late-fees", user?.id],
+    queryFn: async () => {
+      const { data } = await supabase.from("tuition_late_fees").select("*").eq("user_id", user!.id).order("applied_at", { ascending: false });
+      return data || [];
+    },
+    enabled: !!user,
+  });
+  const lateFeeByCharge = Object.fromEntries(lateFees.map((lf: any) => [lf.charge_id, lf]));
+  const activeLateFees = lateFees.filter((lf: any) => !lf.waived);
+  const totalLateFees = activeLateFees.reduce((s: number, lf: any) => s + Number(lf.amount), 0);
   const semMap = Object.fromEntries(semesters.map((s: any) => [s.id, s]));
 
   const scholarshipPct = Math.max(0, Math.min(100, Number(profile?.scholarship_percentage || 0)));
@@ -199,6 +211,19 @@ const StudentTuition = () => {
         </div>
       </div>
 
+      {/* Late fees banner */}
+      {totalLateFees > 0 && (
+        <div className="mt-6 rounded-xl border border-destructive/30 bg-destructive/5 p-4 flex items-center gap-3">
+          <AlertTriangle className="h-5 w-5 text-destructive shrink-0" />
+          <div className="flex-1 min-w-0">
+            <p className="text-sm font-semibold text-destructive">Late fees applied</p>
+            <p className="text-xs text-destructive/80">
+              {activeLateFees.length} late fee{activeLateFees.length !== 1 ? "s" : ""} totalling {fmtMoney(totalLateFees, activeLateFees[0]?.currency)} have been added to your overdue charges.
+            </p>
+          </div>
+        </div>
+      )}
+
       {/* Overdue alert */}
       {overdue.length > 0 && (
         <div className="mt-6 rounded-xl border border-destructive/30 bg-destructive/5 p-5">
@@ -256,6 +281,14 @@ const StudentTuition = () => {
                     </div>
                     {c.due_date && <p className="mt-1 text-sm text-muted-foreground">Due {new Date(c.due_date).toLocaleDateString()}</p>}
                     {c.notes && <p className="mt-1 text-xs text-muted-foreground">{c.notes}</p>}
+                    {lateFeeByCharge[c.id] && !lateFeeByCharge[c.id].waived && (
+                      <p className="mt-1.5 inline-flex items-center gap-1 rounded-md bg-destructive/10 px-2 py-0.5 text-xs font-medium text-destructive">
+                        Late fee applied: +{fmtMoney(Number(lateFeeByCharge[c.id].amount), lateFeeByCharge[c.id].currency)}
+                      </p>
+                    )}
+                    {lateFeeByCharge[c.id]?.waived && (
+                      <p className="mt-1.5 text-xs text-muted-foreground">Late fee waived ({fmtMoney(Number(lateFeeByCharge[c.id].amount), lateFeeByCharge[c.id].currency)})</p>
+                    )}
                   </div>
                   <div className="text-right">
                     <p className="font-display text-xl font-bold text-foreground">{fmtMoney(Number(c.amount), c.currency)}</p>
