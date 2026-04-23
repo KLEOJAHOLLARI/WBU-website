@@ -129,7 +129,7 @@ const AdminTuition = () => {
       );
       if (!semFees.length) throw new Error("No program fees defined for this selection");
 
-      // Existing charges to skip
+      // Existing keys (user|program|semester) — skip students who already have ANY installment
       const existingKeys = new Set(
         skipExisting
           ? charges
@@ -143,9 +143,27 @@ const AdminTuition = () => {
         const targets = students.filter((s: any) => s.program === fee.program);
         for (const s of targets) {
           if (skipExisting && existingKeys.has(`${s.user_id}|${fee.program}`)) continue;
-          rows.push({
-            user_id: s.user_id, academic_semester_id: semesterId, program: fee.program,
-            amount: fee.amount, currency: fee.currency, due_date: fee.due_date,
+
+          const scholarshipPct = Math.max(0, Math.min(100, Number(s.scholarship_percentage || 0)));
+          const annual = Number(fee.amount) || 0;
+          const netAnnual = +(annual * (100 - scholarshipPct) / 100).toFixed(2);
+          if (netAnnual <= 0) continue; // 100% scholarship => no charges
+
+          // Split into 4 installments (last one absorbs rounding remainder)
+          const base = Math.floor((netAnnual / 4) * 100) / 100;
+          const installments = [base, base, base, +(netAnnual - base * 3).toFixed(2)];
+
+          // Due dates: fee.due_date as installment 1, +1mo, +2mo, +3mo
+          const baseDue = fee.due_date ? new Date(fee.due_date) : null;
+          installments.forEach((amt, idx) => {
+            const due = baseDue
+              ? (() => { const d = new Date(baseDue); d.setMonth(d.getMonth() + idx); return d.toISOString().slice(0, 10); })()
+              : null;
+            rows.push({
+              user_id: s.user_id, academic_semester_id: semesterId, program: fee.program,
+              amount: amt, currency: fee.currency, due_date: due,
+              notes: `Installment ${idx + 1} of 4 · Annual ${fmtMoney(annual, fee.currency)}${scholarshipPct ? ` · Scholarship ${scholarshipPct}%` : ""}`,
+            });
           });
         }
       }
@@ -160,7 +178,7 @@ const AdminTuition = () => {
     onSuccess: ({ created, skipped }) => {
       qc.invalidateQueries({ queryKey: ["adm-tuition-charges"] });
       setBulkDialog(null);
-      toast.success(`${created} charges generated${skipped ? ` · ${skipped} skipped` : ""}`);
+      toast.success(`${created} installment${created !== 1 ? "s" : ""} generated${skipped ? ` · ${skipped} skipped` : ""}`);
     },
     onError: (e: any) => { toast.error(e.message); },
   });
