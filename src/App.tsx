@@ -59,6 +59,7 @@ import DevToolbar from "./components/DevToolbar";
 import FacultyProfile from "./pages/FacultyProfile";
 import AdminTuition from "./pages/admin/AdminTuition";
 import StudentTuition from "./pages/portal/StudentTuition";
+import StudentTuitionEstimate from "./pages/portal/StudentTuitionEstimate";
 
 const queryClient = new QueryClient();
 
