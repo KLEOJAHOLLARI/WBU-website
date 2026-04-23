@@ -6,7 +6,7 @@ import { supabase } from "@/integrations/supabase/client";
 import {
   GraduationCap, LayoutDashboard, BookOpen, Newspaper, Mail, FileText, Users,
   LogOut, CalendarDays, UserPlus, Megaphone, UserCircle, UserCheck, Menu, ScrollText, ArrowLeft,
-  BarChart3, Calendar, CreditCard,
+  BarChart3, Calendar, CreditCard, ShieldCheck,
 } from "lucide-react";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Sheet, SheetContent, SheetTrigger } from "@/components/ui/sheet";
@@ -39,6 +39,7 @@ const navGroups: { label: string; items: { to: string; label: string; icon: any;
     items: [
       { to: "/admin/applications", label: "Applications", icon: FileText, badgeKey: "applications" },
       { to: "/admin/transcripts", label: "Transcripts", icon: ScrollText },
+      { to: "/admin/transcripts/settings", label: "Transcript Settings", icon: ShieldCheck },
       { to: "/admin/timetable", label: "Timetable", icon: CalendarDays },
       { to: "/admin/exams", label: "Exam Schedule", icon: CalendarDays },
       { to: "/admin/graduation", label: "Graduation", icon: GraduationCap },
