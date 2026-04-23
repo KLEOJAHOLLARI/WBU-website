@@ -14,9 +14,10 @@ import {
   buildTranscriptRows,
   computeTranscriptSummary,
   gradeToLetter,
-  gradeToGPA,
+  gradeToAlbanian,
   type TranscriptRow,
 } from "@/lib/transcript";
+import { SCHOLARSHIP_GPA_THRESHOLD } from "@/lib/grading";
 import { downloadTranscriptPdf } from "@/lib/transcriptPdf";
 
 const StudentTranscript = () => {
@@ -137,7 +138,9 @@ const StudentTranscript = () => {
               {row.grade !== null ? (
                 <span className="font-semibold">
                   {row.grade.toFixed(1)}%{" "}
-                  <span className="text-xs text-muted-foreground">({gradeToLetter(row.grade)})</span>
+                  <span className="text-xs text-muted-foreground">
+                    → {gradeToAlbanian(row.grade)} ({gradeToLetter(row.grade)})
+                  </span>
                 </span>
               ) : (
                 <span className="text-muted-foreground">—</span>
