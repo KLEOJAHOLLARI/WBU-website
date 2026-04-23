@@ -182,10 +182,13 @@ const StudentTranscript = () => {
               {profile?.full_name} · {studentProgram || "No program assigned"}
             </p>
           </div>
-          <Button onClick={handleDownloadPDF} disabled={isLoading || transcriptRows.length === 0} className="gap-2">
-            <Download className="h-4 w-4" />
-            Download PDF
-          </Button>
+          <TranscriptDownloadDialog
+            mode={displayMode}
+            onModeChange={setDisplayMode}
+            rows={filteredRows}
+            onDownload={handleDownloadPDF}
+            disabled={isLoading || transcriptRows.length === 0}
+          />
         </div>
 
         {/* Summary Cards */}
