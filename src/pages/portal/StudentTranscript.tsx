@@ -139,7 +139,7 @@ const StudentTranscript = () => {
                 <span className="font-semibold">
                   {row.grade.toFixed(1)}%{" "}
                   <span className="text-xs text-muted-foreground">
-                    → {gradeToAlbanian(row.grade)} ({gradeToLetter(row.grade)})
+                    → {gradeToAlbanian(row.grade)}
                   </span>
                 </span>
               ) : (

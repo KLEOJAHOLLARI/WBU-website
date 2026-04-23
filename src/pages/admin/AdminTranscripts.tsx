@@ -13,7 +13,7 @@ import { Download, FileText, GraduationCap, Award, BookOpen, Search, User } from
 import {
   buildTranscriptRows,
   computeTranscriptSummary,
-  gradeToLetter,
+  gradeToAlbanian,
   gradeToGPA,
   type TranscriptRow,
 } from "@/lib/transcript";
@@ -130,7 +130,7 @@ const AdminTranscripts = () => {
             <TableCell className="hidden sm:table-cell text-muted-foreground">{row.courseCode}</TableCell>
             <TableCell>
               {row.grade !== null ? (
-                <span className="font-semibold">{row.grade.toFixed(1)}% <span className="text-xs text-muted-foreground">({gradeToLetter(row.grade)})</span></span>
+                <span className="font-semibold">{row.grade.toFixed(1)}% <span className="text-xs text-muted-foreground">→ {gradeToAlbanian(row.grade)}</span></span>
               ) : <span className="text-muted-foreground">—</span>}
             </TableCell>
             <TableCell className="text-center">{row.ects}</TableCell>
