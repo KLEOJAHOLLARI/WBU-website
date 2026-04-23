@@ -16,6 +16,16 @@ const AdminStudents = () => {
   const [statusFilter, setStatusFilter] = useState<string>("all");
   const [searchQuery, setSearchQuery] = useState("");
   const [editPersonal, setEditPersonal] = useState<Record<string, string>>({});
+  const [scholarshipReview, setScholarshipReview] = useState<{
+    userId: string;
+    program: string | null;
+    currentPct: number;
+    newPct: number;
+    charges: Array<{ id: string; semesterId: string; amount: number; due_date: string | null; status: string }>;
+    fees: Array<{ academic_semester_id: string; amount: number; program: string }>;
+    semesters: Array<{ id: string; name: string }>;
+  } | null>(null);
+  const [applyingScholarship, setApplyingScholarship] = useState(false);
 
   const { data: profiles = [], isLoading } = useQuery({
     queryKey: ["admin-students"],
