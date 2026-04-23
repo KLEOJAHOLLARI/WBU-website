@@ -205,10 +205,27 @@ const NotificationBell = () => {
     refetchInterval: 30000,
   });
 
-  const unreadCount = useMemo(
-    () => notifications.filter((n) => !n.read).length,
-    [notifications]
-  );
+  // Per-user "last seen" timestamp persisted in localStorage. Used for admin/professor
+  // notifications (which have no per-row read flag) so the badge clears when the bell
+  // is opened, and re-appears only for items newer than the last view.
+  const lastSeenKey = user ? `notif-last-seen-${user.id}` : "";
+  const [lastSeen, setLastSeen] = useState<number>(() => {
+    if (typeof window === "undefined" || !lastSeenKey) return 0;
+    return Number(localStorage.getItem(lastSeenKey) || 0);
+  });
+
+  // Re-hydrate when the user changes
+  useEffect(() => {
+    if (!lastSeenKey) return;
+    setLastSeen(Number(localStorage.getItem(lastSeenKey) || 0));
+  }, [lastSeenKey]);
+
+  const unreadCount = useMemo(() => {
+    if (isAdmin || isProfessor) {
+      return notifications.filter((n) => new Date(n.createdAt).getTime() > lastSeen).length;
+    }
+    return notifications.filter((n) => !n.read).length;
+  }, [notifications, isAdmin, isProfessor, lastSeen]);
 
   // Realtime: refresh notifications instantly when grades or messages change for this student
   useEffect(() => {
