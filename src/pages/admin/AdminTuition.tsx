@@ -827,15 +827,26 @@ const AdminTuition = () => {
                   <div className="flex justify-between"><span className="text-muted-foreground">Program fees matched</span><span className="font-medium">{semFees.length}</span></div>
                   <div className="flex justify-between"><span className="text-muted-foreground">Eligible students (new)</span><span className="font-medium text-emerald-600">{eligible}</span></div>
                   <div className="flex justify-between"><span className="text-muted-foreground">Already charged</span><span className="font-medium text-amber-600">{alreadyCharged}</span></div>
+                  {fullScholarSkipped > 0 && (
+                    <div className="flex justify-between"><span className="text-muted-foreground">Skipped (100% scholarship)</span><span className="font-medium">{fullScholarSkipped}</span></div>
+                  )}
                   <div className="border-t border-border pt-2 flex justify-between">
-                    <span className="font-semibold">Charges to create</span>
+                    <span className="font-semibold">Students to charge</span>
+                    <span className="font-bold">{studentsToCharge}</span>
+                  </div>
+                  <div className="flex justify-between">
+                    <span className="font-semibold">Installments to create (×4)</span>
                     <span className="font-bold">{toCreate}</span>
                   </div>
                   <div className="flex justify-between">
-                    <span className="font-semibold">Estimated total</span>
+                    <span className="font-semibold">Estimated total (after scholarships)</span>
                     <span className="font-bold">{fmtMoney(totalAmount)}</span>
                   </div>
                 </div>
+
+                <p className="text-xs text-muted-foreground">
+                  Each eligible student receives <strong>4 monthly installments</strong> starting on the program fee's due date. Amounts are split after applying each student's scholarship percentage.
+                </p>
 
                 {semFees.length === 0 && (
                   <p className="text-sm text-destructive">No program fees defined for this selection. Configure fees first.</p>
