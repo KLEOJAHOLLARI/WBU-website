@@ -3,7 +3,7 @@ import AdminLayout from "@/components/AdminLayout";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
 import { useToast } from "@/hooks/use-toast";
-import { Send, FileText, CheckCircle, XCircle, UserCheck, UserX, Clock, Mail, BookOpen, Save, Hash, CreditCard, Search } from "lucide-react";
+import { Send, FileText, CheckCircle, XCircle, UserCheck, UserX, Clock, Mail, BookOpen, Save, Hash, CreditCard, Search, Award } from "lucide-react";
 
 const AdminStudents = () => {
   const { toast } = useToast();
@@ -352,6 +352,106 @@ const AdminStudents = () => {
                     </div>
                   </div>
                 </div>
+
+                {/* Scholarship */}
+                {(() => {
+                  const sp = selectedProfile as any;
+                  const has = !!sp?.has_scholarship;
+                  const pct = sp?.scholarship_percentage ?? 100;
+                  const req = sp?.required_open_lecture_hours ?? 18;
+                  const done = sp?.completed_open_lecture_hours ?? 0;
+                  const eligible = done >= req;
+                  const statusLabel = !has ? "—" : eligible ? "Eligible" : done > 0 ? "Warning" : "Lost Requirement";
+                  const statusCls = !has
+                    ? "bg-muted text-muted-foreground"
+                    : eligible
+                    ? "bg-emerald-500/10 text-emerald-600"
+                    : "bg-destructive/10 text-destructive";
+                  return (
+                    <div className="rounded-xl border border-border bg-card p-4">
+                      <h2 className="mb-3 flex items-center justify-between font-display text-sm font-semibold text-foreground">
+                        <span className="flex items-center gap-2"><Award className="h-4 w-4" /> Scholarship</span>
+                        <span className={`inline-flex items-center gap-1 rounded-full px-2 py-0.5 text-xs font-medium ${statusCls}`}>
+                          {statusLabel}
+                        </span>
+                      </h2>
+                      <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-4">
+                        <label className="flex items-center gap-2 rounded-md border border-input bg-background px-3 py-2 text-sm">
+                          <input
+                            type="checkbox"
+                            checked={has}
+                            onChange={async (e) => {
+                              const next = e.target.checked;
+                              const { error } = await supabase.from("profiles").update({
+                                has_scholarship: next,
+                                ...(next && !pct ? { scholarship_percentage: 100 } : {}),
+                              } as any).eq("user_id", selectedUserId);
+                              if (error) { toast({ title: "Error", variant: "destructive" }); return; }
+                              queryClient.invalidateQueries({ queryKey: ["admin-students"] });
+                              toast({ title: next ? "Marked as scholarship holder" : "Scholarship removed" });
+                            }}
+                          />
+                          <span className="text-foreground">Has scholarship</span>
+                        </label>
+                        <div>
+                          <label className="mb-1 block text-xs text-muted-foreground">Scholarship %</label>
+                          <input
+                            type="number"
+                            min={0}
+                            max={100}
+                            defaultValue={pct}
+                            key={`pct-${selectedUserId}`}
+                            disabled={!has}
+                            onBlur={async (e) => {
+                              const val = Math.max(0, Math.min(100, parseInt(e.target.value) || 0));
+                              const { error } = await supabase.from("profiles").update({ scholarship_percentage: val } as any).eq("user_id", selectedUserId);
+                              if (error) { toast({ title: "Error", variant: "destructive" }); return; }
+                              queryClient.invalidateQueries({ queryKey: ["admin-students"] });
+                              toast({ title: "Scholarship % updated" });
+                            }}
+                            className="w-full rounded-md border border-input bg-background px-3 py-2 text-sm text-foreground disabled:opacity-60 focus:outline-none focus:ring-2 focus:ring-ring"
+                          />
+                        </div>
+                        <div>
+                          <label className="mb-1 block text-xs text-muted-foreground">Required hours</label>
+                          <input
+                            type="number"
+                            min={0}
+                            defaultValue={req}
+                            key={`req-${selectedUserId}`}
+                            disabled={!has}
+                            onBlur={async (e) => {
+                              const val = Math.max(0, parseInt(e.target.value) || 18);
+                              const { error } = await supabase.from("profiles").update({ required_open_lecture_hours: val } as any).eq("user_id", selectedUserId);
+                              if (error) { toast({ title: "Error", variant: "destructive" }); return; }
+                              queryClient.invalidateQueries({ queryKey: ["admin-students"] });
+                              toast({ title: "Required hours updated" });
+                            }}
+                            className="w-full rounded-md border border-input bg-background px-3 py-2 text-sm text-foreground disabled:opacity-60 focus:outline-none focus:ring-2 focus:ring-ring"
+                          />
+                        </div>
+                        <div>
+                          <label className="mb-1 block text-xs text-muted-foreground">Completed hours</label>
+                          <input
+                            type="number"
+                            min={0}
+                            defaultValue={done}
+                            key={`done-${selectedUserId}`}
+                            disabled={!has}
+                            onBlur={async (e) => {
+                              const val = Math.max(0, parseInt(e.target.value) || 0);
+                              const { error } = await supabase.from("profiles").update({ completed_open_lecture_hours: val } as any).eq("user_id", selectedUserId);
+                              if (error) { toast({ title: "Error", variant: "destructive" }); return; }
+                              queryClient.invalidateQueries({ queryKey: ["admin-students"] });
+                              toast({ title: "Completed hours updated" });
+                            }}
+                            className="w-full rounded-md border border-input bg-background px-3 py-2 text-sm text-foreground disabled:opacity-60 focus:outline-none focus:ring-2 focus:ring-ring"
+                          />
+                        </div>
+                      </div>
+                    </div>
+                  );
+                })()}
 
                 {/* Personal Information (editable by admin) */}
                 <div className="rounded-xl border border-border bg-card p-4">
