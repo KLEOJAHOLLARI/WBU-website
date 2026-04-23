@@ -438,6 +438,13 @@ const AdminTuition = () => {
   const overdueCount = charges.filter((c) => c.due_date && new Date(c.due_date) < new Date() && c.status !== "paid" && c.status !== "waived").length;
   const pendingReceipts = payments.filter((p) => p.verification_status === "pending").length;
 
+  const chargeHighlight = useHighlightParam("charge", "charge", charges.length > 0, (id) => {
+    const c = charges.find((x: any) => x.id === id);
+    const st = c ? studentMap[c.user_id] : null;
+    if (c) setViewCharge({ charge: c, student: st });
+  });
+  const paymentHighlight = useHighlightParam("payment", "payment", payments.length > 0);
+
   const downloadReceipt = async (path: string) => {
     const { data, error } = await supabase.storage.from("payment-receipts").createSignedUrl(path, 60);
     if (error || !data) { toast.error("Could not load receipt"); return; }
