@@ -398,6 +398,16 @@ const StudentCourseDetail = () => {
                       </p>
                     </td>
                     <td className="px-5 py-4">
+                      {cs.hasScore ? (
+                        <div className="flex items-center gap-1.5 text-sm text-foreground">
+                          <Calendar className="h-3.5 w-3.5 text-muted-foreground" />
+                          <span>{formatGradedAt(cs.gradedAt)}</span>
+                        </div>
+                      ) : (
+                        <span className="text-sm text-muted-foreground">—</span>
+                      )}
+                    </td>
+                    <td className="px-5 py-4">
                       <Badge variant="outline" className="text-xs">{cs.weight}%</Badge>
                     </td>
                     <td className="px-5 py-4 text-right">
