@@ -346,6 +346,7 @@ const StudentDashboard = () => {
             percentage={(profile as any)?.scholarship_percentage ?? 100}
             required={(profile as any)?.required_open_lecture_hours ?? 18}
             completed={(profile as any)?.completed_open_lecture_hours ?? 0}
+            gpaAlbanian={gpaData?.gpaAlbanian ?? null}
           />
         </div>
       )}
