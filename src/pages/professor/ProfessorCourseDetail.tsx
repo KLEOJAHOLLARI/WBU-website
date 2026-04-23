@@ -393,6 +393,57 @@ const ProfessorCourseDetail = () => {
     return `${(bytes / (1024 * 1024)).toFixed(1)} MB`;
   };
 
+  /* ─── syllabus management ─── */
+  useEffect(() => {
+    setSyllabusUrlInput(course?.syllabus_url ?? "");
+  }, [course?.syllabus_url]);
+
+  const updateSyllabusUrl = useMutation({
+    mutationFn: async (url: string | null) => {
+      if (!courseId) throw new Error("Missing course");
+      const { error } = await supabase
+        .from("courses")
+        .update({ syllabus_url: url })
+        .eq("id", courseId);
+      if (error) throw error;
+    },
+    onSuccess: () => {
+      qc.invalidateQueries({ queryKey: ["course", courseId] });
+      toast({ title: "Syllabus updated" });
+    },
+    onError: (e: any) =>
+      toast({ title: "Failed to update syllabus", description: e.message, variant: "destructive" }),
+  });
+
+  const handleSyllabusFileUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (!file || !courseId) return;
+    setUploadingSyllabus(true);
+    try {
+      const filePath = `${courseId}/syllabus-${Date.now()}-${file.name}`;
+      const { error: uploadError } = await supabase.storage
+        .from("course-materials")
+        .upload(filePath, file, { upsert: false });
+      if (uploadError) throw uploadError;
+      const { data: pub } = supabase.storage.from("course-materials").getPublicUrl(filePath);
+      const publicUrl = pub.publicUrl;
+
+      const { error: dbError } = await supabase
+        .from("courses")
+        .update({ syllabus_url: publicUrl })
+        .eq("id", courseId);
+      if (dbError) throw dbError;
+
+      qc.invalidateQueries({ queryKey: ["course", courseId] });
+      toast({ title: "Syllabus uploaded" });
+    } catch (err: any) {
+      toast({ title: "Upload failed", description: err.message, variant: "destructive" });
+    } finally {
+      setUploadingSyllabus(false);
+      if (syllabusFileInputRef.current) syllabusFileInputRef.current.value = "";
+    }
+  };
+
   const getFileIcon = (contentType: string) => {
     if (contentType.startsWith("image/")) return "🖼️";
     if (contentType.includes("pdf")) return "📄";
