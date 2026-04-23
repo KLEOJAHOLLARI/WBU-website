@@ -285,47 +285,105 @@ const StudentCourses = () => {
     return groups;
   };
 
-  const renderEnrolledCard = (enr: any) => {
+  // Color palette for course code badges (cycles by index)
+  const badgePalette = [
+    "bg-blue-500",
+    "bg-emerald-500",
+    "bg-violet-500",
+    "bg-amber-500",
+    "bg-rose-500",
+    "bg-cyan-500",
+    "bg-indigo-500",
+    "bg-orange-500",
+    "bg-pink-500",
+    "bg-teal-500",
+  ];
+  const badgeColorFor = (id: string) => {
+    let hash = 0;
+    for (let i = 0; i < id.length; i++) hash = (hash * 31 + id.charCodeAt(i)) >>> 0;
+    return badgePalette[hash % badgePalette.length];
+  };
+
+  const renderEnrolledRow = (enr: any, index: number) => {
     const course = enr.courses;
     const attPct = getAttendancePct(enr.id, enr.course_id);
-    const courseGrades = gradesData.filter((g) => g.enrollment_id === enr.id);
-    const hasGrades = courseGrades.some((g) => g.score !== null);
+    const professor = getProfessor(course?.professor_id ?? null);
+    const lowAttendance = attPct !== null && attPct < 75;
+    const badgeColor = badgeColorFor(course?.id || String(index));
+    const codeLabel = course?.code
+      ? `${course.code}${course.semester ? ` · ${course.semester}` : ""}`
+      : `Course ${index + 1}`;
 
-    
+    const stop = (e: React.MouseEvent) => e.stopPropagation();
 
     return (
       <div
         key={enr.id}
         onClick={() => navigate(`/portal/courses/${enr.course_id}`)}
-        className="group cursor-pointer rounded-xl border border-border bg-card p-5 transition-all hover:border-primary/40 hover:shadow-md"
+        className="group cursor-pointer overflow-hidden rounded-xl border border-border bg-card shadow-sm transition-all hover:border-primary/40 hover:shadow-md"
       >
-        <div className="flex items-start gap-3">
-          <div className="rounded-lg bg-primary/10 p-2">
-            <BookOpen className="h-5 w-5 text-primary" />
-          </div>
-          <div className="flex-1 min-w-0">
-            <h3 className="font-display font-semibold text-foreground truncate group-hover:text-primary transition-colors">{course?.name || "Course"}</h3>
-            <p className="text-xs text-muted-foreground mt-0.5">{course?.code} · Year {course?.year} · Sem {course?.semester}</p>
-            {renderProfessorMeta(course?.professor_id ?? null, true)}
-          </div>
-        </div>
-        <div className="mt-4 flex items-center gap-4 text-sm">
-          <div className="flex items-center gap-1.5">
-            <ClipboardCheck className="h-4 w-4 text-muted-foreground" />
-            <span className={attPct !== null && attPct < 75 ? "font-semibold text-destructive" : "text-muted-foreground"}>
-              {attPct !== null ? `${attPct}%` : "—"}
+        <div className="flex flex-col sm:flex-row sm:items-stretch">
+          {/* Left colored code badge */}
+          <div
+            className={`${badgeColor} flex shrink-0 items-center justify-center px-4 py-3 sm:w-32 sm:py-0`}
+          >
+            <span className="text-center font-display text-sm font-bold uppercase tracking-wide text-white">
+              {codeLabel}
             </span>
           </div>
-          <div className="flex items-center gap-1.5">
-            <BarChart3 className="h-4 w-4 text-muted-foreground" />
-            <span className="text-muted-foreground">{hasGrades ? "Graded" : "—"}</span>
+
+          {/* Middle: name + professor */}
+          <div className="min-w-0 flex-1 px-4 py-4 sm:px-5">
+            <h3 className="truncate font-display text-base font-semibold text-foreground transition-colors group-hover:text-primary">
+              {course?.name || "Course"}
+            </h3>
+            <div className="mt-1 flex items-center gap-1.5 text-xs text-muted-foreground">
+              <User className="h-3.5 w-3.5" />
+              <span className="truncate">
+                {professor?.name || (course?.professor_id ? "Loading..." : "No professor assigned")}
+              </span>
+            </div>
+            {lowAttendance && (
+              <p className="mt-2 inline-flex items-center gap-1 rounded-md bg-destructive/10 px-2 py-0.5 text-[11px] font-medium text-destructive">
+                ⚠ Attendance below 75% — final exam blocked
+              </p>
+            )}
+          </div>
+
+          {/* Right action buttons */}
+          <div className="flex flex-wrap items-center gap-2 border-t border-border px-4 py-3 sm:border-l sm:border-t-0 sm:px-4">
+            <Link
+              to={`/portal/courses/${enr.course_id}?tab=syllabus`}
+              onClick={stop}
+              className="inline-flex items-center gap-1.5 rounded-lg border border-border bg-background px-3 py-1.5 text-xs font-medium text-foreground transition-colors hover:bg-muted"
+            >
+              <BookOpen className="h-3.5 w-3.5" />
+              Syllabus
+            </Link>
+            <Link
+              to={`/portal/courses/${enr.course_id}?tab=grades`}
+              onClick={stop}
+              className="inline-flex items-center gap-1.5 rounded-lg border border-border bg-background px-3 py-1.5 text-xs font-medium text-foreground transition-colors hover:bg-muted"
+            >
+              <BarChart3 className="h-3.5 w-3.5" />
+              Grades
+            </Link>
+            <Link
+              to={`/portal/courses/${enr.course_id}?tab=attendance`}
+              onClick={stop}
+              className={`inline-flex items-center gap-1.5 rounded-lg border px-3 py-1.5 text-xs font-semibold transition-colors ${
+                attPct === null
+                  ? "border-border bg-background text-muted-foreground hover:bg-muted"
+                  : lowAttendance
+                  ? "border-destructive/30 bg-destructive/10 text-destructive hover:bg-destructive/15"
+                  : "border-emerald-500/30 bg-emerald-500/10 text-emerald-700 hover:bg-emerald-500/15 dark:text-emerald-400"
+              }`}
+            >
+              <ClipboardCheck className="h-3.5 w-3.5" />
+              Attendance {attPct !== null ? `${attPct}%` : "—"}
+            </Link>
           </div>
         </div>
-        {attPct !== null && attPct < 75 && (
-          <p className="mt-2 rounded-lg bg-destructive/10 px-2.5 py-1.5 text-xs font-medium text-destructive">
-            ⚠ Attendance below 75% — final exam blocked
-          </p>
-        )}
       </div>
     );
   };
@@ -464,14 +522,16 @@ const StudentCourses = () => {
       {/* Enrolled Courses */}
       <div className="mt-8">
         <div className="flex items-center gap-2 mb-4">
-          <h2 className="font-display text-lg font-semibold text-foreground">Enrolled Courses</h2>
+          <h2 className="font-display text-lg font-semibold text-foreground">Courses</h2>
           <Badge variant="secondary" className="text-xs">{enrollments.length}</Badge>
         </div>
-        <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
+        <div className="flex flex-col gap-3">
           {isLoading ? (
-            <p className="text-muted-foreground col-span-full">Loading...</p>
+            <div className="rounded-xl border border-border bg-card p-6 text-center text-sm text-muted-foreground">
+              Loading your courses...
+            </div>
           ) : enrollments.length === 0 ? (
-            <div className="col-span-full rounded-xl border border-border bg-card p-8 text-center">
+            <div className="rounded-xl border border-border bg-card p-8 text-center">
               <BookOpen className="mx-auto mb-3 h-10 w-10 text-muted-foreground/40" />
               <p className="text-muted-foreground">You are not enrolled in any courses yet.</p>
               {profile?.program && availableCourses.length > 0 && (
@@ -481,7 +541,7 @@ const StudentCourses = () => {
               )}
             </div>
           ) : (
-            enrollments.map(renderEnrolledCard)
+            enrollments.map((enr, i) => renderEnrolledRow(enr, i))
           )}
         </div>
       </div>
