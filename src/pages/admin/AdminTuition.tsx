@@ -726,6 +726,118 @@ const AdminTuition = () => {
           </DialogFooter>
         </DialogContent>
       </Dialog>
+
+      {/* BULK GENERATE CHARGES DIALOG */}
+      <AlertDialog open={!!bulkDialog} onOpenChange={(o) => !o && setBulkDialog(null)}>
+        <AlertDialogContent className="max-w-lg">
+          <AlertDialogHeader>
+            <AlertDialogTitle>Bulk Generate Tuition Charges</AlertDialogTitle>
+            <AlertDialogDescription>
+              Create charges for all eligible students based on the program fees configured for the selected semester.
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+
+          {bulkDialog && (() => {
+            const semFees = fees.filter((f: any) =>
+              f.academic_semester_id === bulkDialog.semesterId &&
+              (bulkDialog.program === "all" || f.program === bulkDialog.program)
+            );
+            const programs = Array.from(new Set(fees.filter((f: any) => f.academic_semester_id === bulkDialog.semesterId).map((f: any) => f.program)));
+            const existingKeys = new Set(
+              charges
+                .filter((c) => c.academic_semester_id === bulkDialog.semesterId)
+                .map((c) => `${c.user_id}|${c.program}`)
+            );
+            let eligible = 0, alreadyCharged = 0, totalAmount = 0;
+            for (const fee of semFees) {
+              const targets = students.filter((s: any) => s.program === fee.program);
+              for (const s of targets) {
+                if (existingKeys.has(`${s.user_id}|${fee.program}`)) {
+                  alreadyCharged++;
+                  if (!bulkDialog.skipExisting) totalAmount += Number(fee.amount);
+                } else {
+                  eligible++;
+                  totalAmount += Number(fee.amount);
+                }
+              }
+            }
+            const toCreate = bulkDialog.skipExisting ? eligible : eligible + alreadyCharged;
+            const semName = semesters.find((s: any) => s.id === bulkDialog.semesterId)?.name || "—";
+
+            return (
+              <div className="space-y-4">
+                <div className="grid grid-cols-2 gap-3">
+                  <div>
+                    <Label>Semester</Label>
+                    <Select
+                      value={bulkDialog.semesterId}
+                      onValueChange={(v) => setBulkDialog({ ...bulkDialog, semesterId: v, program: "all" })}
+                    >
+                      <SelectTrigger><SelectValue /></SelectTrigger>
+                      <SelectContent>
+                        {semesters.map((s: any) => <SelectItem key={s.id} value={s.id}>{s.name}</SelectItem>)}
+                      </SelectContent>
+                    </Select>
+                  </div>
+                  <div>
+                    <Label>Program</Label>
+                    <Select value={bulkDialog.program} onValueChange={(v) => setBulkDialog({ ...bulkDialog, program: v })}>
+                      <SelectTrigger><SelectValue /></SelectTrigger>
+                      <SelectContent>
+                        <SelectItem value="all">All programs</SelectItem>
+                        {programs.map((p) => <SelectItem key={p} value={p}>{p}</SelectItem>)}
+                      </SelectContent>
+                    </Select>
+                  </div>
+                </div>
+
+                <label className="flex items-center gap-2 text-sm">
+                  <Checkbox
+                    checked={bulkDialog.skipExisting}
+                    onCheckedChange={(v) => setBulkDialog({ ...bulkDialog, skipExisting: !!v })}
+                  />
+                  Skip students who already have a charge for this semester
+                </label>
+
+                <div className="rounded-lg border border-border bg-muted/40 p-4 space-y-2 text-sm">
+                  <div className="flex justify-between"><span className="text-muted-foreground">Semester</span><span className="font-medium">{semName}</span></div>
+                  <div className="flex justify-between"><span className="text-muted-foreground">Program fees matched</span><span className="font-medium">{semFees.length}</span></div>
+                  <div className="flex justify-between"><span className="text-muted-foreground">Eligible students (new)</span><span className="font-medium text-emerald-600">{eligible}</span></div>
+                  <div className="flex justify-between"><span className="text-muted-foreground">Already charged</span><span className="font-medium text-amber-600">{alreadyCharged}</span></div>
+                  <div className="border-t border-border pt-2 flex justify-between">
+                    <span className="font-semibold">Charges to create</span>
+                    <span className="font-bold">{toCreate}</span>
+                  </div>
+                  <div className="flex justify-between">
+                    <span className="font-semibold">Estimated total</span>
+                    <span className="font-bold">{fmtMoney(totalAmount)}</span>
+                  </div>
+                </div>
+
+                {semFees.length === 0 && (
+                  <p className="text-sm text-destructive">No program fees defined for this selection. Configure fees first.</p>
+                )}
+                {toCreate === 0 && semFees.length > 0 && (
+                  <p className="text-sm text-muted-foreground">No new charges would be created with the current settings.</p>
+                )}
+              </div>
+            );
+          })()}
+
+          <AlertDialogFooter>
+            <AlertDialogCancel>Cancel</AlertDialogCancel>
+            <AlertDialogAction
+              disabled={generateForSemester.isPending}
+              onClick={(e) => {
+                e.preventDefault();
+                if (bulkDialog) generateForSemester.mutate(bulkDialog);
+              }}
+            >
+              {generateForSemester.isPending ? "Generating…" : "Confirm & Generate"}
+            </AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
     </AdminLayout>
   );
 };
