@@ -53,6 +53,10 @@ const AdminTuition = () => {
   const [lateFeeSettingsDraft, setLateFeeSettingsDraft] = useState<any | null>(null);
   const [applyLateFeesOpen, setApplyLateFeesOpen] = useState(false);
   const [editLateFee, setEditLateFee] = useState<any | null>(null);
+  const [lfSearch, setLfSearch] = useState("");
+  const [lfStatus, setLfStatus] = useState<"all" | "active" | "waived">("all");
+  const [lfFrom, setLfFrom] = useState<string>("");
+  const [lfTo, setLfTo] = useState<string>("");
 
   const { data: semesters = [] } = useQuery({
     queryKey: ["adm-tuition-semesters"],
