@@ -856,6 +856,63 @@ const AdminTuition = () => {
         </AlertDialogContent>
       </AlertDialog>
 
+      {/* Edit late fee reason / waive note dialog */}
+      <Dialog open={!!editLateFee} onOpenChange={(o) => !o && setEditLateFee(null)}>
+        <DialogContent>
+          <DialogHeader>
+            <DialogTitle>Edit Late Fee {editLateFee?.waived ? "(Waived)" : ""}</DialogTitle>
+          </DialogHeader>
+          {editLateFee && (
+            <div className="space-y-4">
+              <div className="rounded-lg border border-border bg-muted/30 p-3 text-sm">
+                <div className="text-muted-foreground">Student</div>
+                <div className="font-medium text-foreground">
+                  {studentMap[editLateFee.user_id]?.full_name || "—"}
+                </div>
+                <div className="mt-2 text-muted-foreground">Amount</div>
+                <div className="font-medium text-foreground">
+                  {fmtMoney(Number(editLateFee.amount), editLateFee.currency)}
+                </div>
+              </div>
+              <div>
+                <Label>Reason</Label>
+                <Textarea
+                  rows={3}
+                  value={editLateFee.reason ?? ""}
+                  onChange={(e) => setEditLateFee({ ...editLateFee, reason: e.target.value })}
+                  placeholder="Why this late fee was applied"
+                />
+              </div>
+              {editLateFee.waived && (
+                <div>
+                  <Label>Waive note</Label>
+                  <Textarea
+                    rows={3}
+                    value={editLateFee.waive_note ?? ""}
+                    onChange={(e) => setEditLateFee({ ...editLateFee, waive_note: e.target.value })}
+                    placeholder="Why this fee was waived (visible to admins)"
+                  />
+                </div>
+              )}
+            </div>
+          )}
+          <DialogFooter>
+            <Button variant="outline" onClick={() => setEditLateFee(null)}>Cancel</Button>
+            <Button
+              onClick={() => editLateFee && updateLateFeeNotes.mutate({
+                id: editLateFee.id,
+                reason: editLateFee.reason ?? "",
+                waive_note: editLateFee.waive_note ?? "",
+                waived: !!editLateFee.waived,
+              })}
+              disabled={updateLateFeeNotes.isPending}
+            >
+              Save
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
+
       {/* Fee Dialog */}
       <Dialog open={!!feeDialog} onOpenChange={(o) => !o && setFeeDialog(null)}>
         <DialogContent>
