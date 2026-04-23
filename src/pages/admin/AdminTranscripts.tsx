@@ -15,6 +15,7 @@ import {
   computeTranscriptSummary,
   gradeToAlbanian,
   gradeToGPA,
+  gradeToLetter,
   type TranscriptRow,
 } from "@/lib/transcript";
 import { downloadTranscriptPdf } from "@/lib/transcriptPdf";
@@ -130,7 +131,7 @@ const AdminTranscripts = () => {
             <TableCell className="hidden sm:table-cell text-muted-foreground">{row.courseCode}</TableCell>
             <TableCell>
               {row.grade !== null ? (
-                <span className="font-semibold">{row.grade.toFixed(1)}% <span className="text-xs text-muted-foreground">→ {gradeToAlbanian(row.grade)}</span></span>
+                <span className="font-semibold">{row.grade.toFixed(1)}% <span className="text-xs text-muted-foreground">→ {gradeToAlbanian(row.grade)} ({gradeToLetter(row.grade)})</span></span>
               ) : <span className="text-muted-foreground">—</span>}
             </TableCell>
             <TableCell className="text-center">{row.ects}</TableCell>
