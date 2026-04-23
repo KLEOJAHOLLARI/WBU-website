@@ -7,7 +7,7 @@ import { useAuth } from "@/hooks/useAuth";
 import {
   AlertTriangle, CheckCircle2, ExternalLink, ArrowLeft,
   CalendarDays, BarChart3, Loader2, BookOpen, TrendingUp,
-  FileText, Download, X, Minus, HelpCircle, Clock, ArrowRight
+  FileText, Download, X, Minus, HelpCircle, Clock, ArrowRight, Calendar
 } from "lucide-react";
 import { Badge } from "@/components/ui/badge";
 import { Progress } from "@/components/ui/progress";
