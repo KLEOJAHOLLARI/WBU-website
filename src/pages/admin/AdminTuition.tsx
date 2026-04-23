@@ -77,7 +77,7 @@ const AdminTuition = () => {
   const { data: students = [] } = useQuery({
     queryKey: ["adm-tuition-students"],
     queryFn: async () => {
-      const { data } = await supabase.from("profiles").select("user_id, full_name, email, student_id, program").order("full_name");
+      const { data } = await supabase.from("profiles").select("user_id, full_name, email, student_id, program, scholarship_percentage, has_scholarship").order("full_name");
       return (data || []).filter((p: any) => p.program);
     },
   });
