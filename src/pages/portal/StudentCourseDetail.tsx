@@ -387,9 +387,13 @@ const StudentCourseDetail = () => {
                       {cs.hasScore ? (
                         <div className="flex flex-col items-end">
                           <span className={`font-display text-lg font-bold ${gradeColor(cs.pct!)}`}>
-                            {cs.score}/{cs.maxScore}
+                            {gradingScale === "albanian" ? toAlbanian(cs.pct!) : `${cs.score}/${cs.maxScore}`}
                           </span>
-                          <span className="text-xs text-muted-foreground">{cs.pct!.toFixed(0)}%</span>
+                          <span className="text-xs text-muted-foreground">
+                            {gradingScale === "albanian"
+                              ? `${cs.score}/${cs.maxScore} · ${cs.pct!.toFixed(0)}%`
+                              : `${cs.pct!.toFixed(0)}%`}
+                          </span>
                         </div>
                       ) : (
                         <span className="text-sm text-muted-foreground">—</span>
