@@ -114,6 +114,21 @@ const AdminExamSchedule = () => {
     },
   });
 
+  // Auto-open edit form when navigated with ?edit=<id>
+  const editParam = searchParams.get("edit");
+  useEffect(() => {
+    if (!editParam || exams.length === 0) return;
+    const target = exams.find((e) => e.id === editParam);
+    if (target) {
+      openEdit(target);
+      // Clear the param so refresh / further edits don't re-trigger
+      const next = new URLSearchParams(searchParams);
+      next.delete("edit");
+      setSearchParams(next, { replace: true });
+    }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [editParam, exams]);
+
   const filtered = useMemo(() => {
     const q = search.trim().toLowerCase();
     return exams.filter((e) => {
