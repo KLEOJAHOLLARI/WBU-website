@@ -390,8 +390,10 @@ const AdminExamSchedule = () => {
             ) : filtered.map((e) => (
               <TableRow key={e.id}>
                 <TableCell className="font-medium">
-                  {e.courses?.name || "—"}
-                  {e.courses?.code && <span className="ml-1 text-xs text-muted-foreground">({e.courses.code})</span>}
+                  <Link to={`/portal/exams/${e.id}`} className="hover:text-primary hover:underline">
+                    {e.courses?.name || "—"}
+                    {e.courses?.code && <span className="ml-1 text-xs text-muted-foreground">({e.courses.code})</span>}
+                  </Link>
                 </TableCell>
                 <TableCell className="text-sm text-muted-foreground">{e.program}</TableCell>
                 <TableCell>
