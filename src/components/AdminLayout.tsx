@@ -40,6 +40,7 @@ const navGroups: { label: string; items: { to: string; label: string; icon: any;
       { to: "/admin/applications", label: "Applications", icon: FileText, badgeKey: "applications" },
       { to: "/admin/transcripts", label: "Transcripts", icon: ScrollText },
       { to: "/admin/timetable", label: "Timetable", icon: CalendarDays },
+      { to: "/admin/exams", label: "Exam Schedule", icon: CalendarDays },
       { to: "/admin/graduation", label: "Graduation", icon: GraduationCap },
       { to: "/admin/semesters", label: "Semesters", icon: Calendar },
       { to: "/admin/tuition", label: "Tuition", icon: CreditCard },
