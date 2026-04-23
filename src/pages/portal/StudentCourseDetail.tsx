@@ -441,6 +441,7 @@ const StudentCourseDetail = () => {
                     </p>
                   </td>
                   <td className="px-5 py-4" />
+                  <td className="px-5 py-4" />
                   <td className="px-5 py-4 text-right">
                     <span className={`font-display text-3xl font-bold ${gradeColor(roundedTotal)}`}>
                       {formatGrade(roundedTotal)}
