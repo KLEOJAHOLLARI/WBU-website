@@ -127,6 +127,7 @@ const App = () => (
             <Route path="/professor/announcements" element={<ProfessorAnnouncements />} />
             <Route path="/professor/advisor" element={<ProfessorAdvisor />} />
             <Route path="/professor/transcripts" element={<ProfessorTranscripts />} />
+            <Route path="/professor/exams" element={<ProfessorExamSchedule />} />
             <Route path="/professor/profile" element={<ProfessorProfile />} />
             <Route path="*" element={<NotFound />} />
           </Routes>
