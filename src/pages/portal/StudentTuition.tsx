@@ -125,12 +125,37 @@ const StudentTuition = () => {
       {/* Overdue alert */}
       {overdue.length > 0 && (
         <div className="mt-6 rounded-xl border border-destructive/30 bg-destructive/5 p-5">
-          <div className="flex items-center gap-2 mb-2">
+          <div className="flex items-center gap-2 mb-3">
             <AlertTriangle className="h-5 w-5 text-destructive" />
             <h2 className="font-semibold text-destructive">Overdue Payment{overdue.length > 1 ? "s" : ""}</h2>
             <Badge variant="destructive" className="ml-auto">{overdue.length}</Badge>
           </div>
-          <p className="text-sm text-destructive/80">You have {overdue.length} unpaid charge{overdue.length > 1 ? "s" : ""} past the due date. Please settle as soon as possible.</p>
+          <p className="text-sm text-destructive/80 mb-3">
+            You have {overdue.length} unpaid charge{overdue.length > 1 ? "s" : ""} past the due date. Please settle as soon as possible to avoid academic holds.
+          </p>
+          <ul className="space-y-2">
+            {overdue.map((c: any) => {
+              const daysLate = Math.floor((Date.now() - new Date(c.due_date).getTime()) / (1000 * 60 * 60 * 24));
+              const paidOnCharge = payments.filter((p: any) => p.charge_id === c.id && p.verification_status === "verified").reduce((s: number, p: any) => s + Number(p.amount), 0);
+              const remaining = Number(c.amount) - paidOnCharge;
+              return (
+                <li key={c.id} className="flex items-center justify-between gap-3 rounded-lg bg-card border border-destructive/20 p-3 text-sm">
+                  <div className="min-w-0">
+                    <p className="font-medium text-foreground truncate">{semMap[c.academic_semester_id]?.name || "Tuition"}</p>
+                    <p className="text-xs text-destructive">
+                      Due {new Date(c.due_date).toLocaleDateString()} · <span className="font-semibold">{daysLate} day{daysLate !== 1 ? "s" : ""} overdue</span>
+                    </p>
+                  </div>
+                  <div className="text-right shrink-0">
+                    <p className="font-semibold text-destructive">{fmtMoney(remaining, c.currency)}</p>
+                    <Button size="sm" variant="outline" className="h-7 mt-1 text-xs" onClick={() => setUploadFor(c)}>
+                      <Upload className="h-3 w-3 mr-1" /> Pay Now
+                    </Button>
+                  </div>
+                </li>
+              );
+            })}
+          </ul>
         </div>
       )}
 

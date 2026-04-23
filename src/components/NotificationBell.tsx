@@ -1,6 +1,6 @@
 import { useMemo } from "react";
 import { Link } from "react-router-dom";
-import { Bell, GraduationCap, Mail, FileText, Check } from "lucide-react";
+import { Bell, GraduationCap, Mail, FileText, Check, AlertTriangle } from "lucide-react";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/hooks/useAuth";
@@ -15,7 +15,7 @@ import { formatDistanceToNow } from "date-fns";
 
 type NotificationItem = {
   id: string;
-  type: "grade" | "message" | "application" | "enrollment";
+  type: "grade" | "message" | "application" | "enrollment" | "tuition";
   title: string;
   description: string;
   href: string;
@@ -48,6 +48,57 @@ const NotificationBell = () => {
             description: `${a.full_name} — ${a.program}`,
             href: "/admin/applications",
             createdAt: a.created_at,
+            read: false,
+          });
+        });
+
+        // Overdue tuition charges
+        const today = new Date().toISOString().slice(0, 10);
+        const { data: overdueCharges } = await supabase
+          .from("tuition_charges")
+          .select("id, user_id, amount, currency, due_date, status, program")
+          .lt("due_date", today)
+          .in("status", ["unpaid", "partial"])
+          .order("due_date", { ascending: true })
+          .limit(20);
+        if (overdueCharges && overdueCharges.length > 0) {
+          const userIds = [...new Set(overdueCharges.map((c) => c.user_id))];
+          const { data: profs } = await supabase
+            .from("profiles")
+            .select("user_id, full_name, student_id")
+            .in("user_id", userIds);
+          const nameMap = Object.fromEntries((profs || []).map((p) => [p.user_id, p]));
+          overdueCharges.forEach((c) => {
+            const p = nameMap[c.user_id];
+            const days = Math.floor((Date.now() - new Date(c.due_date!).getTime()) / 86400000);
+            items.push({
+              id: `tuition-${c.id}`,
+              type: "tuition",
+              title: "Tuition overdue",
+              description: `${p?.full_name || "Student"} — ${new Intl.NumberFormat("en-US", { style: "currency", currency: c.currency }).format(Number(c.amount))} · ${days}d late`,
+              href: "/admin/tuition",
+              createdAt: c.due_date!,
+              read: false,
+            });
+          });
+        }
+
+        // Pending receipt uploads
+        const { data: pendingReceipts } = await supabase
+          .from("tuition_payments")
+          .select("id, user_id, amount, currency, created_at")
+          .eq("verification_status", "pending")
+          .eq("uploaded_by_student", true)
+          .order("created_at", { ascending: false })
+          .limit(10);
+        pendingReceipts?.forEach((r) => {
+          items.push({
+            id: `receipt-${r.id}`,
+            type: "tuition",
+            title: "Receipt awaiting review",
+            description: `${new Intl.NumberFormat("en-US", { style: "currency", currency: r.currency }).format(Number(r.amount))} pending verification`,
+            href: "/admin/tuition",
+            createdAt: r.created_at,
             read: false,
           });
         });
@@ -121,6 +172,29 @@ const NotificationBell = () => {
             read: m.is_read,
           });
         });
+
+        // Student overdue tuition
+        const today = new Date().toISOString().slice(0, 10);
+        const { data: stOverdue } = await supabase
+          .from("tuition_charges")
+          .select("id, amount, currency, due_date, status")
+          .eq("user_id", user.id)
+          .lt("due_date", today)
+          .in("status", ["unpaid", "partial"])
+          .order("due_date", { ascending: true })
+          .limit(5);
+        stOverdue?.forEach((c) => {
+          const days = Math.floor((Date.now() - new Date(c.due_date!).getTime()) / 86400000);
+          items.push({
+            id: `tuition-${c.id}`,
+            type: "tuition",
+            title: "Tuition overdue",
+            description: `${new Intl.NumberFormat("en-US", { style: "currency", currency: c.currency }).format(Number(c.amount))} · ${days} day${days !== 1 ? "s" : ""} late`,
+            href: "/portal/tuition",
+            createdAt: c.due_date!,
+            read: false,
+          });
+        });
       }
 
       return items.sort(
@@ -164,6 +238,8 @@ const NotificationBell = () => {
         return <GraduationCap className="h-4 w-4 text-primary" />;
       case "message":
         return <Mail className="h-4 w-4 text-primary" />;
+      case "tuition":
+        return <AlertTriangle className="h-4 w-4 text-destructive" />;
       case "application":
       case "enrollment":
         return <FileText className="h-4 w-4 text-primary" />;
