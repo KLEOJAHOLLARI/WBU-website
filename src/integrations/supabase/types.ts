@@ -194,6 +194,7 @@ export type Database = {
         Row: {
           course_id: string
           created_at: string
+          hours: number
           id: string
           session_date: string
           week_number: number
@@ -201,6 +202,7 @@ export type Database = {
         Insert: {
           course_id: string
           created_at?: string
+          hours?: number
           id?: string
           session_date: string
           week_number?: number
@@ -208,6 +210,7 @@ export type Database = {
         Update: {
           course_id?: string
           created_at?: string
+          hours?: number
           id?: string
           session_date?: string
           week_number?: number
@@ -324,6 +327,7 @@ export type Database = {
           code: string
           created_at: string
           ects: number
+          hours_per_week: number
           id: string
           is_shared: boolean
           name: string
@@ -338,6 +342,7 @@ export type Database = {
           code?: string
           created_at?: string
           ects?: number
+          hours_per_week?: number
           id?: string
           is_shared?: boolean
           name: string
@@ -352,6 +357,7 @@ export type Database = {
           code?: string
           created_at?: string
           ects?: number
+          hours_per_week?: number
           id?: string
           is_shared?: boolean
           name?: string
@@ -994,6 +1000,27 @@ export type Database = {
           sent_by_admin?: boolean
           subject?: string
           user_id?: string
+        }
+        Relationships: []
+      }
+      system_settings: {
+        Row: {
+          id: string
+          key: string
+          updated_at: string
+          value: Json
+        }
+        Insert: {
+          id?: string
+          key: string
+          updated_at?: string
+          value?: Json
+        }
+        Update: {
+          id?: string
+          key?: string
+          updated_at?: string
+          value?: Json
         }
         Relationships: []
       }
