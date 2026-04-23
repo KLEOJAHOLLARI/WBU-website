@@ -720,8 +720,38 @@ const AdminTuition = () => {
           )}
 
           <div className="rounded-xl border border-border bg-card">
-            <div className="border-b border-border p-4">
-              <h2 className="font-semibold text-foreground">Applied Late Fees</h2>
+            <div className="border-b border-border p-4 space-y-3">
+              <div className="flex flex-wrap items-center justify-between gap-2">
+                <h2 className="font-semibold text-foreground">Applied Late Fees</h2>
+                {(lfSearch || lfStatus !== "all" || lfFrom || lfTo) && (
+                  <Button size="sm" variant="ghost" onClick={() => { setLfSearch(""); setLfStatus("all"); setLfFrom(""); setLfTo(""); }}>
+                    Clear filters
+                  </Button>
+                )}
+              </div>
+              <div className="grid gap-2 sm:grid-cols-2 lg:grid-cols-4">
+                <Input
+                  placeholder="Search student name, ID or email…"
+                  value={lfSearch}
+                  onChange={(e) => setLfSearch(e.target.value)}
+                />
+                <Select value={lfStatus} onValueChange={(v: any) => setLfStatus(v)}>
+                  <SelectTrigger><SelectValue placeholder="Status" /></SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="all">All statuses</SelectItem>
+                    <SelectItem value="active">Active</SelectItem>
+                    <SelectItem value="waived">Waived</SelectItem>
+                  </SelectContent>
+                </Select>
+                <div>
+                  <Label className="text-xs text-muted-foreground">From</Label>
+                  <Input type="date" value={lfFrom} onChange={(e) => setLfFrom(e.target.value)} />
+                </div>
+                <div>
+                  <Label className="text-xs text-muted-foreground">To</Label>
+                  <Input type="date" value={lfTo} onChange={(e) => setLfTo(e.target.value)} />
+                </div>
+              </div>
             </div>
             <Table>
               <TableHeader>
