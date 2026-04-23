@@ -627,6 +627,79 @@ const AdminTuition = () => {
           )}
         </DialogContent>
       </Dialog>
+
+      {/* Receipt review dialog */}
+      <Dialog open={!!reviewDialog} onOpenChange={(o) => { if (!o) { setReviewDialog(null); setReviewNote(""); } }}>
+        <DialogContent>
+          <DialogHeader>
+            <DialogTitle>{reviewDialog?.mode === "verify" ? "Approve Payment Receipt" : "Reject Payment Receipt"}</DialogTitle>
+          </DialogHeader>
+          {reviewDialog && (() => {
+            const p = reviewDialog.payment;
+            const st = studentMap[p.user_id];
+            const charge = charges.find((c) => c.id === p.charge_id);
+            const sem = charge ? semesterMap[charge.academic_semester_id] : null;
+            return (
+              <div className="space-y-4">
+                <div className="rounded-lg bg-muted p-3 text-sm space-y-1">
+                  <p className="font-medium text-foreground">{st?.full_name || "—"}</p>
+                  <p className="text-xs text-muted-foreground">{st?.student_id || st?.email}</p>
+                  {sem && <p className="text-xs text-muted-foreground">Semester: {sem.name}</p>}
+                  <div className="flex flex-wrap gap-x-4 gap-y-1 pt-2 text-xs">
+                    <span><span className="text-muted-foreground">Amount:</span> <span className="font-semibold text-foreground">{fmtMoney(Number(p.amount), p.currency)}</span></span>
+                    <span><span className="text-muted-foreground">Date:</span> {new Date(p.payment_date).toLocaleDateString()}</span>
+                    <span><span className="text-muted-foreground">Method:</span> <span className="capitalize">{p.method.replace("_", " ")}</span></span>
+                    {p.reference && <span><span className="text-muted-foreground">Ref:</span> {p.reference}</span>}
+                  </div>
+                </div>
+                {p.receipt_path && (
+                  <Button variant="outline" className="w-full" onClick={() => downloadReceipt(p.receipt_path!)}>
+                    <FileDown className="h-4 w-4 mr-2" /> View Uploaded Receipt
+                  </Button>
+                )}
+                <div>
+                  <Label>{reviewDialog.mode === "verify" ? "Admin note (optional)" : "Reason for rejection"}</Label>
+                  <Textarea
+                    value={reviewNote}
+                    onChange={(e) => setReviewNote(e.target.value)}
+                    placeholder={reviewDialog.mode === "verify" ? "e.g. Verified against bank statement" : "e.g. Receipt unreadable, wrong amount, etc."}
+                    rows={3}
+                  />
+                </div>
+              </div>
+            );
+          })()}
+          <DialogFooter>
+            <Button variant="outline" onClick={() => { setReviewDialog(null); setReviewNote(""); }}>Cancel</Button>
+            {reviewDialog?.mode === "verify" ? (
+              <Button
+                className="bg-emerald-600 hover:bg-emerald-700 text-white"
+                onClick={() => {
+                  verifyPayment.mutate(
+                    { id: reviewDialog.payment.id, status: "verified", note: reviewNote || undefined },
+                    { onSuccess: () => { setReviewDialog(null); setReviewNote(""); } }
+                  );
+                }}
+              >
+                <CheckCircle2 className="h-4 w-4 mr-1" /> Approve Payment
+              </Button>
+            ) : (
+              <Button
+                variant="destructive"
+                disabled={!reviewNote.trim()}
+                onClick={() => {
+                  verifyPayment.mutate(
+                    { id: reviewDialog!.payment.id, status: "rejected", note: reviewNote },
+                    { onSuccess: () => { setReviewDialog(null); setReviewNote(""); } }
+                  );
+                }}
+              >
+                <XCircle className="h-4 w-4 mr-1" /> Reject Payment
+              </Button>
+            )}
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
     </AdminLayout>
   );
 };
