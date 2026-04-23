@@ -157,16 +157,9 @@ const StudentTranscript = () => {
             </TableCell>
             <TableCell className="hidden sm:table-cell text-muted-foreground">{row.courseCode}</TableCell>
             <TableCell>
-              {row.grade !== null ? (
-                <span className="font-semibold">
-                  {row.grade.toFixed(1)}%{" "}
-                  <span className="text-xs text-muted-foreground">
-                    → {gradeToAlbanian(row.grade)} ({gradeToLetter(row.grade)})
-                  </span>
-                </span>
-              ) : (
-                <span className="text-muted-foreground">—</span>
-              )}
+              {row.grade !== null
+                ? renderGrade(row.grade)
+                : <span className="text-muted-foreground">—</span>}
             </TableCell>
             <TableCell className="text-center">{row.ects}</TableCell>
             <TableCell className="hidden sm:table-cell">Y{row.year} / S{row.semester}</TableCell>
