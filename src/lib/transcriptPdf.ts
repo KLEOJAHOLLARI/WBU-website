@@ -144,12 +144,14 @@ export async function downloadTranscriptPdf(opts: BuildTranscriptPdfOptions): Pr
   doc.text(`Date: ${new Date().toLocaleDateString()}`, pageW - 14, infoY, { align: "right" });
 
   // ── Course table ──────────────────────────────────────────────────────────
+  // Note: jsPDF's default WinAnsi encoding doesn't support the "→" arrow
+  // (it renders as "!'"), so we use ASCII "->" inside the PDF.
   const tableData = rows.map((r) => [
     r.courseName,
     r.courseCode,
     r.grade !== null
-      ? `${r.grade.toFixed(1)}% → ${gradeToAlbanian(r.grade)}`
-      : "—",
+      ? `${r.grade.toFixed(1)}% -> ${gradeToAlbanian(r.grade)} (${gradeToLetter(r.grade)})`
+      : "-",
     r.ects.toString(),
     `Y${r.year}/S${r.semester}`,
     r.status,
