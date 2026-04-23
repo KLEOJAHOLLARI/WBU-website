@@ -25,6 +25,7 @@ const StudentTranscript = () => {
   const { user, profile } = useAuth();
   const [semesterFilter, setSemesterFilter] = useState<string>("all");
   const [yearFilter, setYearFilter] = useState<string>("all");
+  const [displayMode, setDisplayMode] = useState<GradeDisplayMode>("full");
   const printRef = useRef<HTMLDivElement>(null);
 
   const { data: studentProgram } = useQuery({
