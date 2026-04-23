@@ -47,7 +47,7 @@ const TranscriptSignatureSettings = () => {
         .select("value")
         .eq("key", "transcript_signature")
         .maybeSingle();
-      return (data?.value as SignatureConfig | null) ?? null;
+      return (data?.value as unknown as SignatureConfig | null) ?? null;
     },
   });
 
