@@ -357,25 +357,40 @@ const StudentCourses = () => {
 
           {/* Right action buttons */}
           <div className="flex flex-wrap items-center gap-2 border-t border-border px-4 py-3 sm:border-l sm:border-t-0 sm:px-4">
-            <Link
-              to={`/portal/courses/${enr.course_id}?tab=syllabus`}
-              onClick={stop}
+            <a
+              href={`/portal/courses/${enr.course_id}?tab=syllabus`}
+              onClick={(e) => {
+                if (e.metaKey || e.ctrlKey || e.shiftKey || e.button === 1) return;
+                e.preventDefault();
+                e.stopPropagation();
+                setModal({ kind: "syllabus", enrollment: enr });
+              }}
               className="inline-flex items-center gap-1.5 rounded-lg border border-border bg-background px-3 py-1.5 text-xs font-medium text-foreground transition-colors hover:bg-muted"
             >
               <BookOpen className="h-3.5 w-3.5" />
               Syllabus
-            </Link>
-            <Link
-              to={`/portal/courses/${enr.course_id}?tab=grades`}
-              onClick={stop}
+            </a>
+            <a
+              href={`/portal/courses/${enr.course_id}?tab=grades`}
+              onClick={(e) => {
+                if (e.metaKey || e.ctrlKey || e.shiftKey || e.button === 1) return;
+                e.preventDefault();
+                e.stopPropagation();
+                setModal({ kind: "grades", enrollment: enr });
+              }}
               className="inline-flex items-center gap-1.5 rounded-lg border border-border bg-background px-3 py-1.5 text-xs font-medium text-foreground transition-colors hover:bg-muted"
             >
               <BarChart3 className="h-3.5 w-3.5" />
               Grades
-            </Link>
-            <Link
-              to={`/portal/courses/${enr.course_id}?tab=attendance`}
-              onClick={stop}
+            </a>
+            <a
+              href={`/portal/courses/${enr.course_id}?tab=attendance`}
+              onClick={(e) => {
+                if (e.metaKey || e.ctrlKey || e.shiftKey || e.button === 1) return;
+                e.preventDefault();
+                e.stopPropagation();
+                setModal({ kind: "attendance", enrollment: enr });
+              }}
               className={`inline-flex items-center gap-1.5 rounded-lg border px-3 py-1.5 text-xs font-semibold transition-colors ${
                 attPct === null
                   ? "border-border bg-background text-muted-foreground hover:bg-muted"
@@ -386,7 +401,7 @@ const StudentCourses = () => {
             >
               <ClipboardCheck className="h-3.5 w-3.5" />
               Attendance {attPct !== null ? `${attPct}%` : "—"}
-            </Link>
+            </a>
           </div>
         </div>
       </div>
