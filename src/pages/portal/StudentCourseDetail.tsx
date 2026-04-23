@@ -468,7 +468,7 @@ const StudentCourseDetail = () => {
                   </p>
                 </div>
                 <span className={`font-display text-2xl font-bold ${gradeColor(roundedTotal)}`}>
-                  {roundedTotal > 0 ? `${roundedTotal}%` : "—"}
+                  {formatGrade(roundedTotal)}
                 </span>
               </div>
             </div>
