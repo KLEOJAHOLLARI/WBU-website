@@ -172,6 +172,29 @@ const NotificationBell = () => {
             read: m.is_read,
           });
         });
+
+        // Student overdue tuition
+        const today = new Date().toISOString().slice(0, 10);
+        const { data: stOverdue } = await supabase
+          .from("tuition_charges")
+          .select("id, amount, currency, due_date, status")
+          .eq("user_id", user.id)
+          .lt("due_date", today)
+          .in("status", ["unpaid", "partial"])
+          .order("due_date", { ascending: true })
+          .limit(5);
+        stOverdue?.forEach((c) => {
+          const days = Math.floor((Date.now() - new Date(c.due_date!).getTime()) / 86400000);
+          items.push({
+            id: `tuition-${c.id}`,
+            type: "tuition",
+            title: "Tuition overdue",
+            description: `${new Intl.NumberFormat("en-US", { style: "currency", currency: c.currency }).format(Number(c.amount))} · ${days} day${days !== 1 ? "s" : ""} late`,
+            href: "/portal/tuition",
+            createdAt: c.due_date!,
+            read: false,
+          });
+        });
       }
 
       return items.sort(
