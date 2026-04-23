@@ -8,6 +8,7 @@ import { Badge } from "@/components/ui/badge";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Input } from "@/components/ui/input";
 import { CalendarDays, Search } from "lucide-react";
+import { useNavigate } from "react-router-dom";
 
 type ExamRow = {
   id: string;
@@ -33,6 +34,7 @@ const typeColors: Record<string, string> = {
 
 const ProfessorExamSchedule = () => {
   const { user } = useAuth();
+  const navigate = useNavigate();
   const [filter, setFilter] = useState<string>("upcoming");
   const [type, setType] = useState<string>("all");
   const [search, setSearch] = useState("");
@@ -136,7 +138,11 @@ const ProfessorExamSchedule = () => {
             ) : filtered.length === 0 ? (
               <TableRow><TableCell colSpan={6} className="text-center py-8 text-muted-foreground">No exams scheduled</TableCell></TableRow>
             ) : filtered.map((e) => (
-              <TableRow key={e.id} className={e.exam_date < today ? "opacity-60" : ""}>
+              <TableRow
+                key={e.id}
+                className={`cursor-pointer hover:bg-muted/40 transition-colors ${e.exam_date < today ? "opacity-60" : ""}`}
+                onClick={() => navigate(`/portal/exams/${e.id}`)}
+              >
                 <TableCell className="font-medium">
                   {e.courses?.name || "—"}
                   {e.courses?.code && <span className="ml-1 text-xs text-muted-foreground">({e.courses.code})</span>}

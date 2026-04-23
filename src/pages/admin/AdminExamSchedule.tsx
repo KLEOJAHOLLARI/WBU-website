@@ -1,5 +1,6 @@
 import { useMemo, useState } from "react";
 import AdminLayout from "@/components/AdminLayout";
+import { Link } from "react-router-dom";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "@/hooks/use-toast";
@@ -390,8 +391,10 @@ const AdminExamSchedule = () => {
             ) : filtered.map((e) => (
               <TableRow key={e.id}>
                 <TableCell className="font-medium">
-                  {e.courses?.name || "—"}
-                  {e.courses?.code && <span className="ml-1 text-xs text-muted-foreground">({e.courses.code})</span>}
+                  <Link to={`/portal/exams/${e.id}`} className="hover:text-primary hover:underline">
+                    {e.courses?.name || "—"}
+                    {e.courses?.code && <span className="ml-1 text-xs text-muted-foreground">({e.courses.code})</span>}
+                  </Link>
                 </TableCell>
                 <TableCell className="text-sm text-muted-foreground">{e.program}</TableCell>
                 <TableCell>
