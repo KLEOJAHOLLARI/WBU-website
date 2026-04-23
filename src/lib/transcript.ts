@@ -113,7 +113,7 @@ export function buildTranscriptRows(
       const status: TranscriptRow["status"] =
         weightedTotal === null
           ? "In Progress"
-          : weightedTotal >= 50
+          : weightedTotal >= 45
           ? "Passed"
           : "Failed";
 
