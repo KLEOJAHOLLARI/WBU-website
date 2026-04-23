@@ -775,6 +775,42 @@ export type Database = {
         }
         Relationships: []
       }
+      program_tuition_fees: {
+        Row: {
+          academic_semester_id: string
+          amount: number
+          created_at: string
+          currency: string
+          due_date: string | null
+          id: string
+          notes: string | null
+          program: string
+          updated_at: string
+        }
+        Insert: {
+          academic_semester_id: string
+          amount?: number
+          created_at?: string
+          currency?: string
+          due_date?: string | null
+          id?: string
+          notes?: string | null
+          program: string
+          updated_at?: string
+        }
+        Update: {
+          academic_semester_id?: string
+          amount?: number
+          created_at?: string
+          currency?: string
+          due_date?: string | null
+          id?: string
+          notes?: string | null
+          program?: string
+          updated_at?: string
+        }
+        Relationships: []
+      }
       programs: {
         Row: {
           careers: string[]
@@ -1080,6 +1116,107 @@ export type Database = {
           year?: number
         }
         Relationships: []
+      }
+      tuition_charges: {
+        Row: {
+          academic_semester_id: string
+          amount: number
+          created_at: string
+          currency: string
+          due_date: string | null
+          id: string
+          notes: string | null
+          program: string
+          status: string
+          updated_at: string
+          user_id: string
+        }
+        Insert: {
+          academic_semester_id: string
+          amount?: number
+          created_at?: string
+          currency?: string
+          due_date?: string | null
+          id?: string
+          notes?: string | null
+          program: string
+          status?: string
+          updated_at?: string
+          user_id: string
+        }
+        Update: {
+          academic_semester_id?: string
+          amount?: number
+          created_at?: string
+          currency?: string
+          due_date?: string | null
+          id?: string
+          notes?: string | null
+          program?: string
+          status?: string
+          updated_at?: string
+          user_id?: string
+        }
+        Relationships: []
+      }
+      tuition_payments: {
+        Row: {
+          admin_note: string | null
+          amount: number
+          charge_id: string
+          created_at: string
+          currency: string
+          id: string
+          method: string
+          payment_date: string
+          receipt_path: string | null
+          reference: string | null
+          updated_at: string
+          uploaded_by_student: boolean
+          user_id: string
+          verification_status: string
+        }
+        Insert: {
+          admin_note?: string | null
+          amount?: number
+          charge_id: string
+          created_at?: string
+          currency?: string
+          id?: string
+          method?: string
+          payment_date?: string
+          receipt_path?: string | null
+          reference?: string | null
+          updated_at?: string
+          uploaded_by_student?: boolean
+          user_id: string
+          verification_status?: string
+        }
+        Update: {
+          admin_note?: string | null
+          amount?: number
+          charge_id?: string
+          created_at?: string
+          currency?: string
+          id?: string
+          method?: string
+          payment_date?: string
+          receipt_path?: string | null
+          reference?: string | null
+          updated_at?: string
+          uploaded_by_student?: boolean
+          user_id?: string
+          verification_status?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "tuition_payments_charge_id_fkey"
+            columns: ["charge_id"]
+            isOneToOne: false
+            referencedRelation: "tuition_charges"
+            referencedColumns: ["id"]
+          },
+        ]
       }
       user_roles: {
         Row: {
