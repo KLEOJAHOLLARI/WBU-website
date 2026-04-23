@@ -57,6 +57,8 @@ const AdminTuition = () => {
   const [lfStatus, setLfStatus] = useState<"all" | "active" | "waived">("all");
   const [lfFrom, setLfFrom] = useState<string>("");
   const [lfTo, setLfTo] = useState<string>("");
+  const [lfSelected, setLfSelected] = useState<Set<string>>(new Set());
+  const [bulkLfDialog, setBulkLfDialog] = useState<null | "waive" | "remove">(null);
 
   const { data: semesters = [] } = useQuery({
     queryKey: ["adm-tuition-semesters"],
@@ -363,6 +365,42 @@ const AdminTuition = () => {
     },
     onSuccess: () => { qc.invalidateQueries({ queryKey: ["adm-late-fees"] }); toast.success("Late fee removed"); },
   });
+
+  const bulkWaiveLateFees = useMutation({
+    mutationFn: async (ids: string[]) => {
+      if (ids.length === 0) return { count: 0 };
+      const { error } = await supabase.from("tuition_late_fees")
+        .update({ waived: true, waived_at: new Date().toISOString() })
+        .in("id", ids)
+        .eq("waived", false);
+      if (error) throw error;
+      return { count: ids.length };
+    },
+    onSuccess: ({ count }) => {
+      qc.invalidateQueries({ queryKey: ["adm-late-fees"] });
+      setBulkLfDialog(null);
+      setLfSelected(new Set());
+      toast.success(`Waived ${count} late fee${count !== 1 ? "s" : ""}`);
+    },
+    onError: (e: any) => toast.error(e.message),
+  });
+
+  const bulkDeleteLateFees = useMutation({
+    mutationFn: async (ids: string[]) => {
+      if (ids.length === 0) return { count: 0 };
+      const { error } = await supabase.from("tuition_late_fees").delete().in("id", ids);
+      if (error) throw error;
+      return { count: ids.length };
+    },
+    onSuccess: ({ count }) => {
+      qc.invalidateQueries({ queryKey: ["adm-late-fees"] });
+      setBulkLfDialog(null);
+      setLfSelected(new Set());
+      toast.success(`Removed ${count} late fee${count !== 1 ? "s" : ""}`);
+    },
+    onError: (e: any) => toast.error(e.message),
+  });
+
 
   const updateLateFeeNotes = useMutation({
     mutationFn: async (lf: { id: string; reason: string; waive_note: string; waived: boolean }) => {
@@ -719,118 +757,226 @@ const AdminTuition = () => {
             </div>
           )}
 
-          <div className="rounded-xl border border-border bg-card">
-            <div className="border-b border-border p-4 space-y-3">
-              <div className="flex flex-wrap items-center justify-between gap-2">
-                <h2 className="font-semibold text-foreground">Applied Late Fees</h2>
-                {(lfSearch || lfStatus !== "all" || lfFrom || lfTo) && (
-                  <Button size="sm" variant="ghost" onClick={() => { setLfSearch(""); setLfStatus("all"); setLfFrom(""); setLfTo(""); }}>
-                    Clear filters
-                  </Button>
-                )}
-              </div>
-              <div className="grid gap-2 sm:grid-cols-2 lg:grid-cols-4">
-                <Input
-                  placeholder="Search student name, ID or email…"
-                  value={lfSearch}
-                  onChange={(e) => setLfSearch(e.target.value)}
-                />
-                <Select value={lfStatus} onValueChange={(v: any) => setLfStatus(v)}>
-                  <SelectTrigger><SelectValue placeholder="Status" /></SelectTrigger>
-                  <SelectContent>
-                    <SelectItem value="all">All statuses</SelectItem>
-                    <SelectItem value="active">Active</SelectItem>
-                    <SelectItem value="waived">Waived</SelectItem>
-                  </SelectContent>
-                </Select>
-                <div>
-                  <Label className="text-xs text-muted-foreground">From</Label>
-                  <Input type="date" value={lfFrom} onChange={(e) => setLfFrom(e.target.value)} />
-                </div>
-                <div>
-                  <Label className="text-xs text-muted-foreground">To</Label>
-                  <Input type="date" value={lfTo} onChange={(e) => setLfTo(e.target.value)} />
-                </div>
-              </div>
-            </div>
-            <Table>
-              <TableHeader>
-                <TableRow>
-                  <TableHead>Student</TableHead>
-                  <TableHead>Applied</TableHead>
-                  <TableHead>Amount</TableHead>
-                  <TableHead>Reason</TableHead>
-                  <TableHead>Status</TableHead>
-                  <TableHead></TableHead>
-                </TableRow>
-              </TableHeader>
-              <TableBody>
-                {(() => {
-                  const q = lfSearch.trim().toLowerCase();
-                  const fromTs = lfFrom ? new Date(lfFrom).setHours(0, 0, 0, 0) : null;
-                  const toTs = lfTo ? new Date(lfTo).setHours(23, 59, 59, 999) : null;
-                  const filtered = (lateFees as any[]).filter((lf) => {
-                    if (lfStatus === "active" && lf.waived) return false;
-                    if (lfStatus === "waived" && !lf.waived) return false;
-                    const ts = new Date(lf.applied_at).getTime();
-                    if (fromTs != null && ts < fromTs) return false;
-                    if (toTs != null && ts > toTs) return false;
-                    if (q) {
-                      const st = studentMap[lf.user_id];
-                      const hay = `${st?.full_name || ""} ${st?.student_id || ""} ${st?.email || ""}`.toLowerCase();
-                      if (!hay.includes(q)) return false;
-                    }
-                    return true;
-                  });
-                  if (filtered.length === 0) {
-                    return <TableRow><TableCell colSpan={6} className="text-center text-muted-foreground">{lateFees.length === 0 ? "No late fees applied yet." : "No late fees match the current filters."}</TableCell></TableRow>;
-                  }
-                  return filtered.map((lf: any) => {
-                  const st = studentMap[lf.user_id];
-                  const parsed = splitLateFeeReason(lf.reason);
-                  return (
-                    <TableRow key={lf.id}>
-                      <TableCell>
-                        <div className="font-medium text-foreground">{st?.full_name || "—"}</div>
-                        <div className="text-xs text-muted-foreground">{st?.student_id || st?.email}</div>
-                      </TableCell>
-                      <TableCell className="text-sm">{new Date(lf.applied_at).toLocaleDateString()}</TableCell>
-                      <TableCell className="font-medium">{fmtMoney(Number(lf.amount), lf.currency)}</TableCell>
-                      <TableCell className="text-sm text-muted-foreground">
-                        <div>{parsed.reason || "—"}</div>
-                        {lf.waived && parsed.waive_note && (
-                          <div className="mt-1 text-xs italic">Waive note: {parsed.waive_note}</div>
-                        )}
-                      </TableCell>
-                      <TableCell>
-                        {lf.waived
-                          ? <Badge variant="secondary">Waived</Badge>
-                          : <Badge variant="destructive">Active</Badge>}
-                      </TableCell>
-                      <TableCell className="text-right space-x-1">
+          {(() => {
+            const q = lfSearch.trim().toLowerCase();
+            const fromTs = lfFrom ? new Date(lfFrom).setHours(0, 0, 0, 0) : null;
+            const toTs = lfTo ? new Date(lfTo).setHours(23, 59, 59, 999) : null;
+            const filteredLateFees = (lateFees as any[]).filter((lf) => {
+              if (lfStatus === "active" && lf.waived) return false;
+              if (lfStatus === "waived" && !lf.waived) return false;
+              const ts = new Date(lf.applied_at).getTime();
+              if (fromTs != null && ts < fromTs) return false;
+              if (toTs != null && ts > toTs) return false;
+              if (q) {
+                const st = studentMap[lf.user_id];
+                const hay = `${st?.full_name || ""} ${st?.student_id || ""} ${st?.email || ""}`.toLowerCase();
+                if (!hay.includes(q)) return false;
+              }
+              return true;
+            });
+            const filteredIds = filteredLateFees.map((lf) => lf.id);
+            const visibleSelected = filteredIds.filter((id) => lfSelected.has(id));
+            const allVisibleSelected = filteredIds.length > 0 && visibleSelected.length === filteredIds.length;
+            const someVisibleSelected = visibleSelected.length > 0 && !allVisibleSelected;
+            const toggleAllVisible = (checked: boolean) => {
+              const next = new Set(lfSelected);
+              if (checked) filteredIds.forEach((id) => next.add(id));
+              else filteredIds.forEach((id) => next.delete(id));
+              setLfSelected(next);
+            };
+            const toggleOne = (id: string, checked: boolean) => {
+              const next = new Set(lfSelected);
+              if (checked) next.add(id); else next.delete(id);
+              setLfSelected(next);
+            };
+            const selectedRows = filteredLateFees.filter((lf) => lfSelected.has(lf.id));
+            const selectedActiveRows = selectedRows.filter((lf) => !lf.waived);
+
+            return (
+              <div className="rounded-xl border border-border bg-card">
+                <div className="border-b border-border p-4 space-y-3">
+                  <div className="flex flex-wrap items-center justify-between gap-2">
+                    <h2 className="font-semibold text-foreground">Applied Late Fees</h2>
+                    {(lfSearch || lfStatus !== "all" || lfFrom || lfTo) && (
+                      <Button size="sm" variant="ghost" onClick={() => { setLfSearch(""); setLfStatus("all"); setLfFrom(""); setLfTo(""); }}>
+                        Clear filters
+                      </Button>
+                    )}
+                  </div>
+                  <div className="grid gap-2 sm:grid-cols-2 lg:grid-cols-4">
+                    <Input
+                      placeholder="Search student name, ID or email…"
+                      value={lfSearch}
+                      onChange={(e) => setLfSearch(e.target.value)}
+                    />
+                    <Select value={lfStatus} onValueChange={(v: any) => setLfStatus(v)}>
+                      <SelectTrigger><SelectValue placeholder="Status" /></SelectTrigger>
+                      <SelectContent>
+                        <SelectItem value="all">All statuses</SelectItem>
+                        <SelectItem value="active">Active</SelectItem>
+                        <SelectItem value="waived">Waived</SelectItem>
+                      </SelectContent>
+                    </Select>
+                    <div>
+                      <Label className="text-xs text-muted-foreground">From</Label>
+                      <Input type="date" value={lfFrom} onChange={(e) => setLfFrom(e.target.value)} />
+                    </div>
+                    <div>
+                      <Label className="text-xs text-muted-foreground">To</Label>
+                      <Input type="date" value={lfTo} onChange={(e) => setLfTo(e.target.value)} />
+                    </div>
+                  </div>
+                  {visibleSelected.length > 0 && (
+                    <div className="flex flex-wrap items-center justify-between gap-2 rounded-lg border border-primary/30 bg-primary/5 p-2 px-3">
+                      <div className="text-sm">
+                        <span className="font-semibold text-foreground">{visibleSelected.length}</span>
+                        <span className="text-muted-foreground"> selected{selectedActiveRows.length !== visibleSelected.length && ` · ${selectedActiveRows.length} active`}</span>
+                      </div>
+                      <div className="flex flex-wrap gap-2">
+                        <Button size="sm" variant="ghost" onClick={() => setLfSelected(new Set())}>Clear</Button>
                         <Button
                           size="sm"
                           variant="outline"
-                          onClick={() => setEditLateFee({ ...lf, ...parsed })}
+                          disabled={selectedActiveRows.length === 0}
+                          onClick={() => setBulkLfDialog("waive")}
                         >
-                          Edit
+                          <Undo2 className="h-3.5 w-3.5 mr-1" /> Waive ({selectedActiveRows.length})
                         </Button>
-                        {!lf.waived && (
-                          <Button size="sm" variant="outline" onClick={() => waiveLateFee.mutate(lf.id)}>
-                            <Undo2 className="h-3.5 w-3.5 mr-1" /> Waive
-                          </Button>
-                        )}
-                        <Button size="sm" variant="ghost" onClick={() => { if (confirm("Remove this late fee record?")) deleteLateFee.mutate(lf.id); }}>
-                          <Trash2 className="h-3.5 w-3.5" />
+                        <Button
+                          size="sm"
+                          variant="destructive"
+                          onClick={() => setBulkLfDialog("remove")}
+                        >
+                          <Trash2 className="h-3.5 w-3.5 mr-1" /> Remove ({visibleSelected.length})
                         </Button>
-                      </TableCell>
+                      </div>
+                    </div>
+                  )}
+                </div>
+                <Table>
+                  <TableHeader>
+                    <TableRow>
+                      <TableHead className="w-10">
+                        <Checkbox
+                          checked={allVisibleSelected ? true : someVisibleSelected ? "indeterminate" : false}
+                          onCheckedChange={(v) => toggleAllVisible(!!v)}
+                          aria-label="Select all visible"
+                          disabled={filteredIds.length === 0}
+                        />
+                      </TableHead>
+                      <TableHead>Student</TableHead>
+                      <TableHead>Applied</TableHead>
+                      <TableHead>Amount</TableHead>
+                      <TableHead>Reason</TableHead>
+                      <TableHead>Status</TableHead>
+                      <TableHead></TableHead>
                     </TableRow>
-                  );
-                  });
-                })()}
-              </TableBody>
-            </Table>
-          </div>
+                  </TableHeader>
+                  <TableBody>
+                    {filteredLateFees.length === 0 && (
+                      <TableRow>
+                        <TableCell colSpan={7} className="text-center text-muted-foreground">
+                          {lateFees.length === 0 ? "No late fees applied yet." : "No late fees match the current filters."}
+                        </TableCell>
+                      </TableRow>
+                    )}
+                    {filteredLateFees.map((lf: any) => {
+                      const st = studentMap[lf.user_id];
+                      const parsed = splitLateFeeReason(lf.reason);
+                      const checked = lfSelected.has(lf.id);
+                      return (
+                        <TableRow key={lf.id} data-state={checked ? "selected" : undefined}>
+                          <TableCell>
+                            <Checkbox
+                              checked={checked}
+                              onCheckedChange={(v) => toggleOne(lf.id, !!v)}
+                              aria-label="Select row"
+                            />
+                          </TableCell>
+                          <TableCell>
+                            <div className="font-medium text-foreground">{st?.full_name || "—"}</div>
+                            <div className="text-xs text-muted-foreground">{st?.student_id || st?.email}</div>
+                          </TableCell>
+                          <TableCell className="text-sm">{new Date(lf.applied_at).toLocaleDateString()}</TableCell>
+                          <TableCell className="font-medium">{fmtMoney(Number(lf.amount), lf.currency)}</TableCell>
+                          <TableCell className="text-sm text-muted-foreground">
+                            <div>{parsed.reason || "—"}</div>
+                            {lf.waived && parsed.waive_note && (
+                              <div className="mt-1 text-xs italic">Waive note: {parsed.waive_note}</div>
+                            )}
+                          </TableCell>
+                          <TableCell>
+                            {lf.waived
+                              ? <Badge variant="secondary">Waived</Badge>
+                              : <Badge variant="destructive">Active</Badge>}
+                          </TableCell>
+                          <TableCell className="text-right space-x-1">
+                            <Button
+                              size="sm"
+                              variant="outline"
+                              onClick={() => setEditLateFee({ ...lf, ...parsed })}
+                            >
+                              Edit
+                            </Button>
+                            {!lf.waived && (
+                              <Button size="sm" variant="outline" onClick={() => waiveLateFee.mutate(lf.id)}>
+                                <Undo2 className="h-3.5 w-3.5 mr-1" /> Waive
+                              </Button>
+                            )}
+                            <Button size="sm" variant="ghost" onClick={() => { if (confirm("Remove this late fee record?")) deleteLateFee.mutate(lf.id); }}>
+                              <Trash2 className="h-3.5 w-3.5" />
+                            </Button>
+                          </TableCell>
+                        </TableRow>
+                      );
+                    })}
+                  </TableBody>
+                </Table>
+
+                <AlertDialog open={!!bulkLfDialog} onOpenChange={(o) => !o && setBulkLfDialog(null)}>
+                  <AlertDialogContent>
+                    <AlertDialogHeader>
+                      <AlertDialogTitle>
+                        {bulkLfDialog === "waive" ? "Waive selected late fees?" : "Remove selected late fees?"}
+                      </AlertDialogTitle>
+                      <AlertDialogDescription asChild>
+                        <div className="space-y-2 text-sm text-muted-foreground">
+                          {bulkLfDialog === "waive" ? (
+                            <>
+                              <p>
+                                This will waive <span className="font-semibold text-foreground">{selectedActiveRows.length}</span> active late fee{selectedActiveRows.length !== 1 ? "s" : ""}. Already-waived rows in your selection will be skipped.
+                              </p>
+                              <p className="text-xs">The records remain in the table marked as Waived.</p>
+                            </>
+                          ) : (
+                            <>
+                              <p>
+                                This will permanently remove <span className="font-semibold text-foreground">{visibleSelected.length}</span> late fee record{visibleSelected.length !== 1 ? "s" : ""} (active and waived). This cannot be undone.
+                              </p>
+                            </>
+                          )}
+                        </div>
+                      </AlertDialogDescription>
+                    </AlertDialogHeader>
+                    <AlertDialogFooter>
+                      <AlertDialogCancel>Cancel</AlertDialogCancel>
+                      <AlertDialogAction
+                        onClick={() => {
+                          if (bulkLfDialog === "waive") {
+                            bulkWaiveLateFees.mutate(selectedActiveRows.map((r) => r.id));
+                          } else {
+                            bulkDeleteLateFees.mutate(visibleSelected);
+                          }
+                        }}
+                      >
+                        {bulkLfDialog === "waive" ? "Waive Selected" : "Remove Selected"}
+                      </AlertDialogAction>
+                    </AlertDialogFooter>
+                  </AlertDialogContent>
+                </AlertDialog>
+              </div>
+            );
+          })()}
         </TabsContent>
       </Tabs>
 
