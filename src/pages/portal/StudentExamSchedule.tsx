@@ -10,6 +10,7 @@ import { CalendarDays, Search } from "lucide-react";
 import { useMemo, useState } from "react";
 import { useActiveSemester } from "@/hooks/useActiveSemester";
 import SemesterBadge from "@/components/SemesterBadge";
+import { useNavigate } from "react-router-dom";
 
 type ExamRow = {
   id: string;
