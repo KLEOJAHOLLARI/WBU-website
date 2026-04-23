@@ -264,7 +264,100 @@ const AdminTuition = () => {
     },
   });
 
-  // Stats
+  // ===== LATE FEE LOGIC =====
+  const computeLateFee = (chargeAmount: number, settings: any) => {
+    if (!settings || !settings.enabled) return 0;
+    const raw = settings.fee_type === "percent"
+      ? +(Number(chargeAmount) * Number(settings.amount) / 100).toFixed(2)
+      : Number(settings.amount);
+    const capped = settings.max_fee != null ? Math.min(raw, Number(settings.max_fee)) : raw;
+    return Math.max(0, +capped.toFixed(2));
+  };
+
+  // For preview: which charges would get a NEW late fee right now
+  const eligibleForLateFee = (() => {
+    if (!lateFeeSettings?.enabled) return [];
+    const grace = Number(lateFeeSettings.grace_days || 0);
+    const cutoff = Date.now() - grace * 24 * 60 * 60 * 1000;
+    return charges.filter((c) => {
+      if (!c.due_date) return false;
+      if (c.status === "paid" || c.status === "waived") return false;
+      if (new Date(c.due_date).getTime() > cutoff) return false;
+      const existing = lateFeeByCharge[c.id];
+      return !existing || existing.waived; // re-apply only if previously waived? skip — only if none exists
+    }).filter((c) => !lateFeeByCharge[c.id]); // never duplicate; UNIQUE on charge_id
+  })();
+
+  const eligiblePreviewTotal = eligibleForLateFee.reduce((s, c) => s + computeLateFee(Number(c.amount), lateFeeSettings), 0);
+
+  const saveLateFeeSettings = useMutation({
+    mutationFn: async (s: any) => {
+      const payload = {
+        enabled: !!s.enabled,
+        fee_type: s.fee_type === "percent" ? "percent" : "fixed",
+        amount: Number(s.amount) || 0,
+        grace_days: Math.max(0, Math.floor(Number(s.grace_days) || 0)),
+        max_fee: s.max_fee === "" || s.max_fee == null ? null : Number(s.max_fee),
+        currency: s.currency || "EUR",
+        updated_at: new Date().toISOString(),
+      };
+      if (s.id) {
+        const { error } = await supabase.from("tuition_late_fee_settings").update(payload).eq("id", s.id);
+        if (error) throw error;
+      } else {
+        const { error } = await supabase.from("tuition_late_fee_settings").insert(payload);
+        if (error) throw error;
+      }
+    },
+    onSuccess: () => {
+      qc.invalidateQueries({ queryKey: ["adm-late-fee-settings"] });
+      setLateFeeSettingsDraft(null);
+      toast.success("Late fee settings saved");
+    },
+    onError: (e: any) => toast.error(e.message),
+  });
+
+  const applyLateFees = useMutation({
+    mutationFn: async () => {
+      if (!lateFeeSettings?.enabled) throw new Error("Late fees are disabled");
+      let applied = 0, skipped = 0;
+      for (const c of eligibleForLateFee) {
+        const fee = computeLateFee(Number(c.amount), lateFeeSettings);
+        if (fee <= 0) { skipped++; continue; }
+        const reason = `${lateFeeSettings.fee_type === "percent" ? `${lateFeeSettings.amount}% of ${fmtMoney(Number(c.amount), c.currency)}` : `Flat fee`} after ${lateFeeSettings.grace_days}-day grace period`;
+        const { error } = await supabase.from("tuition_late_fees").insert({
+          charge_id: c.id, user_id: c.user_id, amount: fee, currency: c.currency, reason,
+        });
+        if (error) skipped++; else applied++;
+      }
+      return { applied, skipped };
+    },
+    onSuccess: ({ applied, skipped }) => {
+      qc.invalidateQueries({ queryKey: ["adm-late-fees"] });
+      setApplyLateFeesOpen(false);
+      toast.success(`Applied ${applied} late fee${applied !== 1 ? "s" : ""}${skipped ? ` · ${skipped} skipped` : ""}`);
+    },
+    onError: (e: any) => toast.error(e.message),
+  });
+
+  const waiveLateFee = useMutation({
+    mutationFn: async (id: string) => {
+      const { error } = await supabase.from("tuition_late_fees")
+        .update({ waived: true, waived_at: new Date().toISOString() })
+        .eq("id", id);
+      if (error) throw error;
+    },
+    onSuccess: () => { qc.invalidateQueries({ queryKey: ["adm-late-fees"] }); toast.success("Late fee waived"); },
+    onError: (e: any) => toast.error(e.message),
+  });
+
+  const deleteLateFee = useMutation({
+    mutationFn: async (id: string) => {
+      const { error } = await supabase.from("tuition_late_fees").delete().eq("id", id);
+      if (error) throw error;
+    },
+    onSuccess: () => { qc.invalidateQueries({ queryKey: ["adm-late-fees"] }); toast.success("Late fee removed"); },
+  });
   const totalCharged = charges.reduce((s, c) => s + Number(c.amount), 0);
   const verifiedPayments = payments.filter((p) => p.verification_status === "verified");
   const totalCollected = verifiedPayments.reduce((s, p) => s + Number(p.amount), 0);
