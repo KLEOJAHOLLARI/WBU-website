@@ -7,7 +7,7 @@ import { useAuth } from "@/hooks/useAuth";
 import {
   AlertTriangle, CheckCircle2, ExternalLink, ArrowLeft,
   CalendarDays, BarChart3, Loader2, BookOpen, TrendingUp,
-  FileText, Download, X, Minus, HelpCircle, Clock, ArrowRight
+  FileText, Download, X, Minus, HelpCircle, Clock, ArrowRight, Calendar
 } from "lucide-react";
 import { Badge } from "@/components/ui/badge";
 import { Progress } from "@/components/ui/progress";
@@ -65,6 +65,19 @@ const StudentCourseDetail = () => {
     if (pct === null || pct <= 0) return "—";
     if (gradingScale === "albanian") return String(toAlbanian(pct));
     return `${Math.round(pct)}%`;
+  };
+
+  const formatGradedAt = (iso: string | null): string => {
+    if (!iso) return "—";
+    try {
+      return new Date(iso).toLocaleDateString(undefined, {
+        day: "2-digit",
+        month: "short",
+        year: "numeric",
+      });
+    } catch {
+      return "—";
+    }
   };
 
   const { data: course, isLoading: loadingCourse } = useQuery({
@@ -197,6 +210,7 @@ const StudentCourseDetail = () => {
         pct,
         weighted,
         hasScore,
+        gradedAt: hasScore ? (grade?.created_at ?? null) : null,
       };
     })
   );
@@ -362,6 +376,9 @@ const StudentCourseDetail = () => {
                     Evaluation Type
                   </th>
                   <th className="px-5 py-3 text-xs font-semibold uppercase tracking-wider text-muted-foreground">
+                    Date
+                  </th>
+                  <th className="px-5 py-3 text-xs font-semibold uppercase tracking-wider text-muted-foreground">
                     Weight
                   </th>
                   <th className="px-5 py-3 text-right text-xs font-semibold uppercase tracking-wider text-muted-foreground">
@@ -379,6 +396,16 @@ const StudentCourseDetail = () => {
                           ? `Contributes ${cs.weighted!.toFixed(1)}% to final grade`
                           : "Awaiting grade"}
                       </p>
+                    </td>
+                    <td className="px-5 py-4">
+                      {cs.hasScore ? (
+                        <div className="flex items-center gap-1.5 text-sm text-foreground">
+                          <Calendar className="h-3.5 w-3.5 text-muted-foreground" />
+                          <span>{formatGradedAt(cs.gradedAt)}</span>
+                        </div>
+                      ) : (
+                        <span className="text-sm text-muted-foreground">—</span>
+                      )}
                     </td>
                     <td className="px-5 py-4">
                       <Badge variant="outline" className="text-xs">{cs.weight}%</Badge>
@@ -414,6 +441,7 @@ const StudentCourseDetail = () => {
                     </p>
                   </td>
                   <td className="px-5 py-4" />
+                  <td className="px-5 py-4" />
                   <td className="px-5 py-4 text-right">
                     <span className={`font-display text-3xl font-bold ${gradeColor(roundedTotal)}`}>
                       {formatGrade(roundedTotal)}
@@ -438,6 +466,12 @@ const StudentCourseDetail = () => {
                         {cs.hasScore ? `+${cs.weighted!.toFixed(1)}% weighted` : "Awaiting grade"}
                       </span>
                     </div>
+                    {cs.hasScore && (
+                      <div className="mt-1 flex items-center gap-1 text-[11px] text-muted-foreground">
+                        <Calendar className="h-3 w-3" />
+                        <span>Graded {formatGradedAt(cs.gradedAt)}</span>
+                      </div>
+                    )}
                   </div>
                   <div className="flex flex-col items-end flex-shrink-0">
                     {cs.hasScore ? (
