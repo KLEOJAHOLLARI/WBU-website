@@ -210,6 +210,32 @@ const NotificationBell = () => {
     [notifications]
   );
 
+  // Realtime: refresh notifications instantly when grades or messages change for this student
+  useEffect(() => {
+    if (!user || isAdmin || isProfessor) return;
+    const channel = supabase
+      .channel(`notif-${user.id}`)
+      .on(
+        "postgres_changes",
+        { event: "*", schema: "public", table: "grade_notifications", filter: `user_id=eq.${user.id}` },
+        () => {
+          queryClient.invalidateQueries({ queryKey: ["notifications"] });
+        }
+      )
+      .on(
+        "postgres_changes",
+        { event: "*", schema: "public", table: "student_messages", filter: `user_id=eq.${user.id}` },
+        () => {
+          queryClient.invalidateQueries({ queryKey: ["notifications"] });
+          queryClient.invalidateQueries({ queryKey: ["student-unread-messages"] });
+        }
+      )
+      .subscribe();
+    return () => {
+      supabase.removeChannel(channel);
+    };
+  }, [user?.id, isAdmin, isProfessor, queryClient]);
+
   const markAllRead = useMutation({
     mutationFn: async () => {
       if (!user) return;
