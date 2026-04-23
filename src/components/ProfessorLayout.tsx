@@ -26,6 +26,7 @@ const navGroups = [
     items: [
       { to: "/professor/advisor", label: "Advisor", icon: UserCheck, badgeKey: "advisor" as const },
       { to: "/professor/transcripts", label: "Transcripts", icon: ScrollText },
+      { to: "/professor/exams", label: "Exam Schedule", icon: CalendarDays },
       { to: "/professor/announcements", label: "Announcements", icon: Megaphone },
     ],
   },
