@@ -82,10 +82,13 @@ const GradeCell = ({ defaultValue, onSave, isSaving }: { defaultValue: string; o
 const ProfessorCourseDetail = () => {
   const { id: courseId } = useParams<{ id: string }>();
   const qc = useQueryClient();
-  const [tab, setTab] = useState<"students" | "scheme" | "attendance" | "grades" | "materials" | "analytics" | "quizzes" | "messages">("students");
+  const [tab, setTab] = useState<"students" | "scheme" | "attendance" | "grades" | "materials" | "syllabus" | "analytics" | "quizzes" | "messages">("students");
   const [studentSearch, setStudentSearch] = useState("");
   const fileInputRef = useRef<HTMLInputElement>(null);
+  const syllabusFileInputRef = useRef<HTMLInputElement>(null);
   const [uploading, setUploading] = useState(false);
+  const [uploadingSyllabus, setUploadingSyllabus] = useState(false);
+  const [syllabusUrlInput, setSyllabusUrlInput] = useState("");
 
   /* ─── queries ─── */
   const { data: course, isLoading: loadingCourse } = useQuery({
