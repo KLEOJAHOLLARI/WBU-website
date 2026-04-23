@@ -5,6 +5,7 @@ import { useAuth } from "@/hooks/useAuth";
 import { useToast } from "@/hooks/use-toast";
 import { CheckCircle, XCircle, Clock, UserCheck, BookOpen, Building2, GraduationCap, ChevronRight } from "lucide-react";
 import { Badge } from "@/components/ui/badge";
+import { useHighlightParam, highlightClasses } from "@/hooks/useHighlightParam";
 
 const ProfessorAdvisor = () => {
   const { user } = useAuth();
@@ -98,6 +99,8 @@ const ProfessorAdvisor = () => {
   const pendingRequests = requests.filter((r) => r.status === "pending");
   const processedRequests = requests.filter((r) => r.status !== "pending");
 
+  const { isHighlighted } = useHighlightParam("request", "req", requests.length > 0);
+
   const statusBadge = (status: string) => {
     switch (status) {
       case "accepted":
@@ -178,7 +181,7 @@ const ProfessorAdvisor = () => {
         ) : (
           <div className="space-y-3">
             {pendingRequests.map((r) => (
-              <div key={r.id} className="rounded-xl border border-border bg-card p-4 transition-all hover:shadow-sm">
+              <div key={r.id} id={`req-${r.id}`} className={`rounded-xl border border-border bg-card p-4 transition-all hover:shadow-sm ${isHighlighted(r.id) ? highlightClasses : ""}`}>
                 <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
                   <div className="flex items-start gap-3">
                     <div className="rounded-lg bg-amber-500/10 p-2">
@@ -237,7 +240,7 @@ const ProfessorAdvisor = () => {
               </thead>
               <tbody>
                 {processedRequests.map((r) => (
-                  <tr key={r.id} className="border-b border-border last:border-0">
+                  <tr key={r.id} id={`req-${r.id}`} className={`border-b border-border last:border-0 ${isHighlighted(r.id) ? highlightClasses : ""}`}>
                     <td className="px-4 py-3">
                       <p className="font-medium text-foreground">{r.student?.full_name || "Unknown"}</p>
                       <p className="text-xs text-muted-foreground">{r.student?.email}</p>

@@ -13,6 +13,7 @@ import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from "
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { toast } from "sonner";
 import { CreditCard, AlertTriangle, CheckCircle2, Wallet, Receipt, FileDown, Upload } from "lucide-react";
+import { useHighlightParam, highlightClasses } from "@/hooks/useHighlightParam";
 
 const fmtMoney = (n: number, c: string = "EUR") => new Intl.NumberFormat("en-US", { style: "currency", currency: c }).format(n || 0);
 
@@ -102,6 +103,8 @@ const StudentTuition = () => {
   const balance = totalCharged - verifiedPaid;
   const overdue = charges.filter((c) => c.due_date && new Date(c.due_date) < new Date() && c.status !== "paid" && c.status !== "waived");
   const pendingCount = payments.filter((p) => p.verification_status === "pending").length;
+
+  const { isHighlighted } = useHighlightParam("charge", "charge", charges.length > 0);
 
   const uploadReceipt = useMutation({
     mutationFn: async ({ charge, file, amount, payment_date, method, reference }: any) => {
@@ -279,7 +282,7 @@ const StudentTuition = () => {
             const paid = chargePayments.filter((p: any) => p.verification_status === "verified").reduce((s: number, p: any) => s + Number(p.amount), 0);
             const pct = Number(c.amount) > 0 ? Math.min(100, Math.round((paid / Number(c.amount)) * 100)) : 0;
             return (
-              <div key={c.id} className="rounded-xl border border-border bg-card p-5">
+              <div key={c.id} id={`charge-${c.id}`} className={`rounded-xl border border-border bg-card p-5 ${isHighlighted(c.id) ? highlightClasses : ""}`}>
                 <div className="flex flex-wrap items-start justify-between gap-3">
                   <div>
                     <div className="flex items-center gap-2 flex-wrap">

@@ -11,6 +11,7 @@ import { toast } from "sonner";
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { Label } from "@/components/ui/label";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
+import { useHighlightParam, highlightClasses } from "@/hooks/useHighlightParam";
 
 const StudentMessages = () => {
   const { user } = useAuth();
@@ -127,6 +128,14 @@ const StudentMessages = () => {
     }
   };
 
+  const { isHighlighted } = useHighlightParam("msg", "msg", !isLoading && messages.length > 0, (id) => {
+    const msg = messages.find((m: any) => m.id === id);
+    if (msg) {
+      setExpandedId(id);
+      if (!msg.is_read) markRead.mutate(id);
+    }
+  });
+
   return (
     <StudentLayout>
       <div className="flex items-center justify-between">
@@ -198,7 +207,7 @@ const StudentMessages = () => {
           </div>
         ) : (
           messages.map((msg) => (
-            <div key={msg.id} className={`rounded-xl border bg-card transition-colors ${!msg.is_read ? "border-primary/40 bg-primary/5" : "border-border"}`}>
+            <div key={msg.id} id={`msg-${msg.id}`} className={`rounded-xl border bg-card transition-colors ${!msg.is_read ? "border-primary/40 bg-primary/5" : "border-border"} ${isHighlighted(msg.id) ? highlightClasses : ""}`}>
               <button
                 onClick={() => toggleMessage(msg)}
                 className="flex w-full items-center justify-between p-4 text-left"

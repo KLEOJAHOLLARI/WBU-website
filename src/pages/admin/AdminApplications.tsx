@@ -4,6 +4,7 @@ import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
 import { useToast } from "@/hooks/use-toast";
 import { CheckCircle, XCircle, Eye, FileText, Trash2, Copy, UserPlus } from "lucide-react";
+import { useHighlightParam, highlightClasses } from "@/hooks/useHighlightParam";
 
 const AdminApplications = () => {
   const { toast } = useToast();
@@ -80,6 +81,10 @@ const AdminApplications = () => {
   const filtered = statusFilter === "all"
     ? applications
     : applications.filter((a) => a.status === statusFilter);
+
+  const { isHighlighted } = useHighlightParam("focus", "app", !isLoading && applications.length > 0, (id) => {
+    setViewing(id);
+  });
 
   const pendingCount = applications.filter((a) => a.status === "pending").length;
 
@@ -183,7 +188,7 @@ const AdminApplications = () => {
             ) : filtered.length === 0 ? (
               <tr><td colSpan={7} className="px-4 py-8 text-center text-muted-foreground">No applications found</td></tr>
             ) : filtered.map((a) => (
-              <tr key={a.id} className="border-b border-border last:border-0">
+              <tr key={a.id} id={`app-${a.id}`} className={`border-b border-border last:border-0 ${isHighlighted(a.id) ? highlightClasses : ""}`}>
                 <td className="px-4 py-3 font-medium text-foreground">{a.full_name}</td>
                 <td className="px-4 py-3 text-muted-foreground">{a.email}</td>
                 <td className="px-4 py-3 text-muted-foreground">{a.program}</td>
