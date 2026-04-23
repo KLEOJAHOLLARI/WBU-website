@@ -141,11 +141,18 @@ const StudentTuition = () => {
 
   return (
     <StudentLayout>
-      <div className="flex items-center gap-2">
-        <CreditCard className="h-6 w-6 text-primary" />
-        <h1 className="font-display text-2xl font-bold text-foreground">Tuition & Payments</h1>
+      <div className="flex flex-wrap items-center justify-between gap-3">
+        <div>
+          <div className="flex items-center gap-2">
+            <CreditCard className="h-6 w-6 text-primary" />
+            <h1 className="font-display text-2xl font-bold text-foreground">Tuition & Payments</h1>
+          </div>
+          <p className="mt-1 text-muted-foreground">Track your tuition fees, payments, and upload payment receipts.</p>
+        </div>
+        <a href="/portal/tuition/estimate" className="text-sm font-medium text-primary hover:underline">
+          Open tuition estimate →
+        </a>
       </div>
-      <p className="mt-1 text-muted-foreground">Track your tuition fees, payments, and upload payment receipts.</p>
 
       {/* Tuition summary (program-based pricing + scholarship) */}
       {profile?.program && (

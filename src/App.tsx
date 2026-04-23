@@ -59,6 +59,7 @@ import DevToolbar from "./components/DevToolbar";
 import FacultyProfile from "./pages/FacultyProfile";
 import AdminTuition from "./pages/admin/AdminTuition";
 import StudentTuition from "./pages/portal/StudentTuition";
+import StudentTuitionEstimate from "./pages/portal/StudentTuitionEstimate";
 
 const queryClient = new QueryClient();
 
@@ -115,6 +116,7 @@ const App = () => (
             <Route path="/portal/change-password" element={<ChangePassword />} />
             <Route path="/portal/exams" element={<StudentExamSchedule />} />
             <Route path="/portal/tuition" element={<StudentTuition />} />
+            <Route path="/portal/tuition/estimate" element={<StudentTuitionEstimate />} />
             <Route path="/portal/quiz/:quizId" element={<StudentQuiz />} />
             <Route path="/professor" element={<ProfessorDashboard />} />
             <Route path="/professor/courses" element={<ProfessorCourses />} />
