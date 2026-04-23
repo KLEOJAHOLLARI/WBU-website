@@ -8,6 +8,7 @@
 import { supabase } from "@/integrations/supabase/client";
 import {
   gradeToLetter,
+  gradeToAlbanian,
   type TranscriptRow,
   type TranscriptSummary,
 } from "@/lib/transcript";
@@ -146,7 +147,9 @@ export async function downloadTranscriptPdf(opts: BuildTranscriptPdfOptions): Pr
   const tableData = rows.map((r) => [
     r.courseName,
     r.courseCode,
-    r.grade !== null ? `${r.grade.toFixed(1)}% (${gradeToLetter(r.grade)})` : "—",
+    r.grade !== null
+      ? `${r.grade.toFixed(1)}% → ${gradeToAlbanian(r.grade)} (${gradeToLetter(r.grade)})`
+      : "—",
     r.ects.toString(),
     `Y${r.year}/S${r.semester}`,
     r.status,
@@ -170,7 +173,11 @@ export async function downloadTranscriptPdf(opts: BuildTranscriptPdfOptions): Pr
   doc.text(`Total ECTS Earned: ${summary.totalECTS}`, 14, y + 8);
   doc.text(`Total Institutional Credits: ${summary.totalInstitutionalCredits}`, 14, y + 14);
   doc.text(`CGPA: ${summary.cgpa.toFixed(2)} / 4.00`, 14, y + 20);
-  doc.text(`Weighted Average: ${summary.weightedAvg.toFixed(2)}%`, 14, y + 26);
+  doc.text(`GPA (Albanian): ${summary.gpaAlbanian.toFixed(2)} / 10.00`, 14, y + 26);
+  doc.text(`Weighted Average: ${summary.weightedAvg.toFixed(2)}%`, 14, y + 32);
+
+  // Push downstream y reference forward to account for the extra line.
+  y += 6;
 
   // ── Verification footer ───────────────────────────────────────────────────
   const config = opts.signatureConfig ?? (await fetchTranscriptSignatureConfig());
