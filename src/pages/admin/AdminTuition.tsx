@@ -765,8 +765,27 @@ const AdminTuition = () => {
                 </TableRow>
               </TableHeader>
               <TableBody>
-                {lateFees.length === 0 && <TableRow><TableCell colSpan={6} className="text-center text-muted-foreground">No late fees applied yet.</TableCell></TableRow>}
-                {lateFees.map((lf: any) => {
+                {(() => {
+                  const q = lfSearch.trim().toLowerCase();
+                  const fromTs = lfFrom ? new Date(lfFrom).setHours(0, 0, 0, 0) : null;
+                  const toTs = lfTo ? new Date(lfTo).setHours(23, 59, 59, 999) : null;
+                  const filtered = (lateFees as any[]).filter((lf) => {
+                    if (lfStatus === "active" && lf.waived) return false;
+                    if (lfStatus === "waived" && !lf.waived) return false;
+                    const ts = new Date(lf.applied_at).getTime();
+                    if (fromTs != null && ts < fromTs) return false;
+                    if (toTs != null && ts > toTs) return false;
+                    if (q) {
+                      const st = studentMap[lf.user_id];
+                      const hay = `${st?.full_name || ""} ${st?.student_id || ""} ${st?.email || ""}`.toLowerCase();
+                      if (!hay.includes(q)) return false;
+                    }
+                    return true;
+                  });
+                  if (filtered.length === 0) {
+                    return <TableRow><TableCell colSpan={6} className="text-center text-muted-foreground">{lateFees.length === 0 ? "No late fees applied yet." : "No late fees match the current filters."}</TableCell></TableRow>;
+                  }
+                  return filtered.map((lf: any) => {
                   const st = studentMap[lf.user_id];
                   const parsed = splitLateFeeReason(lf.reason);
                   return (
