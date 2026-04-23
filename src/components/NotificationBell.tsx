@@ -51,6 +51,57 @@ const NotificationBell = () => {
             read: false,
           });
         });
+
+        // Overdue tuition charges
+        const today = new Date().toISOString().slice(0, 10);
+        const { data: overdueCharges } = await supabase
+          .from("tuition_charges")
+          .select("id, user_id, amount, currency, due_date, status, program")
+          .lt("due_date", today)
+          .in("status", ["unpaid", "partial"])
+          .order("due_date", { ascending: true })
+          .limit(20);
+        if (overdueCharges && overdueCharges.length > 0) {
+          const userIds = [...new Set(overdueCharges.map((c) => c.user_id))];
+          const { data: profs } = await supabase
+            .from("profiles")
+            .select("user_id, full_name, student_id")
+            .in("user_id", userIds);
+          const nameMap = Object.fromEntries((profs || []).map((p) => [p.user_id, p]));
+          overdueCharges.forEach((c) => {
+            const p = nameMap[c.user_id];
+            const days = Math.floor((Date.now() - new Date(c.due_date!).getTime()) / 86400000);
+            items.push({
+              id: `tuition-${c.id}`,
+              type: "tuition",
+              title: "Tuition overdue",
+              description: `${p?.full_name || "Student"} — ${new Intl.NumberFormat("en-US", { style: "currency", currency: c.currency }).format(Number(c.amount))} · ${days}d late`,
+              href: "/admin/tuition",
+              createdAt: c.due_date!,
+              read: false,
+            });
+          });
+        }
+
+        // Pending receipt uploads
+        const { data: pendingReceipts } = await supabase
+          .from("tuition_payments")
+          .select("id, user_id, amount, currency, created_at")
+          .eq("verification_status", "pending")
+          .eq("uploaded_by_student", true)
+          .order("created_at", { ascending: false })
+          .limit(10);
+        pendingReceipts?.forEach((r) => {
+          items.push({
+            id: `receipt-${r.id}`,
+            type: "tuition",
+            title: "Receipt awaiting review",
+            description: `${new Intl.NumberFormat("en-US", { style: "currency", currency: r.currency }).format(Number(r.amount))} pending verification`,
+            href: "/admin/tuition",
+            createdAt: r.created_at,
+            read: false,
+          });
+        });
       } else if (isProfessor) {
         const { data: advisorPrograms } = await supabase
           .from("program_advisors")
