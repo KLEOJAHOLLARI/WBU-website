@@ -70,6 +70,8 @@ import AdminPromoBanners from "./pages/admin/AdminPromoBanners";
 import Scholarships from "./pages/Scholarships";
 import AdminScholarshipDocs from "./pages/admin/AdminScholarshipDocs";
 import AdminCommunication from "./pages/admin/AdminCommunication";
+import StudentDigitalIDCard from "./pages/portal/StudentDigitalIDCard";
+import AdminDigitalIDCards from "./pages/admin/AdminDigitalIDCards";
 
 const queryClient = new QueryClient();
 
@@ -118,6 +120,7 @@ const App = () => (
             <Route path="/admin/exams" element={<AdminExamSchedule />} />
             <Route path="/admin/promo-banners" element={<AdminPromoBanners />} />
             <Route path="/admin/scholarship-docs" element={<AdminScholarshipDocs />} />
+            <Route path="/admin/id-cards" element={<AdminDigitalIDCards />} />
             <Route path="/portal/login" element={<StudentLogin />} />
             <Route path="/portal/register" element={<StudentRegister />} />
             <Route path="/portal" element={<StudentDashboard />} />
@@ -130,6 +133,7 @@ const App = () => (
             <Route path="/portal/courses/:id" element={<StudentCourseDetail />} />
             <Route path="/portal/profile" element={<StudentProfile />} />
             <Route path="/portal/transcript" element={<StudentTranscript />} />
+            <Route path="/portal/id-card" element={<StudentDigitalIDCard />} />
             <Route path="/portal/change-password" element={<ChangePassword />} />
             <Route path="/portal/exams" element={<StudentExamSchedule />} />
             <Route path="/portal/exams/:id" element={<ExamDetail />} />

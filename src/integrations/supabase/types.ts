@@ -1141,6 +1141,83 @@ export type Database = {
         }
         Relationships: []
       }
+      student_id_cards: {
+        Row: {
+          created_at: string
+          expiry_date: string | null
+          id: string
+          issue_date: string
+          notes: string | null
+          reissue_count: number
+          status: string
+          updated_at: string
+          user_id: string
+          verification_token: string
+        }
+        Insert: {
+          created_at?: string
+          expiry_date?: string | null
+          id?: string
+          issue_date?: string
+          notes?: string | null
+          reissue_count?: number
+          status?: string
+          updated_at?: string
+          user_id: string
+          verification_token?: string
+        }
+        Update: {
+          created_at?: string
+          expiry_date?: string | null
+          id?: string
+          issue_date?: string
+          notes?: string | null
+          reissue_count?: number
+          status?: string
+          updated_at?: string
+          user_id?: string
+          verification_token?: string
+        }
+        Relationships: []
+      }
+      student_id_scans: {
+        Row: {
+          card_id: string
+          created_at: string
+          id: string
+          result: string
+          scan_type: string
+          scanned_by: string | null
+          user_id: string
+        }
+        Insert: {
+          card_id: string
+          created_at?: string
+          id?: string
+          result?: string
+          scan_type?: string
+          scanned_by?: string | null
+          user_id: string
+        }
+        Update: {
+          card_id?: string
+          created_at?: string
+          id?: string
+          result?: string
+          scan_type?: string
+          scanned_by?: string | null
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "student_id_scans_card_id_fkey"
+            columns: ["card_id"]
+            isOneToOne: false
+            referencedRelation: "student_id_cards"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       student_messages: {
         Row: {
           body: string
