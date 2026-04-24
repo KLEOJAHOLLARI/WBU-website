@@ -30,6 +30,19 @@ const StudentDigitalIDCard = () => {
     enabled: !!user,
   });
 
+  const { data: fullProfile } = useQuery({
+    queryKey: ["student-full-profile", user?.id],
+    queryFn: async () => {
+      const { data } = await supabase
+        .from("profiles")
+        .select("full_name, avatar_url, program, student_id")
+        .eq("user_id", user!.id)
+        .maybeSingle();
+      return data;
+    },
+    enabled: !!user,
+  });
+
   const handleDownload = async () => {
     const el = document.getElementById("id-card-capture");
     if (!el) return;
