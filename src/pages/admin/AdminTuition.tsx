@@ -117,6 +117,49 @@ const AdminTuition = () => {
     },
   });
 
+  // Late enrollment fee (stored in system_settings)
+  const { data: lateEnrollSettings } = useQuery({
+    queryKey: ["adm-late-enroll-settings"],
+    queryFn: async () => {
+      const { data } = await supabase
+        .from("system_settings")
+        .select("*")
+        .eq("key", "late_enrollment_fee")
+        .maybeSingle();
+      const v = (data?.value as any) || {};
+      return {
+        enabled: !!v.enabled,
+        amount: Number(v.amount ?? 0),
+        currency: String(v.currency ?? "EUR"),
+      };
+    },
+  });
+  const [lateEnrollDraft, setLateEnrollDraft] = useState<{ enabled: boolean; amount: number; currency: string } | null>(null);
+  const lateEnrollEffective = lateEnrollDraft ?? lateEnrollSettings ?? { enabled: false, amount: 0, currency: "EUR" };
+
+  const saveLateEnrollSettings = useMutation({
+    mutationFn: async (s: { enabled: boolean; amount: number; currency: string }) => {
+      const { data: existing } = await supabase
+        .from("system_settings").select("id").eq("key", "late_enrollment_fee").maybeSingle();
+      const value = { enabled: s.enabled, amount: s.amount, currency: s.currency };
+      if (existing?.id) {
+        const { error } = await supabase.from("system_settings")
+          .update({ value, updated_at: new Date().toISOString() }).eq("id", existing.id);
+        if (error) throw error;
+      } else {
+        const { error } = await supabase.from("system_settings")
+          .insert({ key: "late_enrollment_fee", value });
+        if (error) throw error;
+      }
+    },
+    onSuccess: () => {
+      qc.invalidateQueries({ queryKey: ["adm-late-enroll-settings"] });
+      setLateEnrollDraft(null);
+      toast.success("Late enrollment fee saved");
+    },
+    onError: (e: any) => toast.error(e.message),
+  });
+
   const { data: lateFees = [] } = useQuery({
     queryKey: ["adm-late-fees"],
     queryFn: async () => {
