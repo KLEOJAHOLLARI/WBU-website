@@ -72,6 +72,7 @@ import AdminScholarshipDocs from "./pages/admin/AdminScholarshipDocs";
 import AdminCommunication from "./pages/admin/AdminCommunication";
 import StudentDigitalIDCard from "./pages/portal/StudentDigitalIDCard";
 import AdminDigitalIDCards from "./pages/admin/AdminDigitalIDCards";
+import ProfessorDigitalIDCard from "./pages/professor/ProfessorDigitalIDCard";
 
 const queryClient = new QueryClient();
 
