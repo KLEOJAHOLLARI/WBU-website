@@ -388,10 +388,11 @@ const Scholarships = () => {
                 <button
                   type="button"
                   onClick={() => generateChecklistPdf(baseDocuments, extraDocs, s)}
-                  className="mt-6 inline-flex items-center justify-center gap-2 rounded-full border border-accent/30 bg-accent/5 px-4 py-2 text-xs font-semibold text-accent transition-all hover:bg-accent hover:text-accent-foreground"
+                  disabled={isLoadingDocs}
+                  className="mt-6 inline-flex items-center justify-center gap-2 rounded-full border border-accent/30 bg-accent/5 px-4 py-2 text-xs font-semibold text-accent transition-all hover:bg-accent hover:text-accent-foreground disabled:cursor-not-allowed disabled:opacity-50 disabled:hover:bg-accent/5 disabled:hover:text-accent"
                 >
                   <Download className="h-3.5 w-3.5" />
-                  Download checklist
+                  {isLoadingDocs ? "Loading…" : "Download checklist"}
                 </button>
               </motion.div>
             ))}
