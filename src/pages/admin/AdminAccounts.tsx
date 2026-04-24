@@ -93,6 +93,25 @@ const AdminAccounts = () => {
     return roles.includes("user") || roles.length === 0;
   });
 
+  const programOptions = Array.from(new Set(studentProfiles.map(p => p.program).filter(Boolean) as string[])).sort();
+  const statusOptions = Array.from(new Set(profiles.map(p => p.account_status).filter(Boolean))).sort();
+
+  const applyFilters = (list: ProfileRow[], includeStudentFilters: boolean) => {
+    const q = search.trim().toLowerCase();
+    return list.filter(p => {
+      if (q) {
+        const hay = `${p.full_name || ""} ${p.email || ""} ${p.phone || ""} ${p.program || ""} ${p.student_id || ""}`.toLowerCase();
+        if (!hay.includes(q)) return false;
+      }
+      if (includeStudentFilters && programFilter !== "all" && (p.program || "") !== programFilter) return false;
+      if (statusFilter !== "all" && p.account_status !== statusFilter) return false;
+      return true;
+    });
+  };
+
+  const filteredProfessors = applyFilters(professorProfiles, false);
+  const filteredStudents = applyFilters(studentProfiles, true);
+
   const deleteMutation = useMutation({
     mutationFn: async (userId: string) => {
       const res = await supabase.functions.invoke("admin-delete-user", {
