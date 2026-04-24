@@ -332,15 +332,15 @@ const StudentRegistration = () => {
           </div>
           <div className="flex items-center gap-2">
             <button
-              disabled={hasPending}
+              disabled={hasPending || !registrationOpen}
               onClick={() => setPickerOpen(true)}
               className="inline-flex items-center gap-1.5 rounded-lg bg-primary px-3.5 py-2 text-sm font-semibold text-primary-foreground transition-all hover:bg-primary/90 disabled:opacity-50 disabled:cursor-not-allowed"
             >
-              {hasPending ? <Lock className="h-4 w-4" /> : <Plus className="h-4 w-4" />}
+              {hasPending || !registrationOpen ? <Lock className="h-4 w-4" /> : <Plus className="h-4 w-4" />}
               Add Course
             </button>
             <button
-              disabled={cart.length === 0 || submitMutation.isPending || hasPending}
+              disabled={cart.length === 0 || submitMutation.isPending || hasPending || !registrationOpen}
               onClick={() => submitMutation.mutate()}
               className="inline-flex items-center gap-1.5 rounded-lg bg-emerald-600 px-3.5 py-2 text-sm font-semibold text-white transition-all hover:bg-emerald-700 disabled:opacity-50 disabled:cursor-not-allowed"
             >
