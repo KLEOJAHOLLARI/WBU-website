@@ -229,11 +229,35 @@ const AdminApplications = () => {
         </div>
       )}
 
-      <div className="mt-4 flex gap-2">
-        <button onClick={() => setStatusFilter("all")} className={tabCls("all")}>All ({applications.length})</button>
-        <button onClick={() => setStatusFilter("pending")} className={tabCls("pending")}>Pending ({pendingCount})</button>
-        <button onClick={() => setStatusFilter("accepted")} className={tabCls("accepted")}>Accepted</button>
-        <button onClick={() => setStatusFilter("rejected")} className={tabCls("rejected")}>Rejected</button>
+      <div className="mt-4 flex flex-wrap items-center gap-3">
+        <div className="flex flex-wrap gap-2">
+          <button onClick={() => setStatusFilter("all")} className={tabCls("all")}>All ({counts?.all ?? "—"})</button>
+          <button onClick={() => setStatusFilter("pending")} className={tabCls("pending")}>Pending ({counts?.pending ?? "—"})</button>
+          <button onClick={() => setStatusFilter("accepted")} className={tabCls("accepted")}>Accepted ({counts?.accepted ?? "—"})</button>
+          <button onClick={() => setStatusFilter("rejected")} className={tabCls("rejected")}>Rejected ({counts?.rejected ?? "—"})</button>
+        </div>
+        <div className="ml-auto flex flex-wrap items-center gap-2">
+          <div className="relative">
+            <Search className="pointer-events-none absolute left-2.5 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" />
+            <input
+              type="search"
+              value={searchInput}
+              onChange={(e) => setSearchInput(e.target.value)}
+              placeholder="Search name, email, program…"
+              className="h-9 w-64 rounded-md border border-border bg-background pl-8 pr-3 text-sm text-foreground placeholder:text-muted-foreground focus:outline-none focus:ring-2 focus:ring-ring"
+            />
+          </div>
+          <select
+            value={programFilter}
+            onChange={(e) => setProgramFilter(e.target.value)}
+            className="h-9 rounded-md border border-border bg-background px-2 text-sm text-foreground focus:outline-none focus:ring-2 focus:ring-ring"
+          >
+            <option value="all">All programs</option>
+            {programs.map((p) => (
+              <option key={p.slug} value={p.slug}>{p.title}</option>
+            ))}
+          </select>
+        </div>
       </div>
 
       <div className="mt-4 overflow-auto rounded-xl border border-border">
@@ -252,9 +276,9 @@ const AdminApplications = () => {
           <tbody>
             {isLoading ? (
               <tr><td colSpan={7} className="px-4 py-8 text-center text-muted-foreground">Loading...</td></tr>
-            ) : filtered.length === 0 ? (
+            ) : applications.length === 0 ? (
               <tr><td colSpan={7} className="px-4 py-8 text-center text-muted-foreground">No applications found</td></tr>
-            ) : filtered.map((a) => (
+            ) : applications.map((a) => (
               <tr key={a.id} id={`app-${a.id}`} className={`border-b border-border last:border-0 ${isHighlighted(a.id) ? highlightClasses : ""}`}>
                 <td className="px-4 py-3 font-medium text-foreground">{a.full_name}</td>
                 <td className="px-4 py-3 text-muted-foreground">{a.email}</td>
