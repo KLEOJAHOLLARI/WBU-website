@@ -1,9 +1,9 @@
-import { useState } from "react";
+import { useState, useRef } from "react";
 import AdminLayout from "@/components/AdminLayout";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
 import { useToast } from "@/hooks/use-toast";
-import { Plus, Pencil, Trash2, X, ArrowUp, ArrowDown, Eye, EyeOff } from "lucide-react";
+import { Plus, Pencil, Trash2, X, ArrowUp, ArrowDown, Eye, EyeOff, Upload, Loader2 } from "lucide-react";
 
 const empty = {
   title: "",
