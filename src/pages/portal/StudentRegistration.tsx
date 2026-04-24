@@ -192,6 +192,7 @@ const StudentRegistration = () => {
 
   const submitMutation = useMutation({
     mutationFn: async () => {
+      if (!registrationOpen) throw new Error("Registration is currently closed");
       if (!cart.length) throw new Error("Cart is empty");
       const rows = cart.map((c) => ({ user_id: user!.id, course_id: c.id }));
       const { error } = await supabase.from("enrollment_requests").insert(rows as any);
