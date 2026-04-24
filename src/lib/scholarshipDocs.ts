@@ -70,7 +70,8 @@ export const fetchScholarshipDocs = async (): Promise<ScholarshipDocsValue> => {
     .eq("key", SCHOLARSHIP_DOCS_KEY)
     .maybeSingle();
 
-  if (error || !data?.value) return DEFAULT_SCHOLARSHIP_DOCS;
+  if (error) throw error;
+  if (!data?.value) return DEFAULT_SCHOLARSHIP_DOCS;
   const v = data.value as Partial<ScholarshipDocsValue>;
   return {
     base: Array.isArray(v.base) && v.base.length ? v.base : DEFAULT_BASE_DOCUMENTS,

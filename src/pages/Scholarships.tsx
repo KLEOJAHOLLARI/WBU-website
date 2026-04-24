@@ -2,6 +2,9 @@ import { useEffect, useState } from "react";
 import { Link } from "react-router-dom";
 import { motion } from "framer-motion";
 import jsPDF from "jspdf";
+import { toast } from "sonner";
+import { AlertCircle } from "lucide-react";
+import { Skeleton } from "@/components/ui/skeleton";
 import {
   fetchScholarshipDocs,
   DEFAULT_BASE_DOCUMENTS,
@@ -263,12 +266,33 @@ const generateChecklistPdf = (
 const Scholarships = () => {
   const [baseDocuments, setBaseDocuments] = useState<string[]>(DEFAULT_BASE_DOCUMENTS);
   const [extraDocs, setExtraDocs] = useState<Record<string, string[]>>(DEFAULT_EXTRA_DOCS);
+  const [isLoadingDocs, setIsLoadingDocs] = useState(true);
+  const [docsError, setDocsError] = useState<string | null>(null);
 
   useEffect(() => {
-    fetchScholarshipDocs().then(({ base, extra }) => {
-      setBaseDocuments(base);
-      setExtraDocs(extra);
-    });
+    let cancelled = false;
+    setIsLoadingDocs(true);
+    setDocsError(null);
+    fetchScholarshipDocs()
+      .then(({ base, extra }) => {
+        if (cancelled) return;
+        setBaseDocuments(base);
+        setExtraDocs(extra);
+      })
+      .catch((err) => {
+        if (cancelled) return;
+        const msg =
+          "Couldn't load the latest scholarship requirements. Showing default checklist.";
+        setDocsError(msg);
+        toast.error(msg);
+        console.error("Failed to fetch scholarship docs", err);
+      })
+      .finally(() => {
+        if (!cancelled) setIsLoadingDocs(false);
+      });
+    return () => {
+      cancelled = true;
+    };
   }, []);
 
   return (
@@ -364,10 +388,11 @@ const Scholarships = () => {
                 <button
                   type="button"
                   onClick={() => generateChecklistPdf(baseDocuments, extraDocs, s)}
-                  className="mt-6 inline-flex items-center justify-center gap-2 rounded-full border border-accent/30 bg-accent/5 px-4 py-2 text-xs font-semibold text-accent transition-all hover:bg-accent hover:text-accent-foreground"
+                  disabled={isLoadingDocs}
+                  className="mt-6 inline-flex items-center justify-center gap-2 rounded-full border border-accent/30 bg-accent/5 px-4 py-2 text-xs font-semibold text-accent transition-all hover:bg-accent hover:text-accent-foreground disabled:cursor-not-allowed disabled:opacity-50 disabled:hover:bg-accent/5 disabled:hover:text-accent"
                 >
                   <Download className="h-3.5 w-3.5" />
-                  Download checklist
+                  {isLoadingDocs ? "Loading…" : "Download checklist"}
                 </button>
               </motion.div>
             ))}
@@ -425,27 +450,53 @@ const Scholarships = () => {
               <button
                 type="button"
                 onClick={() => generateChecklistPdf(baseDocuments, extraDocs)}
-                className="mt-6 inline-flex items-center gap-2 rounded-full bg-accent px-6 py-3 text-sm font-semibold text-accent-foreground shadow-lg shadow-accent/20 transition-all hover:shadow-xl hover:shadow-accent/30 hover:scale-105"
+                disabled={isLoadingDocs}
+                className="mt-6 inline-flex items-center gap-2 rounded-full bg-accent px-6 py-3 text-sm font-semibold text-accent-foreground shadow-lg shadow-accent/20 transition-all hover:shadow-xl hover:shadow-accent/30 hover:scale-105 disabled:cursor-not-allowed disabled:opacity-60 disabled:hover:scale-100 disabled:hover:shadow-lg"
               >
                 <Download className="h-4 w-4" />
-                Download general checklist (PDF)
+                {isLoadingDocs ? "Loading checklist…" : "Download general checklist (PDF)"}
               </button>
               <p className="mt-3 text-xs text-muted-foreground">
                 Tip: each scholarship card also has its own tailored checklist.
               </p>
             </motion.div>
 
-            <motion.ul {...fadeUp} className="grid gap-3">
-              {baseDocuments.map((d) => (
-                <li
-                  key={d}
-                  className="flex items-start gap-3 rounded-xl border border-border/60 bg-card p-4"
+            <motion.div {...fadeUp} className="grid gap-3">
+              {docsError && (
+                <div
+                  role="alert"
+                  className="flex items-start gap-3 rounded-xl border border-destructive/30 bg-destructive/5 p-4 text-sm text-destructive"
                 >
-                  <FileText className="mt-0.5 h-5 w-5 shrink-0 text-accent" />
-                  <span className="text-sm text-foreground">{d}</span>
-                </li>
-              ))}
-            </motion.ul>
+                  <AlertCircle className="mt-0.5 h-5 w-5 shrink-0" />
+                  <span>{docsError}</span>
+                </div>
+              )}
+              {isLoadingDocs ? (
+                <ul className="grid gap-3" aria-busy="true" aria-label="Loading required documents">
+                  {Array.from({ length: 6 }).map((_, i) => (
+                    <li
+                      key={i}
+                      className="flex items-start gap-3 rounded-xl border border-border/60 bg-card p-4"
+                    >
+                      <Skeleton className="mt-0.5 h-5 w-5 shrink-0 rounded" />
+                      <Skeleton className="h-4 w-3/4" />
+                    </li>
+                  ))}
+                </ul>
+              ) : (
+                <ul className="grid gap-3">
+                  {baseDocuments.map((d) => (
+                    <li
+                      key={d}
+                      className="flex items-start gap-3 rounded-xl border border-border/60 bg-card p-4"
+                    >
+                      <FileText className="mt-0.5 h-5 w-5 shrink-0 text-accent" />
+                      <span className="text-sm text-foreground">{d}</span>
+                    </li>
+                  ))}
+                </ul>
+              )}
+            </motion.div>
           </div>
         </div>
       </section>
