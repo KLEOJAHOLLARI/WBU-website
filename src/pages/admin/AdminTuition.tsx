@@ -809,6 +809,81 @@ const AdminTuition = () => {
             </div>
           )}
 
+          {/* Students with Late Fees — aggregated summary */}
+          {(() => {
+            const byStudent = new Map<string, { user_id: string; count: number; active: number; waived: number; total: number; activeTotal: number; currency: string; latest: string }>();
+            for (const lf of lateFees as any[]) {
+              const cur = byStudent.get(lf.user_id) || { user_id: lf.user_id, count: 0, active: 0, waived: 0, total: 0, activeTotal: 0, currency: lf.currency || "EUR", latest: lf.applied_at };
+              cur.count += 1;
+              if (lf.waived) cur.waived += 1; else cur.active += 1;
+              cur.total += Number(lf.amount);
+              if (!lf.waived) cur.activeTotal += Number(lf.amount);
+              if (new Date(lf.applied_at) > new Date(cur.latest)) cur.latest = lf.applied_at;
+              byStudent.set(lf.user_id, cur);
+            }
+            const rows = Array.from(byStudent.values()).sort((a, b) => b.activeTotal - a.activeTotal || b.total - a.total);
+            const q = lfSearch.trim().toLowerCase();
+            const visibleRows = q
+              ? rows.filter((r) => {
+                  const st = studentMap[r.user_id];
+                  return `${st?.full_name || ""} ${st?.student_id || ""} ${st?.email || ""}`.toLowerCase().includes(q);
+                })
+              : rows;
+            return (
+              <div className="rounded-xl border border-border bg-card">
+                <div className="flex items-center justify-between border-b border-border p-4">
+                  <div>
+                    <h2 className="font-semibold text-foreground">Students with Late Fees</h2>
+                    <p className="text-xs text-muted-foreground">{rows.length} student{rows.length !== 1 ? "s" : ""} · filtered by search above</p>
+                  </div>
+                </div>
+                <Table>
+                  <TableHeader>
+                    <TableRow>
+                      <TableHead>Student</TableHead>
+                      <TableHead>Program</TableHead>
+                      <TableHead className="text-center">Active</TableHead>
+                      <TableHead className="text-center">Waived</TableHead>
+                      <TableHead className="text-right">Active Total</TableHead>
+                      <TableHead className="text-right">All-time Total</TableHead>
+                      <TableHead>Latest</TableHead>
+                    </TableRow>
+                  </TableHeader>
+                  <TableBody>
+                    {visibleRows.length === 0 && (
+                      <TableRow>
+                        <TableCell colSpan={7} className="text-center text-muted-foreground">
+                          {rows.length === 0 ? "No students have late fees yet." : "No students match the current search."}
+                        </TableCell>
+                      </TableRow>
+                    )}
+                    {visibleRows.map((r) => {
+                      const st = studentMap[r.user_id];
+                      return (
+                        <TableRow key={r.user_id}>
+                          <TableCell>
+                            <div className="font-medium text-foreground">{st?.full_name || "—"}</div>
+                            <div className="text-xs text-muted-foreground">{st?.student_id || st?.email}</div>
+                          </TableCell>
+                          <TableCell className="text-sm text-muted-foreground">{st?.program || "—"}</TableCell>
+                          <TableCell className="text-center">
+                            {r.active > 0 ? <Badge variant="destructive">{r.active}</Badge> : <span className="text-muted-foreground">—</span>}
+                          </TableCell>
+                          <TableCell className="text-center">
+                            {r.waived > 0 ? <Badge variant="secondary">{r.waived}</Badge> : <span className="text-muted-foreground">—</span>}
+                          </TableCell>
+                          <TableCell className="text-right font-semibold text-destructive">{fmtMoney(r.activeTotal, r.currency)}</TableCell>
+                          <TableCell className="text-right font-medium">{fmtMoney(r.total, r.currency)}</TableCell>
+                          <TableCell className="text-sm text-muted-foreground">{new Date(r.latest).toLocaleDateString()}</TableCell>
+                        </TableRow>
+                      );
+                    })}
+                  </TableBody>
+                </Table>
+              </div>
+            );
+          })()}
+
           {(() => {
             const q = lfSearch.trim().toLowerCase();
             const fromTs = lfFrom ? new Date(lfFrom).setHours(0, 0, 0, 0) : null;
