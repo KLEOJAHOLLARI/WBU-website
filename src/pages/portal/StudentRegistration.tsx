@@ -209,6 +209,29 @@ const StudentRegistration = () => {
 
   const totalEcts = cart.reduce((s, c) => s + (c.ects || 0), 0);
 
+  // Late enrollment fee config
+  const { data: lateEnrollFee } = useQuery({
+    queryKey: ["late-enroll-fee"],
+    queryFn: async () => {
+      const { data } = await supabase
+        .from("system_settings")
+        .select("value")
+        .eq("key", "late_enrollment_fee")
+        .maybeSingle();
+      const v = (data?.value as any) || {};
+      return {
+        enabled: !!v.enabled,
+        amount: Number(v.amount ?? 0),
+        currency: String(v.currency ?? "EUR"),
+      };
+    },
+  });
+
+  const isLate = !!(
+    enrollmentDeadline && countdown?.expired
+  );
+  const willChargeLateFee = !!(isLate && lateEnrollFee?.enabled && lateEnrollFee.amount > 0);
+
   const submitMutation = useMutation({
     mutationFn: async () => {
       if (!registrationOpen) throw new Error("Registration is currently closed");
@@ -216,11 +239,26 @@ const StudentRegistration = () => {
       const rows = cart.map((c) => ({ user_id: user!.id, course_id: c.id }));
       const { error } = await supabase.from("enrollment_requests").insert(rows as any);
       if (error) throw error;
+
+      // Auto-create late-enrollment charge if applicable
+      if (willChargeLateFee && activeSemester?.id && profile?.program) {
+        await supabase.from("tuition_charges").insert({
+          user_id: user!.id,
+          academic_semester_id: activeSemester.id,
+          program: profile.program,
+          amount: lateEnrollFee!.amount,
+          currency: lateEnrollFee!.currency,
+          status: "unpaid",
+          notes: `Late enrollment fee — registration submitted after deadline (${enrollmentDeadline?.toLocaleDateString()}).`,
+        } as any);
+      }
     },
     onSuccess: () => {
       toast({
         title: "Sent to your Academic Advisor",
-        description: `${cart.length} course${cart.length > 1 ? "s" : ""} submitted for approval.`,
+        description: willChargeLateFee
+          ? `${cart.length} course${cart.length > 1 ? "s" : ""} submitted. A late enrollment fee of ${lateEnrollFee!.amount} ${lateEnrollFee!.currency} has been added to your tuition.`
+          : `${cart.length} course${cart.length > 1 ? "s" : ""} submitted for approval.`,
       });
       setCart([]);
       qc.invalidateQueries({ queryKey: ["reg-requests"] });
@@ -336,6 +374,22 @@ const StudentRegistration = () => {
 
       <div className="mt-5 space-y-4">
         {renderStatusAlert()}
+        {willChargeLateFee && (
+          <div className="rounded-xl border border-destructive/30 bg-destructive/5 p-4 flex items-start gap-3">
+            <XCircle className="h-5 w-5 text-destructive mt-0.5 shrink-0" />
+            <div className="flex-1">
+              <p className="font-semibold text-destructive">Late enrollment fee will apply</p>
+              <p className="text-sm text-muted-foreground">
+                The enrollment deadline has passed. If you submit your registration now, a late
+                fee of{" "}
+                <span className="font-semibold text-foreground">
+                  {lateEnrollFee!.amount} {lateEnrollFee!.currency}
+                </span>{" "}
+                will be added to your tuition account.
+              </p>
+            </div>
+          </div>
+        )}
         {registrationOpen && countdown && (
           <div
             className={`rounded-xl border p-4 flex flex-col sm:flex-row sm:items-center gap-4 ${

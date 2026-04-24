@@ -117,6 +117,49 @@ const AdminTuition = () => {
     },
   });
 
+  // Late enrollment fee (stored in system_settings)
+  const { data: lateEnrollSettings } = useQuery({
+    queryKey: ["adm-late-enroll-settings"],
+    queryFn: async () => {
+      const { data } = await supabase
+        .from("system_settings")
+        .select("*")
+        .eq("key", "late_enrollment_fee")
+        .maybeSingle();
+      const v = (data?.value as any) || {};
+      return {
+        enabled: !!v.enabled,
+        amount: Number(v.amount ?? 0),
+        currency: String(v.currency ?? "EUR"),
+      };
+    },
+  });
+  const [lateEnrollDraft, setLateEnrollDraft] = useState<{ enabled: boolean; amount: number; currency: string } | null>(null);
+  const lateEnrollEffective = lateEnrollDraft ?? lateEnrollSettings ?? { enabled: false, amount: 0, currency: "EUR" };
+
+  const saveLateEnrollSettings = useMutation({
+    mutationFn: async (s: { enabled: boolean; amount: number; currency: string }) => {
+      const { data: existing } = await supabase
+        .from("system_settings").select("id").eq("key", "late_enrollment_fee").maybeSingle();
+      const value = { enabled: s.enabled, amount: s.amount, currency: s.currency };
+      if (existing?.id) {
+        const { error } = await supabase.from("system_settings")
+          .update({ value, updated_at: new Date().toISOString() }).eq("id", existing.id);
+        if (error) throw error;
+      } else {
+        const { error } = await supabase.from("system_settings")
+          .insert({ key: "late_enrollment_fee", value });
+        if (error) throw error;
+      }
+    },
+    onSuccess: () => {
+      qc.invalidateQueries({ queryKey: ["adm-late-enroll-settings"] });
+      setLateEnrollDraft(null);
+      toast.success("Late enrollment fee saved");
+    },
+    onError: (e: any) => toast.error(e.message),
+  });
+
   const { data: lateFees = [] } = useQuery({
     queryKey: ["adm-late-fees"],
     queryFn: async () => {
@@ -494,6 +537,7 @@ const AdminTuition = () => {
           <TabsTrigger value="latefees">
             Late Fees {lateFeeSettings?.enabled && eligibleForLateFee.length > 0 && <Badge variant="destructive" className="ml-2">{eligibleForLateFee.length}</Badge>}
           </TabsTrigger>
+          <TabsTrigger value="enrollment">Late Enrollment</TabsTrigger>
         </TabsList>
 
         {/* RECEIPT QUEUE TAB */}
@@ -985,6 +1029,95 @@ const AdminTuition = () => {
               </div>
             );
           })()}
+        </TabsContent>
+
+        {/* LATE ENROLLMENT FEE TAB */}
+        <TabsContent value="enrollment" className="mt-4 space-y-4">
+          <div className="rounded-xl border border-border bg-card p-5">
+            <div className="flex items-start gap-3">
+              <Settings2 className="h-5 w-5 text-primary mt-0.5" />
+              <div className="flex-1">
+                <h2 className="font-semibold text-foreground">Late Enrollment Fee</h2>
+                <p className="text-sm text-muted-foreground">
+                  Charged automatically when a student submits their course registration after the
+                  semester's <span className="font-medium text-foreground">enrollment deadline</span>.
+                  A tuition charge will be created on their account.
+                </p>
+              </div>
+            </div>
+
+            <div className="mt-5 grid gap-4 md:grid-cols-3">
+              <div className="md:col-span-3 flex items-center justify-between rounded-lg border border-border p-3">
+                <div>
+                  <Label className="text-foreground">Enable late enrollment fee</Label>
+                  <p className="text-xs text-muted-foreground">
+                    When off, late submissions are allowed without any extra charge.
+                  </p>
+                </div>
+                <Switch
+                  checked={lateEnrollEffective.enabled}
+                  onCheckedChange={(v) =>
+                    setLateEnrollDraft({ ...lateEnrollEffective, enabled: v })
+                  }
+                />
+              </div>
+
+              <div>
+                <Label>Amount</Label>
+                <Input
+                  type="number"
+                  min={0}
+                  step="0.01"
+                  value={lateEnrollEffective.amount}
+                  onChange={(e) =>
+                    setLateEnrollDraft({
+                      ...lateEnrollEffective,
+                      amount: parseFloat(e.target.value) || 0,
+                    })
+                  }
+                  disabled={!lateEnrollEffective.enabled}
+                />
+              </div>
+              <div>
+                <Label>Currency</Label>
+                <Select
+                  value={lateEnrollEffective.currency}
+                  onValueChange={(v) =>
+                    setLateEnrollDraft({ ...lateEnrollEffective, currency: v })
+                  }
+                  disabled={!lateEnrollEffective.enabled}
+                >
+                  <SelectTrigger><SelectValue /></SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="EUR">EUR</SelectItem>
+                    <SelectItem value="USD">USD</SelectItem>
+                    <SelectItem value="ALL">ALL</SelectItem>
+                  </SelectContent>
+                </Select>
+              </div>
+              <div className="flex items-end">
+                <Button
+                  className="w-full"
+                  disabled={!lateEnrollDraft || saveLateEnrollSettings.isPending}
+                  onClick={() => lateEnrollDraft && saveLateEnrollSettings.mutate(lateEnrollDraft)}
+                >
+                  {saveLateEnrollSettings.isPending ? "Saving..." : "Save settings"}
+                </Button>
+              </div>
+            </div>
+
+            <div className="mt-4 rounded-lg bg-muted/40 p-3 text-sm text-muted-foreground">
+              Current rule:{" "}
+              {lateEnrollEffective.enabled ? (
+                <span className="font-medium text-foreground">
+                  Charge {fmtMoney(lateEnrollEffective.amount, lateEnrollEffective.currency)} for
+                  any registration submitted after the deadline.
+                </span>
+              ) : (
+                <span>Late enrollment fee is currently disabled.</span>
+              )}
+            </div>
+          </div>
         </TabsContent>
       </Tabs>
 
