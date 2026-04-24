@@ -46,16 +46,20 @@ const Admissions = () => {
 
     let document_url: string | null = null;
 
-    if (form.document) {
-      const ext = form.document.name.split(".").pop();
-      const path = `${Date.now()}_${Math.random().toString(36).slice(2)}.${ext}`;
-      const { error: uploadErr } = await supabase.storage.from("application-documents").upload(path, form.document);
-      if (uploadErr) {
-        toast({ title: "Upload failed", description: uploadErr.message, variant: "destructive" });
-        setSubmitting(false);
-        return;
+    if (form.documents.length > 0) {
+      const paths: string[] = [];
+      for (const file of form.documents) {
+        const ext = file.name.split(".").pop();
+        const path = `${Date.now()}_${Math.random().toString(36).slice(2)}.${ext}`;
+        const { error: uploadErr } = await supabase.storage.from("application-documents").upload(path, file);
+        if (uploadErr) {
+          toast({ title: "Upload failed", description: uploadErr.message, variant: "destructive" });
+          setSubmitting(false);
+          return;
+        }
+        paths.push(path);
       }
-      document_url = path;
+      document_url = paths.join(",");
     }
 
     const { data: { user: currentUser } } = await supabase.auth.getUser();
