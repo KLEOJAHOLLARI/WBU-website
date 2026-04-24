@@ -197,18 +197,25 @@ const AdminApplications = () => {
                 <td className="px-4 py-3 text-muted-foreground">{a.email}</td>
                 <td className="px-4 py-3 text-muted-foreground">{a.program}</td>
                 <td className="px-4 py-3">
-                  {a.document_url ? (
-                    <a
-                      href={getDocUrl(a.document_url)}
-                      target="_blank"
-                      rel="noopener noreferrer"
-                      className="inline-flex items-center gap-1 text-primary hover:underline"
-                    >
-                      <FileText className="h-3.5 w-3.5" /> View PDF
-                    </a>
-                  ) : (
-                    <span className="text-muted-foreground">—</span>
-                  )}
+                  {(() => {
+                    const docs = parseDocs(a.document_url);
+                    if (docs.length === 0) return <span className="text-muted-foreground">—</span>;
+                    return (
+                      <div className="flex flex-wrap gap-2">
+                        {docs.map((d, i) => (
+                          <a
+                            key={d}
+                            href={getDocUrl(d)}
+                            target="_blank"
+                            rel="noopener noreferrer"
+                            className="inline-flex items-center gap-1 text-primary hover:underline"
+                          >
+                            <FileText className="h-3.5 w-3.5" /> PDF {docs.length > 1 ? i + 1 : ""}
+                          </a>
+                        ))}
+                      </div>
+                    );
+                  })()}
                 </td>
                 <td className="px-4 py-3">
                   {statusBadge(a.status)}
