@@ -1,11 +1,13 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import AdminLayout from "@/components/AdminLayout";
-import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
+import { useQuery, useMutation, useQueryClient, keepPreviousData } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
 import { useToast } from "@/hooks/use-toast";
-import { CheckCircle, XCircle, Eye, FileText, Trash2, Copy, UserPlus } from "lucide-react";
+import { CheckCircle, XCircle, Eye, FileText, Trash2, Copy, UserPlus, Search, ChevronLeft, ChevronRight } from "lucide-react";
 import { useHighlightParam, highlightClasses } from "@/hooks/useHighlightParam";
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
+
+const PAGE_SIZE = 20;
 
 const parseDocs = (url: string | null): string[] =>
   url ? url.split(",").map((s) => s.trim()).filter(Boolean) : [];
@@ -15,20 +17,87 @@ const AdminApplications = () => {
   const qc = useQueryClient();
   const [viewing, setViewing] = useState<string | null>(null);
   const [statusFilter, setStatusFilter] = useState<string>("all");
+  const [programFilter, setProgramFilter] = useState<string>("all");
+  const [searchInput, setSearchInput] = useState("");
+  const [search, setSearch] = useState("");
+  const [page, setPage] = useState(0);
   const [credentials, setCredentials] = useState<{ email: string; password: string } | null>(null);
   const [accepting, setAccepting] = useState<string | null>(null);
 
-  const { data: applications = [], isLoading } = useQuery({
-    queryKey: ["admin-applications"],
+  // Debounce search
+  useEffect(() => {
+    const t = setTimeout(() => {
+      setSearch(searchInput.trim());
+      setPage(0);
+    }, 300);
+    return () => clearTimeout(t);
+  }, [searchInput]);
+
+  // Reset to first page when filters change
+  useEffect(() => { setPage(0); }, [statusFilter, programFilter]);
+
+  // Page of applications (server-side filtered + paginated)
+  const { data: pageData, isLoading, isFetching } = useQuery({
+    queryKey: ["admin-applications", { statusFilter, programFilter, search, page }],
     queryFn: async () => {
-      const { data, error } = await supabase
+      let q = supabase
         .from("applications")
-        .select("*")
-        .order("created_at", { ascending: false });
+        .select("*", { count: "exact" })
+        .order("created_at", { ascending: false })
+        .range(page * PAGE_SIZE, page * PAGE_SIZE + PAGE_SIZE - 1);
+
+      if (statusFilter !== "all") q = q.eq("status", statusFilter);
+      if (programFilter !== "all") q = q.eq("program", programFilter);
+      if (search) {
+        const esc = search.replace(/[%,]/g, " ");
+        q = q.or(`full_name.ilike.%${esc}%,email.ilike.%${esc}%,program.ilike.%${esc}%`);
+      }
+
+      const { data, error, count } = await q;
       if (error) throw error;
-      return data;
+      return { rows: data ?? [], count: count ?? 0 };
+    },
+    placeholderData: keepPreviousData,
+  });
+
+  const applications = pageData?.rows ?? [];
+  const totalCount = pageData?.count ?? 0;
+  const totalPages = Math.max(1, Math.ceil(totalCount / PAGE_SIZE));
+
+  // Lightweight counts for tabs (status only) — single aggregated query
+  const { data: counts } = useQuery({
+    queryKey: ["admin-applications-counts"],
+    queryFn: async () => {
+      const statuses = ["pending", "accepted", "rejected"] as const;
+      const results = await Promise.all([
+        supabase.from("applications").select("id", { count: "exact", head: true }),
+        ...statuses.map((s) =>
+          supabase.from("applications").select("id", { count: "exact", head: true }).eq("status", s)
+        ),
+      ]);
+      return {
+        all: results[0].count ?? 0,
+        pending: results[1].count ?? 0,
+        accepted: results[2].count ?? 0,
+        rejected: results[3].count ?? 0,
+      };
     },
   });
+
+  // Distinct programs for the program filter dropdown
+  const { data: programs = [] } = useQuery({
+    queryKey: ["admin-applications-programs"],
+    queryFn: async () => {
+      const { data, error } = await supabase.from("programs").select("slug, title").order("title");
+      if (error) throw error;
+      return data ?? [];
+    },
+  });
+
+  const invalidateAll = () => {
+    qc.invalidateQueries({ queryKey: ["admin-applications"] });
+    qc.invalidateQueries({ queryKey: ["admin-applications-counts"] });
+  };
 
   const acceptApplication = async (id: string) => {
     setAccepting(id);
@@ -39,7 +108,7 @@ const AdminApplications = () => {
       if (error) throw error;
       if (data.error) throw new Error(data.error);
 
-      qc.invalidateQueries({ queryKey: ["admin-applications"] });
+      invalidateAll();
       qc.invalidateQueries({ queryKey: ["admin-students"] });
 
       if (!data.account_existed && data.generated_email && data.generated_password) {
@@ -65,7 +134,7 @@ const AdminApplications = () => {
       if (error) throw error;
     },
     onSuccess: (_d, vars) => {
-      qc.invalidateQueries({ queryKey: ["admin-applications"] });
+      invalidateAll();
       toast({ title: `Application ${vars.status}` });
     },
     onError: (e: any) => toast({ title: "Error", description: e.message, variant: "destructive" }),
@@ -77,20 +146,14 @@ const AdminApplications = () => {
       if (error) throw error;
     },
     onSuccess: () => {
-      qc.invalidateQueries({ queryKey: ["admin-applications"] });
+      invalidateAll();
       toast({ title: "Application deleted" });
     },
   });
 
-  const filtered = statusFilter === "all"
-    ? applications
-    : applications.filter((a) => a.status === statusFilter);
-
   const { isHighlighted } = useHighlightParam("focus", "app", !isLoading && applications.length > 0, (id) => {
     setViewing(id);
   });
-
-  const pendingCount = applications.filter((a) => a.status === "pending").length;
 
   const getDocUrl = (path: string) => {
     const { data } = supabase.storage.from("application-documents").getPublicUrl(path);
@@ -166,11 +229,35 @@ const AdminApplications = () => {
         </div>
       )}
 
-      <div className="mt-4 flex gap-2">
-        <button onClick={() => setStatusFilter("all")} className={tabCls("all")}>All ({applications.length})</button>
-        <button onClick={() => setStatusFilter("pending")} className={tabCls("pending")}>Pending ({pendingCount})</button>
-        <button onClick={() => setStatusFilter("accepted")} className={tabCls("accepted")}>Accepted</button>
-        <button onClick={() => setStatusFilter("rejected")} className={tabCls("rejected")}>Rejected</button>
+      <div className="mt-4 flex flex-wrap items-center gap-3">
+        <div className="flex flex-wrap gap-2">
+          <button onClick={() => setStatusFilter("all")} className={tabCls("all")}>All ({counts?.all ?? "—"})</button>
+          <button onClick={() => setStatusFilter("pending")} className={tabCls("pending")}>Pending ({counts?.pending ?? "—"})</button>
+          <button onClick={() => setStatusFilter("accepted")} className={tabCls("accepted")}>Accepted ({counts?.accepted ?? "—"})</button>
+          <button onClick={() => setStatusFilter("rejected")} className={tabCls("rejected")}>Rejected ({counts?.rejected ?? "—"})</button>
+        </div>
+        <div className="ml-auto flex flex-wrap items-center gap-2">
+          <div className="relative">
+            <Search className="pointer-events-none absolute left-2.5 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" />
+            <input
+              type="search"
+              value={searchInput}
+              onChange={(e) => setSearchInput(e.target.value)}
+              placeholder="Search name, email, program…"
+              className="h-9 w-64 rounded-md border border-border bg-background pl-8 pr-3 text-sm text-foreground placeholder:text-muted-foreground focus:outline-none focus:ring-2 focus:ring-ring"
+            />
+          </div>
+          <select
+            value={programFilter}
+            onChange={(e) => setProgramFilter(e.target.value)}
+            className="h-9 rounded-md border border-border bg-background px-2 text-sm text-foreground focus:outline-none focus:ring-2 focus:ring-ring"
+          >
+            <option value="all">All programs</option>
+            {programs.map((p) => (
+              <option key={p.slug} value={p.slug}>{p.title}</option>
+            ))}
+          </select>
+        </div>
       </div>
 
       <div className="mt-4 overflow-auto rounded-xl border border-border">
@@ -189,9 +276,9 @@ const AdminApplications = () => {
           <tbody>
             {isLoading ? (
               <tr><td colSpan={7} className="px-4 py-8 text-center text-muted-foreground">Loading...</td></tr>
-            ) : filtered.length === 0 ? (
+            ) : applications.length === 0 ? (
               <tr><td colSpan={7} className="px-4 py-8 text-center text-muted-foreground">No applications found</td></tr>
-            ) : filtered.map((a) => (
+            ) : applications.map((a) => (
               <tr key={a.id} id={`app-${a.id}`} className={`border-b border-border last:border-0 ${isHighlighted(a.id) ? highlightClasses : ""}`}>
                 <td className="px-4 py-3 font-medium text-foreground">{a.full_name}</td>
                 <td className="px-4 py-3 text-muted-foreground">{a.email}</td>
@@ -264,7 +351,35 @@ const AdminApplications = () => {
         </table>
       </div>
 
-      {/* Detail modal */}
+      {/* Pagination footer */}
+      <div className="mt-4 flex flex-wrap items-center justify-between gap-3 text-sm text-muted-foreground">
+        <p>
+          {totalCount === 0
+            ? "0 results"
+            : `${page * PAGE_SIZE + 1}–${Math.min((page + 1) * PAGE_SIZE, totalCount)} of ${totalCount}`}
+          {isFetching && !isLoading && <span className="ml-2 italic opacity-70">Updating…</span>}
+        </p>
+        <div className="flex items-center gap-2">
+          <button
+            onClick={() => setPage((p) => Math.max(0, p - 1))}
+            disabled={page === 0 || isLoading}
+            className="inline-flex items-center gap-1 rounded-md border border-border bg-background px-3 py-1.5 text-foreground transition-colors hover:bg-secondary disabled:cursor-not-allowed disabled:opacity-50"
+          >
+            <ChevronLeft className="h-4 w-4" /> Prev
+          </button>
+          <span className="px-1 text-foreground">
+            Page {page + 1} / {totalPages}
+          </span>
+          <button
+            onClick={() => setPage((p) => (p + 1 < totalPages ? p + 1 : p))}
+            disabled={page + 1 >= totalPages || isLoading}
+            className="inline-flex items-center gap-1 rounded-md border border-border bg-background px-3 py-1.5 text-foreground transition-colors hover:bg-secondary disabled:cursor-not-allowed disabled:opacity-50"
+          >
+            Next <ChevronRight className="h-4 w-4" />
+          </button>
+        </div>
+      </div>
+
       <Dialog open={!!viewing} onOpenChange={(o) => !o && setViewing(null)}>
         <DialogContent className="max-w-3xl max-h-[90vh] overflow-y-auto">
           {(() => {
