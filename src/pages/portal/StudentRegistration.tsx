@@ -374,6 +374,22 @@ const StudentRegistration = () => {
 
       <div className="mt-5 space-y-4">
         {renderStatusAlert()}
+        {willChargeLateFee && (
+          <div className="rounded-xl border border-destructive/30 bg-destructive/5 p-4 flex items-start gap-3">
+            <XCircle className="h-5 w-5 text-destructive mt-0.5 shrink-0" />
+            <div className="flex-1">
+              <p className="font-semibold text-destructive">Late enrollment fee will apply</p>
+              <p className="text-sm text-muted-foreground">
+                The enrollment deadline has passed. If you submit your registration now, a late
+                fee of{" "}
+                <span className="font-semibold text-foreground">
+                  {lateEnrollFee!.amount} {lateEnrollFee!.currency}
+                </span>{" "}
+                will be added to your tuition account.
+              </p>
+            </div>
+          </div>
+        )}
         {registrationOpen && countdown && (
           <div
             className={`rounded-xl border p-4 flex flex-col sm:flex-row sm:items-center gap-4 ${
