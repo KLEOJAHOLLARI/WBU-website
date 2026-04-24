@@ -32,6 +32,7 @@ const navGroups: { label: string; items: { to: string; label: string; icon: any;
       { to: "/admin/professors", label: "Professors", icon: Users },
       { to: "/admin/students", label: "Students", icon: Users },
       { to: "/admin/advisors", label: "Advisors", icon: UserCheck },
+      { to: "/admin/id-cards", label: "ID Cards", icon: IdCard },
     ],
   },
   {
