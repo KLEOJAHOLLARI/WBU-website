@@ -37,6 +37,7 @@ const navGroups = [
   {
     label: "Other",
     items: [
+      { to: "/portal/id-card", label: "Digital ID Card", icon: IdCard },
       { to: "/portal/messages", label: "Messages", icon: Mail, badge: true },
       { to: "/portal/profile", label: "My Profile", icon: UserCircle },
     ],
