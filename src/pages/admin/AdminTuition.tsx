@@ -60,6 +60,7 @@ const AdminTuition = () => {
   const [lfTo, setLfTo] = useState<string>("");
   const [lfSelected, setLfSelected] = useState<Set<string>>(new Set());
   const [bulkLfDialog, setBulkLfDialog] = useState<null | "waive" | "remove">(null);
+  const [waiveDialog, setWaiveDialog] = useState<{ lf: any; note: string } | null>(null);
 
   const { data: semesters = [] } = useQuery({
     queryKey: ["adm-tuition-semesters"],
