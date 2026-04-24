@@ -137,9 +137,27 @@ const Programs = () => {
           {/* Program list */}
           <div className="mt-8 overflow-hidden rounded-2xl border border-border/60 bg-card shadow-sm">
             {isLoading ? (
-              <div className="py-20 text-center text-sm text-muted-foreground">
-                {t("programs.loading", "Loading…")}
-              </div>
+              <ul className="divide-y divide-border/60">
+                {Array.from({ length: 6 }).map((_, i) => (
+                  <li
+                    key={i}
+                    className="flex items-center gap-4 px-4 py-4 sm:gap-5 sm:px-6 sm:py-5"
+                  >
+                    <div className="h-14 w-14 shrink-0 animate-pulse rounded-full bg-muted sm:h-16 sm:w-16" />
+                    <div className="min-w-0 flex-1 space-y-2">
+                      <div
+                        className="h-4 animate-pulse rounded-md bg-muted"
+                        style={{ width: `${55 + ((i * 7) % 35)}%` }}
+                      />
+                      <div
+                        className="h-3 animate-pulse rounded-md bg-muted/70"
+                        style={{ width: `${35 + ((i * 5) % 25)}%` }}
+                      />
+                    </div>
+                    <div className="h-5 w-5 shrink-0 animate-pulse rounded bg-muted" />
+                  </li>
+                ))}
+              </ul>
             ) : filtered.length === 0 ? (
               <div className="py-20 text-center text-sm text-muted-foreground">
                 {t("programs.noResults", "No programs found.")}
