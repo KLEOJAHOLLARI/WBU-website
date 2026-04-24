@@ -201,6 +201,9 @@ const Index = () => {
       {/* Student's Corner */}
       <StudentsCorner />
 
+      {/* Promotional Banners (admin-managed) */}
+      <PromoBanners />
+
       {/* Latest News */}
       <section className="section-padding">
         <div className="container">
