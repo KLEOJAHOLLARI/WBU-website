@@ -17,20 +17,87 @@ const AdminApplications = () => {
   const qc = useQueryClient();
   const [viewing, setViewing] = useState<string | null>(null);
   const [statusFilter, setStatusFilter] = useState<string>("all");
+  const [programFilter, setProgramFilter] = useState<string>("all");
+  const [searchInput, setSearchInput] = useState("");
+  const [search, setSearch] = useState("");
+  const [page, setPage] = useState(0);
   const [credentials, setCredentials] = useState<{ email: string; password: string } | null>(null);
   const [accepting, setAccepting] = useState<string | null>(null);
 
-  const { data: applications = [], isLoading } = useQuery({
-    queryKey: ["admin-applications"],
+  // Debounce search
+  useEffect(() => {
+    const t = setTimeout(() => {
+      setSearch(searchInput.trim());
+      setPage(0);
+    }, 300);
+    return () => clearTimeout(t);
+  }, [searchInput]);
+
+  // Reset to first page when filters change
+  useEffect(() => { setPage(0); }, [statusFilter, programFilter]);
+
+  // Page of applications (server-side filtered + paginated)
+  const { data: pageData, isLoading, isFetching } = useQuery({
+    queryKey: ["admin-applications", { statusFilter, programFilter, search, page }],
     queryFn: async () => {
-      const { data, error } = await supabase
+      let q = supabase
         .from("applications")
-        .select("*")
-        .order("created_at", { ascending: false });
+        .select("*", { count: "exact" })
+        .order("created_at", { ascending: false })
+        .range(page * PAGE_SIZE, page * PAGE_SIZE + PAGE_SIZE - 1);
+
+      if (statusFilter !== "all") q = q.eq("status", statusFilter);
+      if (programFilter !== "all") q = q.eq("program", programFilter);
+      if (search) {
+        const esc = search.replace(/[%,]/g, " ");
+        q = q.or(`full_name.ilike.%${esc}%,email.ilike.%${esc}%,program.ilike.%${esc}%`);
+      }
+
+      const { data, error, count } = await q;
       if (error) throw error;
-      return data;
+      return { rows: data ?? [], count: count ?? 0 };
+    },
+    placeholderData: keepPreviousData,
+  });
+
+  const applications = pageData?.rows ?? [];
+  const totalCount = pageData?.count ?? 0;
+  const totalPages = Math.max(1, Math.ceil(totalCount / PAGE_SIZE));
+
+  // Lightweight counts for tabs (status only) — single aggregated query
+  const { data: counts } = useQuery({
+    queryKey: ["admin-applications-counts"],
+    queryFn: async () => {
+      const statuses = ["pending", "accepted", "rejected"] as const;
+      const results = await Promise.all([
+        supabase.from("applications").select("id", { count: "exact", head: true }),
+        ...statuses.map((s) =>
+          supabase.from("applications").select("id", { count: "exact", head: true }).eq("status", s)
+        ),
+      ]);
+      return {
+        all: results[0].count ?? 0,
+        pending: results[1].count ?? 0,
+        accepted: results[2].count ?? 0,
+        rejected: results[3].count ?? 0,
+      };
     },
   });
+
+  // Distinct programs for the program filter dropdown
+  const { data: programs = [] } = useQuery({
+    queryKey: ["admin-applications-programs"],
+    queryFn: async () => {
+      const { data, error } = await supabase.from("programs").select("slug, title").order("title");
+      if (error) throw error;
+      return data ?? [];
+    },
+  });
+
+  const invalidateAll = () => {
+    qc.invalidateQueries({ queryKey: ["admin-applications"] });
+    qc.invalidateQueries({ queryKey: ["admin-applications-counts"] });
+  };
 
   const acceptApplication = async (id: string) => {
     setAccepting(id);
