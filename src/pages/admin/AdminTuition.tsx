@@ -1063,7 +1063,7 @@ const AdminTuition = () => {
                               Edit
                             </Button>
                             {!lf.waived && (
-                              <Button size="sm" variant="outline" onClick={() => waiveLateFee.mutate(lf.id)}>
+                              <Button size="sm" variant="outline" onClick={() => setWaiveDialog({ lf, note: "" })}>
                                 <Undo2 className="h-3.5 w-3.5 mr-1" /> Waive
                               </Button>
                             )}
