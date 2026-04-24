@@ -31,6 +31,12 @@ export interface TranscriptSignatureConfig {
   signature_text?: string;
   /** Font style for the signature text. */
   signature_font?: "script" | "italic" | "bold";
+  /** Font size in pt for the signature text. */
+  signature_size?: number;
+  /** Horizontal offset in pt applied to the signature (+right / -left). */
+  signature_offset_x?: number;
+  /** Vertical offset in pt applied to the signature (+down / -up). */
+  signature_offset_y?: number;
   /** Legacy — image-based signature (kept for backwards compat, no longer used). */
   signature_path: string | null;
 }
@@ -43,6 +49,9 @@ const DEFAULT_SIGNATURE_CONFIG: TranscriptSignatureConfig = {
   label: "Verified by Administration",
   signature_text: "",
   signature_font: "script",
+  signature_size: 28,
+  signature_offset_x: 0,
+  signature_offset_y: 0,
   signature_path: null,
 };
 
@@ -256,39 +265,39 @@ export async function downloadTranscriptPdf(opts: BuildTranscriptPdfOptions): Pr
     // Render the signature as styled text (no image upload required)
     const signatureText = (config.signature_text || config.admin_name || "").trim();
     const fontStyle = config.signature_font ?? "script";
+    const fontSize = config.signature_size && config.signature_size > 0 ? config.signature_size : 28;
+    const offsetX = config.signature_offset_x ?? 0;
+    const offsetY = config.signature_offset_y ?? 0;
 
     if (signatureText) {
-      // jsPDF doesn't ship a script font; we approximate per chosen style.
       if (fontStyle === "bold") {
         doc.setFont("helvetica", "bold");
-        doc.setFontSize(22);
       } else if (fontStyle === "italic") {
         doc.setFont("times", "italic");
-        doc.setFontSize(24);
       } else {
         // "script" — closest built-in approximation
         doc.setFont("times", "italic");
-        doc.setFontSize(28);
       }
+      doc.setFontSize(fontSize);
       doc.setTextColor(20, 30, 80);
-      doc.text(signatureText, rightX, sigBaselineY, { align: "right" });
+      doc.text(signatureText, rightX + offsetX, sigBaselineY + offsetY, { align: "right" });
       doc.setTextColor(0);
     }
 
-    // Signature line
+    // Signature line (follows horizontal offset so it stays under the signature)
     doc.setDrawColor(120);
-    doc.line(sigX, sigBaselineY + 3, rightX, sigBaselineY + 3);
+    doc.line(sigX + offsetX, sigBaselineY + offsetY + 3, rightX + offsetX, sigBaselineY + offsetY + 3);
 
     // Name + title under the signature line
-    const nameY = sigBaselineY + 9;
+    const nameY = sigBaselineY + offsetY + 9;
     doc.setFont("helvetica", "bold");
     doc.setFontSize(10);
-    doc.text(config.admin_name || "—", rightX, nameY, { align: "right" });
+    doc.text(config.admin_name || "—", rightX + offsetX, nameY, { align: "right" });
     if (config.title) {
       doc.setFont("helvetica", "normal");
       doc.setFontSize(8.5);
       doc.setTextColor(90);
-      doc.text(config.title, rightX, nameY + 5, { align: "right" });
+      doc.text(config.title, rightX + offsetX, nameY + 5, { align: "right" });
       doc.setTextColor(0);
     }
   }

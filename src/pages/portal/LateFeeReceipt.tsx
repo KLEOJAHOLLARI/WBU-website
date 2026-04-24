@@ -22,6 +22,9 @@ interface SignatureConfig {
   label: string;
   signature_text: string;
   signature_font: "script" | "italic" | "bold";
+  signature_size?: number;
+  signature_offset_x?: number;
+  signature_offset_y?: number;
 }
 
 const LateFeeReceipt = () => {
@@ -234,11 +237,15 @@ const LateFeeReceipt = () => {
           {sigEnabled ? (
             <div className="text-center">
               <div
-                className="mb-1 text-3xl text-foreground"
+                className="mb-1 text-foreground transition-transform"
                 style={{
                   fontFamily: FONT_FAMILY[sigFont],
                   fontStyle: sigFont === "italic" ? "italic" : "normal",
                   fontWeight: sigFont === "bold" ? 700 : 400,
+                  // pt → px conversion keeps on-screen preview proportional to PDF output
+                  fontSize: `${Math.round((signature?.signature_size ?? 28) * 1.333)}px`,
+                  lineHeight: 1,
+                  transform: `translate(${signature?.signature_offset_x ?? 0}px, ${signature?.signature_offset_y ?? 0}px)`,
                 }}
               >
                 {sigText}
