@@ -150,6 +150,7 @@ const App = () => (
             <Route path="/professor/transcripts" element={<ProfessorTranscripts />} />
             <Route path="/professor/exams" element={<ProfessorExamSchedule />} />
             <Route path="/professor/profile" element={<ProfessorProfile />} />
+            <Route path="/professor/id-card" element={<ProfessorDigitalIDCard />} />
             <Route path="*" element={<NotFound />} />
           </Routes>
         </AuthProvider>
