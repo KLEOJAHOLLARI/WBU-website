@@ -1,11 +1,13 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import AdminLayout from "@/components/AdminLayout";
-import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
+import { useQuery, useMutation, useQueryClient, keepPreviousData } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
 import { useToast } from "@/hooks/use-toast";
-import { CheckCircle, XCircle, Eye, FileText, Trash2, Copy, UserPlus } from "lucide-react";
+import { CheckCircle, XCircle, Eye, FileText, Trash2, Copy, UserPlus, Search, ChevronLeft, ChevronRight } from "lucide-react";
 import { useHighlightParam, highlightClasses } from "@/hooks/useHighlightParam";
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
+
+const PAGE_SIZE = 20;
 
 const parseDocs = (url: string | null): string[] =>
   url ? url.split(",").map((s) => s.trim()).filter(Boolean) : [];
