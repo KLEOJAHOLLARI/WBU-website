@@ -334,7 +334,68 @@ const StudentRegistration = () => {
         <div className="mt-1"><SemesterBadge /></div>
       </div>
 
-      <div className="mt-5 space-y-4">{renderStatusAlert()}</div>
+      <div className="mt-5 space-y-4">
+        {renderStatusAlert()}
+        {registrationOpen && countdown && (
+          <div
+            className={`rounded-xl border p-4 flex flex-col sm:flex-row sm:items-center gap-4 ${
+              countdown.expired
+                ? "border-destructive/30 bg-destructive/5"
+                : countdown.days < 3
+                ? "border-amber-500/30 bg-amber-500/5"
+                : "border-primary/30 bg-primary/5"
+            }`}
+          >
+            <div className="flex items-start gap-3 flex-1">
+              <Clock
+                className={`h-5 w-5 mt-0.5 shrink-0 ${
+                  countdown.expired
+                    ? "text-destructive"
+                    : countdown.days < 3
+                    ? "text-amber-600"
+                    : "text-primary"
+                }`}
+              />
+              <div>
+                <p className="font-semibold text-foreground">
+                  {countdown.expired
+                    ? "Enrollment deadline has passed"
+                    : "Enrollment closes in"}
+                </p>
+                <p className="text-xs text-muted-foreground">
+                  Deadline:{" "}
+                  {enrollmentDeadline?.toLocaleString(undefined, {
+                    dateStyle: "medium",
+                    timeStyle: "short",
+                  })}
+                </p>
+              </div>
+            </div>
+            {!countdown.expired && (
+              <div className="flex items-center gap-2 sm:gap-3">
+                {[
+                  { label: "Days", value: countdown.days },
+                  { label: "Hours", value: countdown.hours },
+                  { label: "Min", value: countdown.minutes },
+                  { label: "Sec", value: countdown.seconds },
+                ].map((u) => (
+                  <div
+                    key={u.label}
+                    className="min-w-[56px] rounded-lg bg-card border border-border px-2 py-1.5 text-center"
+                  >
+                    <div className="font-display text-xl font-bold text-foreground tabular-nums leading-none">
+                      {String(u.value).padStart(2, "0")}
+                    </div>
+                    <div className="mt-0.5 text-[10px] uppercase tracking-wide text-muted-foreground">
+                      {u.label}
+                    </div>
+                  </div>
+                ))}
+              </div>
+            )}
+          </div>
+        )}
+      </div>
 
       {/* Cart */}
       <div className="mt-6 rounded-xl border border-border bg-card overflow-hidden">
