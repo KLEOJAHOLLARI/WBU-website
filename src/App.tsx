@@ -70,6 +70,8 @@ import AdminPromoBanners from "./pages/admin/AdminPromoBanners";
 import Scholarships from "./pages/Scholarships";
 import AdminScholarshipDocs from "./pages/admin/AdminScholarshipDocs";
 import AdminCommunication from "./pages/admin/AdminCommunication";
+import StudentDigitalIDCard from "./pages/portal/StudentDigitalIDCard";
+import AdminDigitalIDCards from "./pages/admin/AdminDigitalIDCards";
 
 const queryClient = new QueryClient();
 
