@@ -354,7 +354,9 @@ const StudentRegistration = () => {
           <div className="px-5 py-12 text-center">
             <Inbox className="h-10 w-10 text-muted-foreground/40 mx-auto mb-3" />
             <p className="text-muted-foreground text-sm">
-              {hasPending
+              {!registrationOpen
+                ? "Course registration is closed. You'll be able to add courses once an admin opens the registration window."
+                : hasPending
                 ? "You have a pending registration. Wait for your advisor's decision before adding more."
                 : "No courses added yet. Click \"Add Course\" to start building your registration."}
             </p>
