@@ -268,16 +268,18 @@ const Scholarships = () => {
   const [extraDocs, setExtraDocs] = useState<Record<string, string[]>>(DEFAULT_EXTRA_DOCS);
   const [isLoadingDocs, setIsLoadingDocs] = useState(true);
   const [docsError, setDocsError] = useState<string | null>(null);
+  const [docsUpdatedAt, setDocsUpdatedAt] = useState<string | null>(null);
 
   useEffect(() => {
     let cancelled = false;
     setIsLoadingDocs(true);
     setDocsError(null);
     fetchScholarshipDocs()
-      .then(({ base, extra }) => {
+      .then(({ base, extra, updatedAt }) => {
         if (cancelled) return;
         setBaseDocuments(base);
         setExtraDocs(extra);
+        setDocsUpdatedAt(updatedAt);
       })
       .catch((err) => {
         if (cancelled) return;
@@ -458,6 +460,16 @@ const Scholarships = () => {
               </button>
               <p className="mt-3 text-xs text-muted-foreground">
                 Tip: each scholarship card also has its own tailored checklist.
+              </p>
+              <p className="mt-2 text-xs text-muted-foreground">
+                {isLoadingDocs
+                  ? "Checking for updates…"
+                  : docsUpdatedAt
+                    ? `Requirements last updated ${new Date(docsUpdatedAt).toLocaleString(
+                        undefined,
+                        { dateStyle: "long", timeStyle: "short" },
+                      )}`
+                    : "Showing default requirements (no custom updates yet)."}
               </p>
             </motion.div>
 

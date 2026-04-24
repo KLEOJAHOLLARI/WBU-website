@@ -63,18 +63,23 @@ export const DEFAULT_SCHOLARSHIP_DOCS: ScholarshipDocsValue = {
   extra: DEFAULT_EXTRA_DOCS,
 };
 
-export const fetchScholarshipDocs = async (): Promise<ScholarshipDocsValue> => {
+export type ScholarshipDocsResult = ScholarshipDocsValue & {
+  updatedAt: string | null;
+};
+
+export const fetchScholarshipDocs = async (): Promise<ScholarshipDocsResult> => {
   const { data, error } = await supabase
     .from("system_settings")
-    .select("value")
+    .select("value, updated_at")
     .eq("key", SCHOLARSHIP_DOCS_KEY)
     .maybeSingle();
 
   if (error) throw error;
-  if (!data?.value) return DEFAULT_SCHOLARSHIP_DOCS;
+  if (!data?.value) return { ...DEFAULT_SCHOLARSHIP_DOCS, updatedAt: null };
   const v = data.value as Partial<ScholarshipDocsValue>;
   return {
     base: Array.isArray(v.base) && v.base.length ? v.base : DEFAULT_BASE_DOCUMENTS,
     extra: { ...DEFAULT_EXTRA_DOCS, ...(v.extra || {}) },
+    updatedAt: data.updated_at ?? null,
   };
 };
