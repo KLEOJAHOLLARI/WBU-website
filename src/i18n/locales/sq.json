@@ -49,7 +49,15 @@
     "viewAllNews": "Shiko të Gjitha Lajmet",
     "readyTitle": "Gati të Filloni Udhëtimin Tuaj?",
     "readySub": "Aplikimet për vitin e ri akademik janë tani të hapura. Bëni hapin e parë drejt një diplome që hap dyert.",
-    "contactUs": "Na Kontaktoni"
+    "contactUs": "Na Kontaktoni",
+    "studentsCorner": "Këndi i Studentit",
+    "studentsCornerSub": "Akses i shpejtë në jetën akademike, oraret dhe portalin e studentit",
+    "academicCalendar": "Kalendari Akademik",
+    "timetable": "Orari Mësimor",
+    "smartWBU": "Portali Smart WBU",
+    "smartWBUTag": "Hyr",
+    "deanOfStudents": "Dekani i Studentëve",
+    "registrarOffice": "Zyra e Regjistrimit"
   },
   "about": {
     "title": "Rreth WBU",

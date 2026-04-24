@@ -49,7 +49,15 @@
     "viewAllNews": "View All News",
     "readyTitle": "Ready to Begin Your Journey?",
     "readySub": "Applications for the upcoming academic year are now open. Take the first step toward a degree that opens doors.",
-    "contactUs": "Contact Us"
+    "contactUs": "Contact Us",
+    "studentsCorner": "Student's Corner",
+    "studentsCornerSub": "Quick access to academic life, schedules and the student portal",
+    "academicCalendar": "Academic Calendar",
+    "timetable": "Timetable",
+    "smartWBU": "Smart WBU Portal",
+    "smartWBUTag": "Login",
+    "deanOfStudents": "Dean of Students",
+    "registrarOffice": "Registrar's Office"
   },
   "about": {
     "title": "About WBU",
