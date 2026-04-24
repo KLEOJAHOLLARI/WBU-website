@@ -1121,6 +1121,48 @@ const AdminTuition = () => {
               </div>
             );
           })()}
+
+          {/* Waive Late Fee Dialog */}
+          <Dialog open={!!waiveDialog} onOpenChange={(o) => !o && setWaiveDialog(null)}>
+            <DialogContent>
+              <DialogHeader>
+                <DialogTitle>Waive Late Fee</DialogTitle>
+              </DialogHeader>
+              {waiveDialog && (() => {
+                const st = studentMap[waiveDialog.lf.user_id];
+                return (
+                  <div className="space-y-3">
+                    <div className="rounded-lg bg-muted p-3 text-sm space-y-1">
+                      <div><span className="text-muted-foreground">Student:</span> <span className="font-medium text-foreground">{st?.full_name || "—"}</span> {st?.student_id && <span className="text-muted-foreground text-xs">· {st.student_id}</span>}</div>
+                      <div><span className="text-muted-foreground">Amount:</span> <span className="font-medium text-foreground">{fmtMoney(Number(waiveDialog.lf.amount), waiveDialog.lf.currency)}</span></div>
+                      <div><span className="text-muted-foreground">Applied:</span> <span className="font-medium text-foreground">{new Date(waiveDialog.lf.applied_at).toLocaleDateString()}</span></div>
+                    </div>
+                    <div>
+                      <Label>Reason for waiving <span className="text-destructive">*</span></Label>
+                      <Textarea
+                        rows={4}
+                        placeholder="e.g. Student provided documentation of hardship; approved by Dean."
+                        value={waiveDialog.note}
+                        onChange={(e) => setWaiveDialog({ ...waiveDialog, note: e.target.value })}
+                      />
+                      <p className="mt-1 text-xs text-muted-foreground">
+                        This reason and your admin user will be recorded on the late fee record.
+                      </p>
+                    </div>
+                  </div>
+                );
+              })()}
+              <DialogFooter>
+                <Button variant="outline" onClick={() => setWaiveDialog(null)}>Cancel</Button>
+                <Button
+                  onClick={() => waiveDialog && waiveLateFee.mutate({ lf: waiveDialog.lf, note: waiveDialog.note })}
+                  disabled={!waiveDialog?.note.trim() || waiveLateFee.isPending}
+                >
+                  {waiveLateFee.isPending ? "Waiving…" : "Waive Late Fee"}
+                </Button>
+              </DialogFooter>
+            </DialogContent>
+          </Dialog>
         </TabsContent>
 
         {/* LATE ENROLLMENT FEE TAB */}
