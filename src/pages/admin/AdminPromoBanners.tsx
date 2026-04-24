@@ -358,6 +358,14 @@ const AdminPromoBanners = () => {
           ))
         )}
       </div>
+      <ImageCropDialog
+        open={!!cropSrc}
+        imageSrc={cropSrc}
+        aspect={16 / 9}
+        loading={uploading}
+        onCancel={() => { setCropSrc(null); if (fileInputRef.current) fileInputRef.current.value = ""; }}
+        onConfirm={uploadCroppedBlob}
+      />
     </AdminLayout>
   );
 };
