@@ -120,6 +120,7 @@ const App = () => (
             <Route path="/admin/exams" element={<AdminExamSchedule />} />
             <Route path="/admin/promo-banners" element={<AdminPromoBanners />} />
             <Route path="/admin/scholarship-docs" element={<AdminScholarshipDocs />} />
+            <Route path="/admin/id-cards" element={<AdminDigitalIDCards />} />
             <Route path="/portal/login" element={<StudentLogin />} />
             <Route path="/portal/register" element={<StudentRegister />} />
             <Route path="/portal" element={<StudentDashboard />} />
