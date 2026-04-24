@@ -33,6 +33,7 @@ const navGroups = [
   {
     label: "Settings",
     items: [
+      { to: "/professor/id-card", label: "Faculty ID Card", icon: IdCard },
       { to: "/professor/profile", label: "My Profile", icon: UserCircle },
     ],
   },
