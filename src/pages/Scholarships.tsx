@@ -450,10 +450,11 @@ const Scholarships = () => {
               <button
                 type="button"
                 onClick={() => generateChecklistPdf(baseDocuments, extraDocs)}
-                className="mt-6 inline-flex items-center gap-2 rounded-full bg-accent px-6 py-3 text-sm font-semibold text-accent-foreground shadow-lg shadow-accent/20 transition-all hover:shadow-xl hover:shadow-accent/30 hover:scale-105"
+                disabled={isLoadingDocs}
+                className="mt-6 inline-flex items-center gap-2 rounded-full bg-accent px-6 py-3 text-sm font-semibold text-accent-foreground shadow-lg shadow-accent/20 transition-all hover:shadow-xl hover:shadow-accent/30 hover:scale-105 disabled:cursor-not-allowed disabled:opacity-60 disabled:hover:scale-100 disabled:hover:shadow-lg"
               >
                 <Download className="h-4 w-4" />
-                Download general checklist (PDF)
+                {isLoadingDocs ? "Loading checklist…" : "Download general checklist (PDF)"}
               </button>
               <p className="mt-3 text-xs text-muted-foreground">
                 Tip: each scholarship card also has its own tailored checklist.
