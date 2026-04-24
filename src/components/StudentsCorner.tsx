@@ -7,13 +7,13 @@ import bgImage from "@/assets/students-corner.jpg";
 const StudentsCorner = () => {
   const { t } = useTranslation();
 
-  const items = [
+  const items: { key: string; to: string; icon: typeof Calendar; highlight?: boolean }[] = [
     { key: "academicCalendar", to: "/academic-calendar", icon: Calendar },
     { key: "timetable", to: "/timetable", icon: Clock },
     { key: "smartWBU", to: "/portal/login", icon: LogIn, highlight: true },
     { key: "deanOfStudents", to: "/about#dean-of-students", icon: Users },
     { key: "registrarOffice", to: "/contact#registrar", icon: FileText },
-  ] as const;
+  ];
 
   return (
     <section className="relative isolate overflow-hidden">
