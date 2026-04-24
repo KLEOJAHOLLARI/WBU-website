@@ -58,6 +58,9 @@ const AdminAccounts = () => {
   const { toast } = useToast();
   const qc = useQueryClient();
   const [tab, setTab] = useState<TabType>("professors");
+  const [search, setSearch] = useState("");
+  const [programFilter, setProgramFilter] = useState("all");
+  const [statusFilter, setStatusFilter] = useState("all");
   const [creating, setCreating] = useState(false);
   const [form, setForm] = useState({ email: "", password: "", full_name: "", phone: "", role: "professor" as string });
   const [deleteTarget, setDeleteTarget] = useState<{ user_id: string; name: string } | null>(null);
