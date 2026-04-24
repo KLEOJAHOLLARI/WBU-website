@@ -18,7 +18,7 @@ const stagger = {
 const Admissions = () => {
   const { t } = useTranslation();
   const { toast } = useToast();
-  const [form, setForm] = useState({ fullName: "", email: "", phone: "", program: "", motivation: "", gender: "", birthplace: "", personalId: "", document: null as File | null });
+  const [form, setForm] = useState({ fullName: "", email: "", phone: "", program: "", motivation: "", gender: "", birthplace: "", personalId: "", documents: [] as File[] });
   const [submitting, setSubmitting] = useState(false);
   const [submitted, setSubmitted] = useState(false);
 
@@ -46,16 +46,20 @@ const Admissions = () => {
 
     let document_url: string | null = null;
 
-    if (form.document) {
-      const ext = form.document.name.split(".").pop();
-      const path = `${Date.now()}_${Math.random().toString(36).slice(2)}.${ext}`;
-      const { error: uploadErr } = await supabase.storage.from("application-documents").upload(path, form.document);
-      if (uploadErr) {
-        toast({ title: "Upload failed", description: uploadErr.message, variant: "destructive" });
-        setSubmitting(false);
-        return;
+    if (form.documents.length > 0) {
+      const paths: string[] = [];
+      for (const file of form.documents) {
+        const ext = file.name.split(".").pop();
+        const path = `${Date.now()}_${Math.random().toString(36).slice(2)}.${ext}`;
+        const { error: uploadErr } = await supabase.storage.from("application-documents").upload(path, file);
+        if (uploadErr) {
+          toast({ title: "Upload failed", description: uploadErr.message, variant: "destructive" });
+          setSubmitting(false);
+          return;
+        }
+        paths.push(path);
       }
-      document_url = path;
+      document_url = paths.join(",");
     }
 
     const { data: { user: currentUser } } = await supabase.auth.getUser();
@@ -182,25 +186,39 @@ const Admissions = () => {
                 <textarea required rows={5} value={form.motivation} onChange={(e) => update("motivation", e.target.value)} className={inputClass} placeholder={t("admissions.motivationPlaceholder")} />
               </div>
               <div>
-                <label className="mb-1.5 block text-sm font-medium text-foreground">Upload Document (PDF, optional)</label>
-                <div className="relative flex items-center gap-3">
-                  <label className="flex cursor-pointer items-center gap-2 rounded-xl border border-input bg-background px-4 py-3 text-sm text-muted-foreground transition-colors hover:bg-secondary">
+                <label className="mb-1.5 block text-sm font-medium text-foreground">Upload Documents (PDF, optional — multiple allowed)</label>
+                <div className="space-y-2">
+                  <label className="flex w-fit cursor-pointer items-center gap-2 rounded-xl border border-input bg-background px-4 py-3 text-sm text-muted-foreground transition-colors hover:bg-secondary">
                     <Upload className="h-4 w-4" />
-                    {form.document ? form.document.name : "Choose file..."}
+                    {form.documents.length > 0 ? `Add more files (${form.documents.length} selected)` : "Choose files..."}
                     <input
                       type="file"
                       accept=".pdf,.doc,.docx"
+                      multiple
                       className="hidden"
                       onChange={(e) => {
-                        const file = e.target.files?.[0] || null;
-                        setForm((f) => ({ ...f, document: file }));
+                        const files = Array.from(e.target.files || []);
+                        if (files.length === 0) return;
+                        setForm((f) => ({ ...f, documents: [...f.documents, ...files] }));
+                        e.target.value = "";
                       }}
                     />
                   </label>
-                  {form.document && (
-                    <button type="button" onClick={() => setForm((f) => ({ ...f, document: null }))} className="text-xs text-destructive hover:underline">
-                      Remove
-                    </button>
+                  {form.documents.length > 0 && (
+                    <ul className="space-y-1">
+                      {form.documents.map((file, idx) => (
+                        <li key={idx} className="flex items-center justify-between rounded-lg border border-border bg-secondary/40 px-3 py-2 text-sm">
+                          <span className="truncate text-foreground">{file.name}</span>
+                          <button
+                            type="button"
+                            onClick={() => setForm((f) => ({ ...f, documents: f.documents.filter((_, i) => i !== idx) }))}
+                            className="ml-3 text-xs text-destructive hover:underline"
+                          >
+                            Remove
+                          </button>
+                        </li>
+                      ))}
+                    </ul>
                   )}
                 </div>
               </div>
