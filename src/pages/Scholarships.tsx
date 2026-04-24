@@ -461,6 +461,16 @@ const Scholarships = () => {
               <p className="mt-3 text-xs text-muted-foreground">
                 Tip: each scholarship card also has its own tailored checklist.
               </p>
+              <p className="mt-2 text-xs text-muted-foreground">
+                {isLoadingDocs
+                  ? "Checking for updates…"
+                  : docsUpdatedAt
+                    ? `Requirements last updated ${new Date(docsUpdatedAt).toLocaleString(
+                        undefined,
+                        { dateStyle: "long", timeStyle: "short" },
+                      )}`
+                    : "Showing default requirements (no custom updates yet)."}
+              </p>
             </motion.div>
 
             <motion.div {...fadeUp} className="grid gap-3">
