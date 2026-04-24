@@ -243,7 +243,7 @@ const AdminCommunication = () => {
   };
 
   const statusBadge = (s: string) => {
-    if (s === "sent") return <Badge className="bg-green-500/10 text-green-600 border-green-500/30 hover:bg-green-500/10"><CheckCircle2 className="h-3 w-3 mr-1" />Sent</Badge>;
+    if (s === "sent") return <Badge className="bg-primary/10 text-primary border-primary/30 hover:bg-primary/10"><CheckCircle2 className="h-3 w-3 mr-1" />Sent</Badge>;
     if (s === "pending") return <Badge variant="secondary"><Clock className="h-3 w-3 mr-1" />Pending</Badge>;
     if (s === "failed") return <Badge variant="destructive"><XCircle className="h-3 w-3 mr-1" />Failed</Badge>;
     if (s === "cancelled") return <Badge variant="outline">Cancelled</Badge>;
