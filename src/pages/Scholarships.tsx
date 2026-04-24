@@ -140,46 +140,6 @@ const faqs = [
   },
 ];
 
-const baseDocuments = [
-  "Completed online admission application",
-  "Official high-school or previous-degree transcripts",
-  "National ID or passport copy",
-  "Motivation letter (max 1 page)",
-  "Two letters of recommendation",
-  "Awards, certificates, or portfolio (if applicable)",
-];
-
-const extraDocsByScholarship: Record<string, string[]> = {
-  "Merit Excellence Scholarship": [
-    "Certified entrance exam result",
-    "Academic transcript with GPA ≥ 9.0 / 90%+",
-  ],
-  "Need-Based Grant": [
-    "Proof of family income (last 6 months)",
-    "Tax statement or social-services letter",
-    "Personal statement explaining financial need",
-  ],
-  "International Student Award": [
-    "Passport copy and proof of residency abroad",
-    "Language proficiency certificate (English/Albanian)",
-    "Equivalence of foreign diploma (if available)",
-  ],
-  "Community Leadership": [
-    "Documentation of volunteer / community service",
-    "Two recommendation letters (mentor / NGO / school)",
-    "Leadership essay (max 1 page)",
-  ],
-  "Alumni Family Discount": [
-    "Proof of relation to a WBU alumnus (parent / sibling)",
-    "Alumnus diploma copy or graduation year reference",
-  ],
-  "Sports & Arts Talent": [
-    "National ranking certificate or competition results",
-    "Coach / mentor recommendation letter",
-    "Portfolio, recordings, or performance evidence",
-  ],
-};
-
 const generateChecklistPdf = (
   baseDocuments: string[],
   extraDocsByScholarship: Record<string, string[]>,
