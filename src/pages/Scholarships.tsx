@@ -1,6 +1,12 @@
+import { useEffect, useState } from "react";
 import { Link } from "react-router-dom";
 import { motion } from "framer-motion";
 import jsPDF from "jspdf";
+import {
+  fetchScholarshipDocs,
+  DEFAULT_BASE_DOCUMENTS,
+  DEFAULT_EXTRA_DOCS,
+} from "@/lib/scholarshipDocs";
 import {
   Award,
   GraduationCap,
