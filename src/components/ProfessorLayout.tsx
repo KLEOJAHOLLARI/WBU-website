@@ -5,7 +5,7 @@ import { useQuery } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
 import {
   GraduationCap, LayoutDashboard, BookOpen, LogOut, Megaphone, UserCircle,
-  UserCheck, Menu, ScrollText, ArrowLeft, CalendarDays,
+  UserCheck, Menu, ScrollText, ArrowLeft, CalendarDays, IdCard,
 } from "lucide-react";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Sheet, SheetContent, SheetTrigger } from "@/components/ui/sheet";
