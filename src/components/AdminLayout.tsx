@@ -52,6 +52,7 @@ const navGroups: { label: string; items: { to: string; label: string; icon: any;
     items: [
       { to: "/admin/announcements", label: "Announcements", icon: Megaphone },
       { to: "/admin/news", label: "News", icon: Newspaper },
+      { to: "/admin/promo-banners", label: "Promo Banners", icon: Megaphone },
       { to: "/admin/contacts", label: "Messages", icon: Mail },
     ],
   },

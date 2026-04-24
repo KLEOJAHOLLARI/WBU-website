@@ -4,6 +4,7 @@ import { BookOpen, Users, Globe, Award, ArrowRight, Calendar, Sparkles } from "l
 import Layout from "@/components/Layout";
 import SectionHeading from "@/components/SectionHeading";
 import StudentsCorner from "@/components/StudentsCorner";
+import PromoBanners from "@/components/PromoBanners";
 import { useQuery } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
 import { useTranslation } from "react-i18next";
