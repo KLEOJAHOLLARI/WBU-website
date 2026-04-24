@@ -292,12 +292,28 @@ const StudentTuition = () => {
                     {c.due_date && <p className="mt-1 text-sm text-muted-foreground">Due {new Date(c.due_date).toLocaleDateString()}</p>}
                     {c.notes && <p className="mt-1 text-xs text-muted-foreground">{c.notes}</p>}
                     {lateFeeByCharge[c.id] && !lateFeeByCharge[c.id].waived && (
-                      <p className="mt-1.5 inline-flex items-center gap-1 rounded-md bg-destructive/10 px-2 py-0.5 text-xs font-medium text-destructive">
-                        Late fee applied: +{fmtMoney(Number(lateFeeByCharge[c.id].amount), lateFeeByCharge[c.id].currency)}
-                      </p>
+                      <div className="mt-1.5 flex flex-wrap items-center gap-2">
+                        <span className="inline-flex items-center gap-1 rounded-md bg-destructive/10 px-2 py-0.5 text-xs font-medium text-destructive">
+                          Late fee applied: +{fmtMoney(Number(lateFeeByCharge[c.id].amount), lateFeeByCharge[c.id].currency)}
+                        </span>
+                        <a
+                          href={`/portal/tuition/late-fee/${lateFeeByCharge[c.id].id}/receipt`}
+                          className="inline-flex items-center gap-1 text-xs font-medium text-primary hover:underline"
+                        >
+                          <Receipt className="h-3 w-3" /> View receipt
+                        </a>
+                      </div>
                     )}
                     {lateFeeByCharge[c.id]?.waived && (
-                      <p className="mt-1.5 text-xs text-muted-foreground">Late fee waived ({fmtMoney(Number(lateFeeByCharge[c.id].amount), lateFeeByCharge[c.id].currency)})</p>
+                      <div className="mt-1.5 flex flex-wrap items-center gap-2">
+                        <span className="text-xs text-muted-foreground">Late fee waived ({fmtMoney(Number(lateFeeByCharge[c.id].amount), lateFeeByCharge[c.id].currency)})</span>
+                        <a
+                          href={`/portal/tuition/late-fee/${lateFeeByCharge[c.id].id}/receipt`}
+                          className="inline-flex items-center gap-1 text-xs font-medium text-primary hover:underline"
+                        >
+                          <Receipt className="h-3 w-3" /> View receipt
+                        </a>
+                      </div>
                     )}
                   </div>
                   <div className="text-right">
