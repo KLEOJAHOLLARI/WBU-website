@@ -66,6 +66,10 @@ const StudentRegistration = () => {
 
   const studentYear = activeSemester?.year ?? profile?.current_year ?? 1;
   const studentSemester = activeSemester?.semester ?? profile?.current_semester ?? 1;
+  const registrationOpen = !!activeSemester?.enrollment_open;
+  const enrollmentDeadline = activeSemester?.enrollment_deadline
+    ? new Date(activeSemester.enrollment_deadline)
+    : null;
 
   // Existing enrollments (already approved)
   const { data: enrollments = [] } = useQuery({
@@ -188,6 +192,7 @@ const StudentRegistration = () => {
 
   const submitMutation = useMutation({
     mutationFn: async () => {
+      if (!registrationOpen) throw new Error("Registration is currently closed");
       if (!cart.length) throw new Error("Cart is empty");
       const rows = cart.map((c) => ({ user_id: user!.id, course_id: c.id }));
       const { error } = await supabase.from("enrollment_requests").insert(rows as any);
@@ -213,6 +218,26 @@ const StudentRegistration = () => {
     setCart((p) => p.filter((c) => c.id !== id));
 
   const renderStatusAlert = () => {
+    if (!registrationOpen) {
+      return (
+        <div className="rounded-xl border border-border bg-muted/40 p-4 flex items-start gap-3">
+          <Lock className="h-5 w-5 text-muted-foreground mt-0.5 shrink-0" />
+          <div className="flex-1">
+            <p className="font-semibold text-foreground">
+              Course registration is currently closed
+            </p>
+            <p className="text-sm text-muted-foreground">
+              Registration for{" "}
+              <span className="font-medium text-foreground">
+                {activeSemester?.name ?? "the current semester"}
+              </span>{" "}
+              has not been opened by the administration yet. You'll be able to build and
+              submit your course list as soon as it's approved and opened.
+            </p>
+          </div>
+        </div>
+      );
+    }
     if (hasPending) {
       return (
         <div className="rounded-xl border border-amber-500/30 bg-amber-500/5 p-4 flex items-start gap-3">
@@ -258,6 +283,25 @@ const StudentRegistration = () => {
         </div>
       );
     }
+    if (enrollmentDeadline) {
+      return (
+        <div className="rounded-xl border border-emerald-500/30 bg-emerald-500/5 p-4 flex items-start gap-3">
+          <CheckCircle2 className="h-5 w-5 text-emerald-600 mt-0.5 shrink-0" />
+          <div className="flex-1">
+            <p className="font-semibold text-emerald-700 dark:text-emerald-400">
+              Registration is open
+            </p>
+            <p className="text-sm text-muted-foreground">
+              Submit your course list before{" "}
+              <span className="font-medium text-foreground">
+                {enrollmentDeadline.toLocaleDateString()}
+              </span>
+              .
+            </p>
+          </div>
+        </div>
+      );
+    }
     return null;
   };
 
@@ -289,15 +333,15 @@ const StudentRegistration = () => {
           </div>
           <div className="flex items-center gap-2">
             <button
-              disabled={hasPending}
+              disabled={hasPending || !registrationOpen}
               onClick={() => setPickerOpen(true)}
               className="inline-flex items-center gap-1.5 rounded-lg bg-primary px-3.5 py-2 text-sm font-semibold text-primary-foreground transition-all hover:bg-primary/90 disabled:opacity-50 disabled:cursor-not-allowed"
             >
-              {hasPending ? <Lock className="h-4 w-4" /> : <Plus className="h-4 w-4" />}
+              {hasPending || !registrationOpen ? <Lock className="h-4 w-4" /> : <Plus className="h-4 w-4" />}
               Add Course
             </button>
             <button
-              disabled={cart.length === 0 || submitMutation.isPending || hasPending}
+              disabled={cart.length === 0 || submitMutation.isPending || hasPending || !registrationOpen}
               onClick={() => submitMutation.mutate()}
               className="inline-flex items-center gap-1.5 rounded-lg bg-emerald-600 px-3.5 py-2 text-sm font-semibold text-white transition-all hover:bg-emerald-700 disabled:opacity-50 disabled:cursor-not-allowed"
             >
@@ -311,7 +355,9 @@ const StudentRegistration = () => {
           <div className="px-5 py-12 text-center">
             <Inbox className="h-10 w-10 text-muted-foreground/40 mx-auto mb-3" />
             <p className="text-muted-foreground text-sm">
-              {hasPending
+              {!registrationOpen
+                ? "Course registration is closed. You'll be able to add courses once an admin opens the registration window."
+                : hasPending
                 ? "You have a pending registration. Wait for your advisor's decision before adding more."
                 : "No courses added yet. Click \"Add Course\" to start building your registration."}
             </p>
