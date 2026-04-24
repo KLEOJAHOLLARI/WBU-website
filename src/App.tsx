@@ -133,6 +133,7 @@ const App = () => (
             <Route path="/portal/courses/:id" element={<StudentCourseDetail />} />
             <Route path="/portal/profile" element={<StudentProfile />} />
             <Route path="/portal/transcript" element={<StudentTranscript />} />
+            <Route path="/portal/id-card" element={<StudentDigitalIDCard />} />
             <Route path="/portal/change-password" element={<ChangePassword />} />
             <Route path="/portal/exams" element={<StudentExamSchedule />} />
             <Route path="/portal/exams/:id" element={<ExamDetail />} />
