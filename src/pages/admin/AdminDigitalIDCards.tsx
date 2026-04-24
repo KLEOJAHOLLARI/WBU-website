@@ -12,32 +12,98 @@ import { toast } from "@/hooks/use-toast";
 import { format } from "date-fns";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from "@/components/ui/dialog";
 import { Label } from "@/components/ui/label";
+import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 
-interface Row {
+interface BaseRow {
   id: string;
   user_id: string;
   status: string;
   issue_date: string;
   reissue_count: number;
   verification_token: string;
+}
+
+interface StudentRow extends BaseRow {
   profile?: { full_name: string; student_id: string | null; program: string | null; email: string };
 }
 
+interface ProfRow extends BaseRow {
+  profile?: { full_name: string; email: string };
+  prof?: { title: string | null; department: string | null };
+}
+
+const useUpdate = (table: "student_id_cards" | "professor_id_cards", queryKey: string) => {
+  const qc = useQueryClient();
+  return useMutation({
+    mutationFn: async ({ id, patch }: { id: string; patch: Record<string, any> }) => {
+      const { error } = await (supabase as any).from(table).update(patch).eq("id", id);
+      if (error) throw error;
+    },
+    onSuccess: () => {
+      qc.invalidateQueries({ queryKey: [queryKey] });
+      toast({ title: "Card updated" });
+    },
+    onError: (e: any) => toast({ title: "Update failed", description: e.message, variant: "destructive" }),
+  });
+};
+
+const newToken = () => {
+  const bytes = new Uint8Array(24);
+  crypto.getRandomValues(bytes);
+  return Array.from(bytes).map(b => b.toString(16).padStart(2, "0")).join("");
+};
+
+const ActionButtons = ({
+  row,
+  onSuspend,
+  onActivate,
+  onEditDate,
+  onReissue,
+}: {
+  row: BaseRow;
+  onSuspend: () => void;
+  onActivate: () => void;
+  onEditDate: () => void;
+  onReissue: () => void;
+}) => (
+  <div className="inline-flex gap-1">
+    {row.status === "active" ? (
+      <Button size="sm" variant="outline" onClick={onSuspend}>
+        <PowerOff className="mr-1 h-3.5 w-3.5" /> Suspend
+      </Button>
+    ) : (
+      <Button size="sm" variant="outline" onClick={onActivate}>
+        <Power className="mr-1 h-3.5 w-3.5" /> Activate
+      </Button>
+    )}
+    <Button size="sm" variant="outline" onClick={onEditDate}>
+      <Calendar className="mr-1 h-3.5 w-3.5" /> Date
+    </Button>
+    <Button size="sm" onClick={onReissue}>
+      <RefreshCw className="mr-1 h-3.5 w-3.5" /> Reissue
+    </Button>
+  </div>
+);
+
+const StatusBadge = ({ status }: { status: string }) =>
+  status === "active" ? <Badge>Active</Badge> : <Badge variant="destructive" className="uppercase">{status}</Badge>;
+
 const AdminDigitalIDCards = () => {
   const [search, setSearch] = useState("");
-  const [editing, setEditing] = useState<Row | null>(null);
+  const [editing, setEditing] = useState<{ id: string; issue_date: string; table: "student_id_cards" | "professor_id_cards" } | null>(null);
   const [editDate, setEditDate] = useState("");
-  const qc = useQueryClient();
 
-  const { data: rows = [], isLoading } = useQuery({
+  const updateStudent = useUpdate("student_id_cards", "admin-id-cards");
+  const updateProf = useUpdate("professor_id_cards", "admin-prof-id-cards");
+
+  // STUDENT cards
+  const { data: studentRows = [], isLoading: studentsLoading } = useQuery({
     queryKey: ["admin-id-cards"],
     queryFn: async () => {
-      const { data: cards, error } = await supabase
+      const { data: cards } = await supabase
         .from("student_id_cards")
         .select("*")
         .order("created_at", { ascending: false });
-      if (error) throw error;
-
       const ids = (cards || []).map(c => c.user_id);
       if (ids.length === 0) return [];
       const { data: profs } = await supabase
@@ -45,39 +111,45 @@ const AdminDigitalIDCards = () => {
         .select("user_id, full_name, student_id, program, email")
         .in("user_id", ids);
       const pmap = new Map((profs || []).map(p => [p.user_id, p]));
-      return (cards || []).map(c => ({ ...c, profile: pmap.get(c.user_id) })) as Row[];
+      return (cards || []).map(c => ({ ...c, profile: pmap.get(c.user_id) })) as StudentRow[];
     },
   });
 
-  const updateCard = useMutation({
-    mutationFn: async ({ id, patch }: { id: string; patch: Record<string, any> }) => {
-      const { error } = await (supabase as any).from("student_id_cards").update(patch).eq("id", id);
-      if (error) throw error;
+  // PROFESSOR cards
+  const { data: profRows = [], isLoading: profsLoading } = useQuery({
+    queryKey: ["admin-prof-id-cards"],
+    queryFn: async () => {
+      const { data: cards } = await (supabase as any)
+        .from("professor_id_cards")
+        .select("*")
+        .order("created_at", { ascending: false });
+      const ids = ((cards || []) as any[]).map((c: any) => c.user_id);
+      if (ids.length === 0) return [];
+      const { data: profiles } = await supabase
+        .from("profiles")
+        .select("user_id, full_name, email")
+        .in("user_id", ids);
+      const pmap = new Map((profiles || []).map(p => [p.user_id, p]));
+
+      // Match professors directory by name to enrich title/department
+      const names = (profiles || []).map(p => p.full_name).filter(Boolean);
+      const { data: profDir } = names.length
+        ? await supabase.from("professors").select("name, title, department").in("name", names)
+        : { data: [] as any[] };
+      const dirmap = new Map(((profDir || []) as any[]).map((d: any) => [d.name, d]));
+
+      return ((cards || []) as any[]).map((c: any) => {
+        const prof = pmap.get(c.user_id);
+        return {
+          ...c,
+          profile: prof,
+          prof: prof?.full_name ? dirmap.get(prof.full_name) : undefined,
+        };
+      }) as ProfRow[];
     },
-    onSuccess: () => {
-      qc.invalidateQueries({ queryKey: ["admin-id-cards"] });
-      toast({ title: "Card updated" });
-    },
-    onError: (e: any) => toast({ title: "Update failed", description: e.message, variant: "destructive" }),
   });
 
-  const reissue = async (row: Row) => {
-    // Generate new token client-side via crypto
-    const bytes = new Uint8Array(24);
-    crypto.getRandomValues(bytes);
-    const token = Array.from(bytes).map(b => b.toString(16).padStart(2, "0")).join("");
-    await updateCard.mutateAsync({
-      id: row.id,
-      patch: {
-        verification_token: token,
-        issue_date: new Date().toISOString().slice(0, 10),
-        reissue_count: (row.reissue_count || 0) + 1,
-        status: "active",
-      } as any,
-    });
-  };
-
-  const filtered = rows.filter(r => {
+  const filterFn = (r: any) => {
     const q = search.toLowerCase();
     if (!q) return true;
     return (
@@ -85,7 +157,32 @@ const AdminDigitalIDCards = () => {
       r.profile?.student_id?.toLowerCase().includes(q) ||
       r.profile?.email?.toLowerCase().includes(q)
     );
-  });
+  };
+
+  const filteredStudents = studentRows.filter(filterFn);
+  const filteredProfs = profRows.filter(filterFn);
+
+  const reissueStudent = (row: StudentRow) =>
+    updateStudent.mutate({
+      id: row.id,
+      patch: {
+        verification_token: newToken(),
+        issue_date: new Date().toISOString().slice(0, 10),
+        reissue_count: (row.reissue_count || 0) + 1,
+        status: "active",
+      },
+    });
+
+  const reissueProf = (row: ProfRow) =>
+    updateProf.mutate({
+      id: row.id,
+      patch: {
+        verification_token: newToken(),
+        issue_date: new Date().toISOString().slice(0, 10),
+        reissue_count: (row.reissue_count || 0) + 1,
+        status: "active",
+      },
+    });
 
   return (
     <AdminLayout>
@@ -95,102 +192,127 @@ const AdminDigitalIDCards = () => {
             <h1 className="font-display text-2xl font-bold tracking-tight text-foreground flex items-center gap-2">
               <IdCard className="h-6 w-6" /> Digital ID Cards
             </h1>
-            <p className="mt-1 text-sm text-muted-foreground">Manage student ID cards — activate, suspend, or reissue.</p>
+            <p className="mt-1 text-sm text-muted-foreground">Manage student & faculty ID cards.</p>
           </div>
           <div className="relative w-full sm:w-72">
             <Search className="absolute left-2.5 top-2.5 h-4 w-4 text-muted-foreground" />
-            <Input
-              placeholder="Search name, ID, email…"
-              value={search}
-              onChange={e => setSearch(e.target.value)}
-              className="pl-8"
-            />
+            <Input placeholder="Search name, ID, email…" value={search} onChange={e => setSearch(e.target.value)} className="pl-8" />
           </div>
         </div>
 
-        <Card>
-          <CardHeader>
-            <CardTitle>All Cards ({filtered.length})</CardTitle>
-          </CardHeader>
-          <CardContent className="overflow-x-auto">
-            {isLoading ? (
-              <div className="flex justify-center p-8">
-                <Loader2 className="h-5 w-5 animate-spin text-muted-foreground" />
-              </div>
-            ) : filtered.length === 0 ? (
-              <p className="p-6 text-center text-sm text-muted-foreground">No cards found.</p>
-            ) : (
-              <Table>
-                <TableHeader>
-                  <TableRow>
-                    <TableHead>Student</TableHead>
-                    <TableHead>Student ID</TableHead>
-                    <TableHead>Program</TableHead>
-                    <TableHead>Issue Date</TableHead>
-                    <TableHead>Reissues</TableHead>
-                    <TableHead>Status</TableHead>
-                    <TableHead className="text-right">Actions</TableHead>
-                  </TableRow>
-                </TableHeader>
-                <TableBody>
-                  {filtered.map(row => (
-                    <TableRow key={row.id}>
-                      <TableCell>
-                        <div className="font-medium text-foreground">{row.profile?.full_name || "—"}</div>
-                        <div className="text-xs text-muted-foreground">{row.profile?.email}</div>
-                      </TableCell>
-                      <TableCell className="font-mono text-xs">{row.profile?.student_id || "—"}</TableCell>
-                      <TableCell className="text-xs">{row.profile?.program || "—"}</TableCell>
-                      <TableCell className="text-xs">{format(new Date(row.issue_date), "dd MMM yyyy")}</TableCell>
-                      <TableCell>{row.reissue_count}</TableCell>
-                      <TableCell>
-                        {row.status === "active" ? (
-                          <Badge>Active</Badge>
-                        ) : (
-                          <Badge variant="destructive" className="uppercase">{row.status}</Badge>
-                        )}
-                      </TableCell>
-                      <TableCell className="text-right">
-                        <div className="inline-flex gap-1">
-                          {row.status === "active" ? (
-                            <Button
-                              size="sm"
-                              variant="outline"
-                              onClick={() => updateCard.mutate({ id: row.id, patch: { status: "suspended" } as any })}
-                            >
-                              <PowerOff className="mr-1 h-3.5 w-3.5" /> Suspend
-                            </Button>
-                          ) : (
-                            <Button
-                              size="sm"
-                              variant="outline"
-                              onClick={() => updateCard.mutate({ id: row.id, patch: { status: "active" } as any })}
-                            >
-                              <Power className="mr-1 h-3.5 w-3.5" /> Activate
-                            </Button>
-                          )}
-                          <Button size="sm" variant="outline" onClick={() => { setEditing(row); setEditDate(row.issue_date); }}>
-                            <Calendar className="mr-1 h-3.5 w-3.5" /> Date
-                          </Button>
-                          <Button size="sm" onClick={() => reissue(row)}>
-                            <RefreshCw className="mr-1 h-3.5 w-3.5" /> Reissue
-                          </Button>
-                        </div>
-                      </TableCell>
-                    </TableRow>
-                  ))}
-                </TableBody>
-              </Table>
-            )}
-          </CardContent>
-        </Card>
+        <Tabs defaultValue="students">
+          <TabsList>
+            <TabsTrigger value="students">Students ({filteredStudents.length})</TabsTrigger>
+            <TabsTrigger value="faculty">Faculty ({filteredProfs.length})</TabsTrigger>
+          </TabsList>
+
+          <TabsContent value="students" className="mt-4">
+            <Card>
+              <CardHeader><CardTitle>Student Cards</CardTitle></CardHeader>
+              <CardContent className="overflow-x-auto">
+                {studentsLoading ? (
+                  <div className="flex justify-center p-8"><Loader2 className="h-5 w-5 animate-spin text-muted-foreground" /></div>
+                ) : filteredStudents.length === 0 ? (
+                  <p className="p-6 text-center text-sm text-muted-foreground">No cards found.</p>
+                ) : (
+                  <Table>
+                    <TableHeader>
+                      <TableRow>
+                        <TableHead>Student</TableHead>
+                        <TableHead>Student ID</TableHead>
+                        <TableHead>Program</TableHead>
+                        <TableHead>Issue Date</TableHead>
+                        <TableHead>Reissues</TableHead>
+                        <TableHead>Status</TableHead>
+                        <TableHead className="text-right">Actions</TableHead>
+                      </TableRow>
+                    </TableHeader>
+                    <TableBody>
+                      {filteredStudents.map(row => (
+                        <TableRow key={row.id}>
+                          <TableCell>
+                            <div className="font-medium text-foreground">{row.profile?.full_name || "—"}</div>
+                            <div className="text-xs text-muted-foreground">{row.profile?.email}</div>
+                          </TableCell>
+                          <TableCell className="font-mono text-xs">{row.profile?.student_id || "—"}</TableCell>
+                          <TableCell className="text-xs">{row.profile?.program || "—"}</TableCell>
+                          <TableCell className="text-xs">{format(new Date(row.issue_date), "dd MMM yyyy")}</TableCell>
+                          <TableCell>{row.reissue_count}</TableCell>
+                          <TableCell><StatusBadge status={row.status} /></TableCell>
+                          <TableCell className="text-right">
+                            <ActionButtons
+                              row={row}
+                              onSuspend={() => updateStudent.mutate({ id: row.id, patch: { status: "suspended" } })}
+                              onActivate={() => updateStudent.mutate({ id: row.id, patch: { status: "active" } })}
+                              onEditDate={() => { setEditing({ id: row.id, issue_date: row.issue_date, table: "student_id_cards" }); setEditDate(row.issue_date); }}
+                              onReissue={() => reissueStudent(row)}
+                            />
+                          </TableCell>
+                        </TableRow>
+                      ))}
+                    </TableBody>
+                  </Table>
+                )}
+              </CardContent>
+            </Card>
+          </TabsContent>
+
+          <TabsContent value="faculty" className="mt-4">
+            <Card>
+              <CardHeader><CardTitle>Faculty Cards</CardTitle></CardHeader>
+              <CardContent className="overflow-x-auto">
+                {profsLoading ? (
+                  <div className="flex justify-center p-8"><Loader2 className="h-5 w-5 animate-spin text-muted-foreground" /></div>
+                ) : filteredProfs.length === 0 ? (
+                  <p className="p-6 text-center text-sm text-muted-foreground">No faculty cards found.</p>
+                ) : (
+                  <Table>
+                    <TableHeader>
+                      <TableRow>
+                        <TableHead>Professor</TableHead>
+                        <TableHead>Title</TableHead>
+                        <TableHead>Department</TableHead>
+                        <TableHead>Issue Date</TableHead>
+                        <TableHead>Reissues</TableHead>
+                        <TableHead>Status</TableHead>
+                        <TableHead className="text-right">Actions</TableHead>
+                      </TableRow>
+                    </TableHeader>
+                    <TableBody>
+                      {filteredProfs.map(row => (
+                        <TableRow key={row.id}>
+                          <TableCell>
+                            <div className="font-medium text-foreground">{row.profile?.full_name || "—"}</div>
+                            <div className="text-xs text-muted-foreground">{row.profile?.email}</div>
+                          </TableCell>
+                          <TableCell className="text-xs">{row.prof?.title || "—"}</TableCell>
+                          <TableCell className="text-xs">{row.prof?.department || "—"}</TableCell>
+                          <TableCell className="text-xs">{format(new Date(row.issue_date), "dd MMM yyyy")}</TableCell>
+                          <TableCell>{row.reissue_count}</TableCell>
+                          <TableCell><StatusBadge status={row.status} /></TableCell>
+                          <TableCell className="text-right">
+                            <ActionButtons
+                              row={row}
+                              onSuspend={() => updateProf.mutate({ id: row.id, patch: { status: "suspended" } })}
+                              onActivate={() => updateProf.mutate({ id: row.id, patch: { status: "active" } })}
+                              onEditDate={() => { setEditing({ id: row.id, issue_date: row.issue_date, table: "professor_id_cards" }); setEditDate(row.issue_date); }}
+                              onReissue={() => reissueProf(row)}
+                            />
+                          </TableCell>
+                        </TableRow>
+                      ))}
+                    </TableBody>
+                  </Table>
+                )}
+              </CardContent>
+            </Card>
+          </TabsContent>
+        </Tabs>
       </div>
 
       <Dialog open={!!editing} onOpenChange={o => !o && setEditing(null)}>
         <DialogContent>
-          <DialogHeader>
-            <DialogTitle>Update Issue Date</DialogTitle>
-          </DialogHeader>
+          <DialogHeader><DialogTitle>Update Issue Date</DialogTitle></DialogHeader>
           <div className="space-y-2">
             <Label>Issue Date</Label>
             <Input type="date" value={editDate} onChange={e => setEditDate(e.target.value)} />
@@ -200,7 +322,8 @@ const AdminDigitalIDCards = () => {
             <Button
               onClick={async () => {
                 if (!editing) return;
-                await updateCard.mutateAsync({ id: editing.id, patch: { issue_date: editDate } as any });
+                const mut = editing.table === "student_id_cards" ? updateStudent : updateProf;
+                await mut.mutateAsync({ id: editing.id, patch: { issue_date: editDate } });
                 setEditing(null);
               }}
             >
