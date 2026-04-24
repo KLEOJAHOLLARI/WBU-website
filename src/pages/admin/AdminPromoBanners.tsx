@@ -4,6 +4,7 @@ import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
 import { useToast } from "@/hooks/use-toast";
 import { Plus, Pencil, Trash2, X, ArrowUp, ArrowDown, Eye, EyeOff, Upload, Loader2 } from "lucide-react";
+import ImageCropDialog from "@/components/admin/ImageCropDialog";
 
 const empty = {
   title: "",
@@ -22,28 +23,36 @@ const AdminPromoBanners = () => {
   const [showForm, setShowForm] = useState(false);
   const [uploading, setUploading] = useState(false);
   const fileInputRef = useRef<HTMLInputElement>(null);
+  const [cropSrc, setCropSrc] = useState<string | null>(null);
 
-  const handleImageUpload = async (file: File) => {
+  const handleFileSelected = (file: File) => {
     if (!file.type.startsWith("image/")) {
       toast({ title: "Invalid file", description: "Please select an image.", variant: "destructive" });
       return;
     }
-    if (file.size > 5 * 1024 * 1024) {
-      toast({ title: "File too large", description: "Max 5MB.", variant: "destructive" });
+    if (file.size > 10 * 1024 * 1024) {
+      toast({ title: "File too large", description: "Max 10MB.", variant: "destructive" });
       return;
     }
+    const reader = new FileReader();
+    reader.onload = () => setCropSrc(reader.result as string);
+    reader.readAsDataURL(file);
+  };
+
+  const uploadCroppedBlob = async (blob: Blob) => {
     setUploading(true);
     try {
-      const ext = file.name.split(".").pop() || "jpg";
-      const path = `${Date.now()}-${Math.random().toString(36).slice(2, 8)}.${ext}`;
-      const { error } = await supabase.storage.from("promo-banners").upload(path, file, {
+      const path = `${Date.now()}-${Math.random().toString(36).slice(2, 8)}.jpg`;
+      const { error } = await supabase.storage.from("promo-banners").upload(path, blob, {
         cacheControl: "3600",
         upsert: false,
+        contentType: "image/jpeg",
       });
       if (error) throw error;
       const { data } = supabase.storage.from("promo-banners").getPublicUrl(path);
       setEditing((prev: any) => ({ ...prev, image_url: data.publicUrl }));
       toast({ title: "Image uploaded" });
+      setCropSrc(null);
     } catch (e: any) {
       toast({ title: "Upload failed", description: e.message, variant: "destructive" });
     } finally {
@@ -214,7 +223,7 @@ const AdminPromoBanners = () => {
                   className="hidden"
                   onChange={(e) => {
                     const f = e.target.files?.[0];
-                    if (f) handleImageUpload(f);
+                    if (f) handleFileSelected(f);
                   }}
                 />
                 <button
@@ -349,6 +358,14 @@ const AdminPromoBanners = () => {
           ))
         )}
       </div>
+      <ImageCropDialog
+        open={!!cropSrc}
+        imageSrc={cropSrc}
+        aspect={16 / 9}
+        loading={uploading}
+        onCancel={() => { setCropSrc(null); if (fileInputRef.current) fileInputRef.current.value = ""; }}
+        onConfirm={uploadCroppedBlob}
+      />
     </AdminLayout>
   );
 };
