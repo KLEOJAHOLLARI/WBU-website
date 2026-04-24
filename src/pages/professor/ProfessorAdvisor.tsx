@@ -439,7 +439,61 @@ const ProfessorAdvisor = () => {
       {/* History */}
       {processedRequests.length > 0 && (
         <div className="mt-8">
-          <h2 className="mb-4 font-display text-lg font-semibold text-foreground">History</h2>
+          <div className="mb-4 flex flex-wrap items-center gap-2">
+            <h2 className="font-display text-lg font-semibold text-foreground">History</h2>
+            <Badge variant="secondary">
+              {filteredHistory.length} of {processedRequests.length}
+            </Badge>
+          </div>
+
+          {/* Filters */}
+          <div className="mb-3 flex flex-col gap-2 rounded-xl border border-border bg-card p-3 sm:flex-row sm:items-center sm:flex-wrap">
+            <div className="relative flex-1 min-w-[200px]">
+              <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
+              <Input
+                placeholder="Search student or course..."
+                value={historySearch}
+                onChange={(e) => setHistorySearch(e.target.value)}
+                className="pl-9 h-9"
+              />
+            </div>
+            <Select value={historyStatus} onValueChange={(v) => setHistoryStatus(v as any)}>
+              <SelectTrigger className="h-9 w-full sm:w-[140px]">
+                <SelectValue placeholder="Status" />
+              </SelectTrigger>
+              <SelectContent>
+                <SelectItem value="all">All statuses</SelectItem>
+                <SelectItem value="accepted">Approved</SelectItem>
+                <SelectItem value="rejected">Rejected</SelectItem>
+              </SelectContent>
+            </Select>
+            <div className="flex items-center gap-2">
+              <Input
+                type="date"
+                value={historyFrom}
+                onChange={(e) => setHistoryFrom(e.target.value)}
+                className="h-9 w-full sm:w-[150px]"
+                aria-label="From date"
+              />
+              <span className="text-xs text-muted-foreground">to</span>
+              <Input
+                type="date"
+                value={historyTo}
+                onChange={(e) => setHistoryTo(e.target.value)}
+                className="h-9 w-full sm:w-[150px]"
+                aria-label="To date"
+              />
+            </div>
+            {hasHistoryFilters && (
+              <button
+                onClick={clearHistoryFilters}
+                className="inline-flex items-center gap-1 rounded-md border border-border px-2.5 py-1.5 text-xs text-muted-foreground hover:bg-muted transition-colors"
+              >
+                <X className="h-3 w-3" /> Clear
+              </button>
+            )}
+          </div>
+
           <div className="overflow-auto rounded-xl border border-border">
             <table className="w-full text-sm">
               <thead className="border-b border-border bg-secondary">
@@ -451,30 +505,38 @@ const ProfessorAdvisor = () => {
                 </tr>
               </thead>
               <tbody>
-                {processedRequests.map((r) => (
-                  <tr
-                    key={r.id}
-                    id={`req-${r.id}`}
-                    className={`border-b border-border last:border-0 ${
-                      isHighlighted(r.id) ? highlightClasses : ""
-                    }`}
-                  >
-                    <td className="px-4 py-3">
-                      <p className="font-medium text-foreground">
-                        {r.student?.full_name || "Unknown"}
-                      </p>
-                      <p className="text-xs text-muted-foreground">{r.student?.email}</p>
-                    </td>
-                    <td className="px-4 py-3">
-                      <p className="text-foreground">{r.course?.name}</p>
-                      <p className="text-xs text-muted-foreground">{r.course?.code}</p>
-                    </td>
-                    <td className="px-4 py-3">{statusBadge(r.status)}</td>
-                    <td className="px-4 py-3 text-muted-foreground">
-                      {new Date(r.updated_at).toLocaleDateString()}
+                {filteredHistory.length === 0 ? (
+                  <tr>
+                    <td colSpan={4} className="px-4 py-8 text-center text-sm text-muted-foreground">
+                      No history matches your filters.
                     </td>
                   </tr>
-                ))}
+                ) : (
+                  filteredHistory.map((r) => (
+                    <tr
+                      key={r.id}
+                      id={`req-${r.id}`}
+                      className={`border-b border-border last:border-0 ${
+                        isHighlighted(r.id) ? highlightClasses : ""
+                      }`}
+                    >
+                      <td className="px-4 py-3">
+                        <p className="font-medium text-foreground">
+                          {r.student?.full_name || "Unknown"}
+                        </p>
+                        <p className="text-xs text-muted-foreground">{r.student?.email}</p>
+                      </td>
+                      <td className="px-4 py-3">
+                        <p className="text-foreground">{r.course?.name}</p>
+                        <p className="text-xs text-muted-foreground">{r.course?.code}</p>
+                      </td>
+                      <td className="px-4 py-3">{statusBadge(r.status)}</td>
+                      <td className="px-4 py-3 text-muted-foreground">
+                        {new Date(r.updated_at).toLocaleDateString()}
+                      </td>
+                    </tr>
+                  ))
+                )}
               </tbody>
             </table>
           </div>
