@@ -66,6 +66,7 @@ import ProfessorExamSchedule from "./pages/professor/ProfessorExamSchedule";
 import ExamDetail from "./pages/portal/ExamDetail";
 import AdminPromoBanners from "./pages/admin/AdminPromoBanners";
 import Scholarships from "./pages/Scholarships";
+import AdminScholarshipDocs from "./pages/admin/AdminScholarshipDocs";
 
 const queryClient = new QueryClient();
 
@@ -112,6 +113,7 @@ const App = () => (
             <Route path="/admin/tuition" element={<AdminTuition />} />
             <Route path="/admin/exams" element={<AdminExamSchedule />} />
             <Route path="/admin/promo-banners" element={<AdminPromoBanners />} />
+            <Route path="/admin/scholarship-docs" element={<AdminScholarshipDocs />} />
             <Route path="/portal/login" element={<StudentLogin />} />
             <Route path="/portal/register" element={<StudentRegister />} />
             <Route path="/portal" element={<StudentDashboard />} />

@@ -45,6 +45,7 @@ const navGroups: { label: string; items: { to: string; label: string; icon: any;
       { to: "/admin/graduation", label: "Graduation", icon: GraduationCap },
       { to: "/admin/semesters", label: "Semesters", icon: Calendar },
       { to: "/admin/tuition", label: "Tuition", icon: CreditCard },
+      { to: "/admin/scholarship-docs", label: "Scholarship Docs", icon: FileText },
     ],
   },
   {
