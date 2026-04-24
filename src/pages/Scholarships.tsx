@@ -1,5 +1,6 @@
 import { Link } from "react-router-dom";
 import { motion } from "framer-motion";
+import jsPDF from "jspdf";
 import {
   Award,
   GraduationCap,
@@ -12,6 +13,7 @@ import {
   FileText,
   Send,
   Sparkles,
+  Download,
 } from "lucide-react";
 import Layout from "@/components/Layout";
 import PageHero from "@/components/PageHero";
