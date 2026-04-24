@@ -2,6 +2,9 @@ import { useEffect, useState } from "react";
 import { Link } from "react-router-dom";
 import { motion } from "framer-motion";
 import jsPDF from "jspdf";
+import { toast } from "sonner";
+import { AlertCircle } from "lucide-react";
+import { Skeleton } from "@/components/ui/skeleton";
 import {
   fetchScholarshipDocs,
   DEFAULT_BASE_DOCUMENTS,
