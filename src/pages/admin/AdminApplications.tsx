@@ -351,7 +351,35 @@ const AdminApplications = () => {
         </table>
       </div>
 
-      {/* Detail modal */}
+      {/* Pagination footer */}
+      <div className="mt-4 flex flex-wrap items-center justify-between gap-3 text-sm text-muted-foreground">
+        <p>
+          {totalCount === 0
+            ? "0 results"
+            : `${page * PAGE_SIZE + 1}–${Math.min((page + 1) * PAGE_SIZE, totalCount)} of ${totalCount}`}
+          {isFetching && !isLoading && <span className="ml-2 italic opacity-70">Updating…</span>}
+        </p>
+        <div className="flex items-center gap-2">
+          <button
+            onClick={() => setPage((p) => Math.max(0, p - 1))}
+            disabled={page === 0 || isLoading}
+            className="inline-flex items-center gap-1 rounded-md border border-border bg-background px-3 py-1.5 text-foreground transition-colors hover:bg-secondary disabled:cursor-not-allowed disabled:opacity-50"
+          >
+            <ChevronLeft className="h-4 w-4" /> Prev
+          </button>
+          <span className="px-1 text-foreground">
+            Page {page + 1} / {totalPages}
+          </span>
+          <button
+            onClick={() => setPage((p) => (p + 1 < totalPages ? p + 1 : p))}
+            disabled={page + 1 >= totalPages || isLoading}
+            className="inline-flex items-center gap-1 rounded-md border border-border bg-background px-3 py-1.5 text-foreground transition-colors hover:bg-secondary disabled:cursor-not-allowed disabled:opacity-50"
+          >
+            Next <ChevronRight className="h-4 w-4" />
+          </button>
+        </div>
+      </div>
+
       <Dialog open={!!viewing} onOpenChange={(o) => !o && setViewing(null)}>
         <DialogContent className="max-w-3xl max-h-[90vh] overflow-y-auto">
           {(() => {
