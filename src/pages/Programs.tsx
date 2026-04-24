@@ -1,27 +1,56 @@
-import { useState } from "react";
+import { useState, useMemo } from "react";
 import { Link } from "react-router-dom";
 import { motion } from "framer-motion";
-import { Search, ArrowRight, Clock } from "lucide-react";
+import {
+  Search,
+  ArrowRight,
+  Cpu,
+  Briefcase,
+  Scale,
+  Stethoscope,
+  Brain,
+  BarChart3,
+  Building2,
+  ShieldCheck,
+  FlaskConical,
+  HeartPulse,
+  Landmark,
+  BookOpen,
+  Code2,
+  Atom,
+  GraduationCap,
+} from "lucide-react";
 import Layout from "@/components/Layout";
-import PageHero from "@/components/PageHero";
 import { useQuery } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
 import { useTranslation } from "react-i18next";
 
-const faculties = [
-  "Faculty of Engineering",
-  "Faculty of Economics",
-  "Faculty of Law",
-  "Faculty of Medicine",
-  "Faculty of Arts & Sciences",
-];
-const degrees = ["Bachelor", "Master", "PhD"];
+const degrees = ["Bachelor", "Master", "PhD"] as const;
+
+// Pick a unique-ish icon based on program title/faculty keywords
+const pickIcon = (p: { title: string; faculty?: string | null }) => {
+  const t = `${p.title} ${p.faculty ?? ""}`.toLowerCase();
+  if (/(ai|artificial|machine|data)/.test(t)) return Brain;
+  if (/(computer|software|comput|coding|program)/.test(t)) return Code2;
+  if (/(cyber|security)/.test(t)) return ShieldCheck;
+  if (/(biotech|biology|bio)/.test(t)) return FlaskConical;
+  if (/(medic|nurs|dental|health|pharma)/.test(t)) return Stethoscope;
+  if (/(heart|cardio|clinic)/.test(t)) return HeartPulse;
+  if (/(law|legal|justice)/.test(t)) return Scale;
+  if (/(econom|finance|account|market|analytic)/.test(t)) return BarChart3;
+  if (/(business|management|administration|entrepre)/.test(t)) return Briefcase;
+  if (/(architect|civil|construct|engineer)/.test(t)) return Building2;
+  if (/(physics|chem|science)/.test(t)) return Atom;
+  if (/(politic|government|public)/.test(t)) return Landmark;
+  if (/(literature|language|art|history|education)/.test(t)) return BookOpen;
+  if (/(tech|systems)/.test(t)) return Cpu;
+  return GraduationCap;
+};
 
 const Programs = () => {
   const { t } = useTranslation();
   const [search, setSearch] = useState("");
-  const [faculty, setFaculty] = useState("");
-  const [degree, setDegree] = useState("");
+  const [degree, setDegree] = useState<(typeof degrees)[number]>("Bachelor");
 
   const { data: programs = [], isLoading } = useQuery({
     queryKey: ["programs"],
@@ -32,56 +61,134 @@ const Programs = () => {
     },
   });
 
+  const counts = useMemo(() => {
+    const c: Record<string, number> = { Bachelor: 0, Master: 0, PhD: 0 };
+    programs.forEach((p) => {
+      if (c[p.degree] !== undefined) c[p.degree]++;
+    });
+    return c;
+  }, [programs]);
+
   const filtered = programs.filter((p) => {
-    const matchesSearch = p.title.toLowerCase().includes(search.toLowerCase()) || p.description.toLowerCase().includes(search.toLowerCase());
-    const matchesFaculty = !faculty || p.faculty === faculty;
-    const matchesDegree = !degree || p.degree === degree;
-    return matchesSearch && matchesFaculty && matchesDegree;
+    const q = search.toLowerCase();
+    const matchesSearch =
+      !q ||
+      p.title.toLowerCase().includes(q) ||
+      (p.description || "").toLowerCase().includes(q) ||
+      (p.faculty || "").toLowerCase().includes(q);
+    const matchesDegree = p.degree === degree;
+    return matchesSearch && matchesDegree;
   });
 
   return (
     <Layout>
-      <PageHero title={t("programs.title")} subtitle={t("programs.subtitle")} />
+      <section className="bg-background">
+        <div className="container max-w-4xl px-5 pt-8 pb-16 md:pt-14 md:pb-24">
+          {/* Breadcrumb */}
+          <nav className="mb-8 text-sm text-muted-foreground">
+            <Link to="/" className="hover:text-foreground transition-colors">
+              {t("nav.home", "Home")}
+            </Link>
+            <span className="mx-2">›</span>
+            <span className="text-accent">{t("programs.title", "Programs")}</span>
+          </nav>
 
-      <section className="section-padding">
-        <div className="container">
-          <div className="mb-10 flex flex-col gap-4 rounded-2xl border border-border/50 bg-card/80 backdrop-blur-sm p-5 shadow-sm sm:flex-row sm:items-center sm:p-6">
-            <div className="relative flex-1">
-              <Search className="absolute left-3.5 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" />
-              <input type="text" placeholder={t("programs.searchPlaceholder")} value={search} onChange={(e) => setSearch(e.target.value)} className="w-full rounded-xl border border-input bg-background py-2.5 pl-10 pr-4 text-sm text-foreground placeholder:text-muted-foreground focus:outline-none focus:ring-2 focus:ring-ring transition-shadow" />
-            </div>
-            <select value={faculty} onChange={(e) => setFaculty(e.target.value)} className="rounded-xl border border-input bg-background px-3.5 py-2.5 text-sm text-foreground focus:outline-none focus:ring-2 focus:ring-ring transition-shadow">
-              <option value="">{t("programs.allFaculties")}</option>
-              {faculties.map((f) => (<option key={f} value={f}>{f}</option>))}
-            </select>
-            <select value={degree} onChange={(e) => setDegree(e.target.value)} className="rounded-xl border border-input bg-background px-3.5 py-2.5 text-sm text-foreground focus:outline-none focus:ring-2 focus:ring-ring transition-shadow">
-              <option value="">{t("programs.allDegrees")}</option>
-              {degrees.map((d) => (<option key={d} value={d}>{d}</option>))}
-            </select>
+          {/* Title */}
+          <motion.h1
+            initial={{ opacity: 0, y: 16 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ duration: 0.5 }}
+            className="font-display text-4xl font-bold leading-tight text-foreground sm:text-5xl md:text-6xl"
+          >
+            {degree} <span className="block sm:inline">Programs</span>
+          </motion.h1>
+          <div className="mt-5 h-1 w-40 rounded-full bg-accent sm:w-56" />
+
+          {/* Degree tabs */}
+          <div className="mt-8 flex flex-wrap gap-2">
+            {degrees.map((d) => (
+              <button
+                key={d}
+                onClick={() => setDegree(d)}
+                className={`rounded-full px-4 py-2 text-sm font-medium transition-all ${
+                  degree === d
+                    ? "bg-accent text-accent-foreground shadow-sm"
+                    : "bg-secondary text-muted-foreground hover:bg-secondary/70 hover:text-foreground"
+                }`}
+              >
+                {d}
+                <span className="ml-2 text-xs opacity-70">({counts[d] || 0})</span>
+              </button>
+            ))}
           </div>
 
-          {isLoading ? (
-            <div className="py-20 text-center text-muted-foreground">{t("programs.loading")}</div>
-          ) : filtered.length === 0 ? (
-            <p className="py-20 text-center text-muted-foreground">{t("programs.noResults")}</p>
-          ) : (
-            <div className="grid gap-6 sm:grid-cols-2 lg:grid-cols-3">
-              {filtered.map((p, i) => (
-                <motion.div key={p.id} initial={{ opacity: 0, y: 20 }} whileInView={{ opacity: 1, y: 0 }} viewport={{ once: true }} transition={{ duration: 0.5, delay: i * 0.05 }}>
-                  <Link to={`/programs/${p.slug}`} className="glass-card group flex h-full flex-col p-7">
-                    <div className="mb-3 flex items-center gap-2">
-                      <span className="rounded-full bg-accent/10 px-3.5 py-1 text-xs font-semibold text-accent">{p.degree}</span>
-                      <span className="flex items-center gap-1 text-xs text-muted-foreground"><Clock className="h-3 w-3" /> {p.duration}</span>
-                    </div>
-                    <h3 className="font-display text-xl font-semibold text-foreground transition-colors group-hover:text-primary">{p.title}</h3>
-                    <p className="mt-1 text-sm font-medium text-muted-foreground">{p.faculty}</p>
-                    <p className="mt-3 flex-1 text-sm leading-relaxed text-muted-foreground/80">{p.description}</p>
-                    <span className="mt-5 inline-flex items-center gap-1.5 text-sm font-semibold text-primary transition-all group-hover:gap-2.5">{t("programs.learnMore")} <ArrowRight className="h-3.5 w-3.5" /></span>
-                  </Link>
-                </motion.div>
-              ))}
-            </div>
-          )}
+          {/* Search */}
+          <div className="relative mt-6">
+            <Search className="absolute left-4 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" />
+            <input
+              type="text"
+              placeholder={t("programs.searchPlaceholder", "Search programs…")}
+              value={search}
+              onChange={(e) => setSearch(e.target.value)}
+              className="w-full rounded-2xl border border-border bg-card py-3 pl-11 pr-4 text-sm text-foreground placeholder:text-muted-foreground focus:border-accent focus:outline-none focus:ring-2 focus:ring-accent/20 transition"
+            />
+          </div>
+
+          {/* Program list */}
+          <div className="mt-8 overflow-hidden rounded-2xl border border-border/60 bg-card shadow-sm">
+            {isLoading ? (
+              <div className="py-20 text-center text-sm text-muted-foreground">
+                {t("programs.loading", "Loading…")}
+              </div>
+            ) : filtered.length === 0 ? (
+              <div className="py-20 text-center text-sm text-muted-foreground">
+                {t("programs.noResults", "No programs found.")}
+              </div>
+            ) : (
+              <ul className="divide-y divide-border/60">
+                {filtered.map((p, i) => {
+                  const Icon = pickIcon(p);
+                  return (
+                    <motion.li
+                      key={p.id}
+                      initial={{ opacity: 0, y: 10 }}
+                      whileInView={{ opacity: 1, y: 0 }}
+                      viewport={{ once: true }}
+                      transition={{ duration: 0.35, delay: Math.min(i * 0.03, 0.3) }}
+                    >
+                      <Link
+                        to={`/programs/${p.slug}`}
+                        className="group flex items-center gap-4 px-4 py-4 transition-colors hover:bg-accent/5 sm:gap-5 sm:px-6 sm:py-5"
+                      >
+                        {/* Icon badge */}
+                        <div className="relative flex h-14 w-14 shrink-0 items-center justify-center rounded-full bg-gradient-to-br from-accent to-accent/70 text-accent-foreground shadow-md shadow-accent/20 sm:h-16 sm:w-16">
+                          <Icon className="h-6 w-6 sm:h-7 sm:w-7" strokeWidth={1.75} />
+                        </div>
+
+                        {/* Text */}
+                        <div className="min-w-0 flex-1">
+                          <h3 className="truncate text-base font-medium text-foreground transition-colors group-hover:text-accent sm:text-lg">
+                            {p.title}
+                          </h3>
+                          {p.faculty && (
+                            <p className="mt-0.5 truncate text-xs text-muted-foreground sm:text-sm">
+                              {p.faculty} · {p.duration}
+                            </p>
+                          )}
+                        </div>
+
+                        {/* Arrow */}
+                        <ArrowRight
+                          className="h-5 w-5 shrink-0 text-accent transition-transform duration-200 group-hover:translate-x-1"
+                          strokeWidth={2}
+                        />
+                      </Link>
+                    </motion.li>
+                  );
+                })}
+              </ul>
+            )}
+          </div>
         </div>
       </section>
     </Layout>
