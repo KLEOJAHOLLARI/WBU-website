@@ -100,7 +100,7 @@ const StudentDigitalIDCard = () => {
         {/* Status */}
         <div className="flex items-center justify-center gap-2">
           {card.status === "active" ? (
-            <Badge className="bg-emerald-600 hover:bg-emerald-600">
+            <Badge className="bg-primary hover:bg-primary text-primary-foreground">
               <ShieldCheck className="mr-1 h-3 w-3" /> Active
             </Badge>
           ) : (
