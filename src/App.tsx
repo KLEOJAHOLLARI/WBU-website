@@ -62,6 +62,7 @@ import FacultyProfile from "./pages/FacultyProfile";
 import AdminTuition from "./pages/admin/AdminTuition";
 import StudentTuition from "./pages/portal/StudentTuition";
 import StudentTuitionEstimate from "./pages/portal/StudentTuitionEstimate";
+import LateFeeReceipt from "./pages/portal/LateFeeReceipt";
 import AdminExamSchedule from "./pages/admin/AdminExamSchedule";
 import ProfessorExamSchedule from "./pages/professor/ProfessorExamSchedule";
 import ExamDetail from "./pages/portal/ExamDetail";
@@ -132,6 +133,7 @@ const App = () => (
             <Route path="/portal/exams/:id" element={<ExamDetail />} />
             <Route path="/portal/tuition" element={<StudentTuition />} />
             <Route path="/portal/tuition/estimate" element={<StudentTuitionEstimate />} />
+            <Route path="/portal/tuition/late-fee/:lateFeeId/receipt" element={<LateFeeReceipt />} />
             <Route path="/portal/quiz/:quizId" element={<StudentQuiz />} />
             <Route path="/professor" element={<ProfessorDashboard />} />
             <Route path="/professor/courses" element={<ProfessorCourses />} />
