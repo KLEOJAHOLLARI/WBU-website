@@ -59,8 +59,8 @@ const StudentCourseDetail = () => {
 
   const formatGrade = (pct: number | null): string => {
     if (pct === null || pct <= 0) return "—";
-    if (gradingScale === "albanian") return String(toAlbanian(pct));
-    return `${Math.round(pct)}%`;
+    if (gradingScale === "albanian") return `${toAlbanian(pct)} (${toLetter(pct)})`;
+    return `${Math.round(pct)}% (${toLetter(pct)})`;
   };
 
   const formatGradedAt = (iso: string | null): string => {
