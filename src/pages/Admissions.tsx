@@ -18,7 +18,7 @@ const stagger = {
 const Admissions = () => {
   const { t } = useTranslation();
   const { toast } = useToast();
-  const [form, setForm] = useState({ fullName: "", email: "", phone: "", program: "", motivation: "", gender: "", birthplace: "", personalId: "", document: null as File | null });
+  const [form, setForm] = useState({ fullName: "", email: "", phone: "", program: "", motivation: "", gender: "", birthplace: "", personalId: "", documents: [] as File[] });
   const [submitting, setSubmitting] = useState(false);
   const [submitted, setSubmitted] = useState(false);
 
