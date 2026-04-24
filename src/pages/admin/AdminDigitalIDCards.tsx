@@ -51,7 +51,7 @@ const AdminDigitalIDCards = () => {
 
   const updateCard = useMutation({
     mutationFn: async ({ id, patch }: { id: string; patch: Record<string, any> }) => {
-      const { error } = await supabase.from("student_id_cards").update(patch).eq("id", id);
+      const { error } = await (supabase as any).from("student_id_cards").update(patch).eq("id", id);
       if (error) throw error;
     },
     onSuccess: () => {
