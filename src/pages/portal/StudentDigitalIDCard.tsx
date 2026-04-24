@@ -120,10 +120,10 @@ const StudentDigitalIDCard = () => {
         >
           <DigitalIDCard
             data={{
-              fullName: profile?.full_name || "Student",
-              program: profile?.program || null,
-              studentId: profile?.student_id || null,
-              avatarUrl: profile?.avatar_url || null,
+              fullName: fullProfile?.full_name || profile?.full_name || "Student",
+              program: fullProfile?.program || null,
+              studentId: fullProfile?.student_id || null,
+              avatarUrl: fullProfile?.avatar_url || profile?.avatar_url || null,
               issueDate: card.issue_date,
               status: card.status,
               verificationToken: card.verification_token,
