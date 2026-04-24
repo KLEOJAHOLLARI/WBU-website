@@ -204,19 +204,52 @@ const AdminPromoBanners = () => {
                 className="rounded-md border border-input bg-background px-3 py-2 text-sm text-foreground focus:outline-none focus:ring-2 focus:ring-ring"
               />
             </div>
-            <input
-              placeholder="Background image URL"
-              value={editing?.image_url || ""}
-              onChange={(e) => setEditing({ ...editing, image_url: e.target.value })}
-              className="w-full rounded-md border border-input bg-background px-3 py-2 text-sm text-foreground focus:outline-none focus:ring-2 focus:ring-ring"
-            />
-            {editing?.image_url && (
-              <img
-                src={editing.image_url}
-                alt="preview"
-                className="h-32 w-full rounded-md border border-border object-cover"
+            <div className="space-y-2">
+              <label className="text-sm font-medium text-foreground">Background image</label>
+              <div className="flex flex-wrap items-center gap-3">
+                <input
+                  ref={fileInputRef}
+                  type="file"
+                  accept="image/*"
+                  className="hidden"
+                  onChange={(e) => {
+                    const f = e.target.files?.[0];
+                    if (f) handleImageUpload(f);
+                  }}
+                />
+                <button
+                  type="button"
+                  onClick={() => fileInputRef.current?.click()}
+                  disabled={uploading}
+                  className="inline-flex items-center gap-2 rounded-md border border-input bg-background px-3 py-2 text-sm font-medium text-foreground hover:bg-muted disabled:opacity-60"
+                >
+                  {uploading ? <Loader2 className="h-4 w-4 animate-spin" /> : <Upload className="h-4 w-4" />}
+                  {uploading ? "Uploading..." : editing?.image_url ? "Replace image" : "Upload image"}
+                </button>
+                {editing?.image_url && (
+                  <button
+                    type="button"
+                    onClick={() => setEditing({ ...editing, image_url: "" })}
+                    className="text-xs text-muted-foreground underline hover:text-destructive"
+                  >
+                    Remove
+                  </button>
+                )}
+              </div>
+              <input
+                placeholder="Or paste an image URL"
+                value={editing?.image_url || ""}
+                onChange={(e) => setEditing({ ...editing, image_url: e.target.value })}
+                className="w-full rounded-md border border-input bg-background px-3 py-2 text-sm text-foreground focus:outline-none focus:ring-2 focus:ring-ring"
               />
-            )}
+              {editing?.image_url && (
+                <img
+                  src={editing.image_url}
+                  alt="preview"
+                  className="h-32 w-full rounded-md border border-border object-cover"
+                />
+              )}
+            </div>
             <div className="grid gap-4 sm:grid-cols-2">
               <input
                 type="number"
