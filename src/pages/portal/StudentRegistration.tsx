@@ -68,8 +68,27 @@ const StudentRegistration = () => {
   const studentSemester = activeSemester?.semester ?? profile?.current_semester ?? 1;
   const registrationOpen = !!activeSemester?.enrollment_open;
   const enrollmentDeadline = activeSemester?.enrollment_deadline
-    ? new Date(activeSemester.enrollment_deadline)
+    ? new Date(`${activeSemester.enrollment_deadline}T23:59:59`)
     : null;
+
+  // Live countdown to enrollment deadline
+  const [now, setNow] = useState<number>(() => Date.now());
+  useEffect(() => {
+    if (!enrollmentDeadline) return;
+    const id = setInterval(() => setNow(Date.now()), 1000);
+    return () => clearInterval(id);
+  }, [enrollmentDeadline?.getTime()]);
+
+  const countdown = useMemo(() => {
+    if (!enrollmentDeadline) return null;
+    const diff = enrollmentDeadline.getTime() - now;
+    if (diff <= 0) return { expired: true, days: 0, hours: 0, minutes: 0, seconds: 0 };
+    const days = Math.floor(diff / 86400000);
+    const hours = Math.floor((diff % 86400000) / 3600000);
+    const minutes = Math.floor((diff % 3600000) / 60000);
+    const seconds = Math.floor((diff % 60000) / 1000);
+    return { expired: false, days, hours, minutes, seconds };
+  }, [enrollmentDeadline?.getTime(), now]);
 
   // Existing enrollments (already approved)
   const { data: enrollments = [] } = useQuery({
