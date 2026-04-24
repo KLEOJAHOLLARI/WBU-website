@@ -35,6 +35,7 @@ import StudentDocuments from "./pages/portal/StudentDocuments";
 import StudentMessages from "./pages/portal/StudentMessages";
 import StudentTimetable from "./pages/portal/StudentTimetable";
 import StudentCourses from "./pages/portal/StudentCourses";
+import StudentRegistration from "./pages/portal/StudentRegistration";
 import StudentCourseDetail from "./pages/portal/StudentCourseDetail";
 import ProfessorDashboard from "./pages/professor/ProfessorDashboard";
 import ProfessorCourses from "./pages/professor/ProfessorCourses";
@@ -122,6 +123,7 @@ const App = () => (
             <Route path="/portal/messages" element={<StudentMessages />} />
             <Route path="/portal/timetable" element={<StudentTimetable />} />
             <Route path="/portal/courses" element={<StudentCourses />} />
+            <Route path="/portal/registration" element={<StudentRegistration />} />
             <Route path="/portal/courses/:id" element={<StudentCourseDetail />} />
             <Route path="/portal/profile" element={<StudentProfile />} />
             <Route path="/portal/transcript" element={<StudentTranscript />} />
