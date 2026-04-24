@@ -261,6 +261,16 @@ const generateChecklistPdf = (
 };
 
 const Scholarships = () => {
+  const [baseDocuments, setBaseDocuments] = useState<string[]>(DEFAULT_BASE_DOCUMENTS);
+  const [extraDocs, setExtraDocs] = useState<Record<string, string[]>>(DEFAULT_EXTRA_DOCS);
+
+  useEffect(() => {
+    fetchScholarshipDocs().then(({ base, extra }) => {
+      setBaseDocuments(base);
+      setExtraDocs(extra);
+    });
+  }, []);
+
   return (
     <Layout>
       <PageHero
