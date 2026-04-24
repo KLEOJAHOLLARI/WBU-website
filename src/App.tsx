@@ -65,6 +65,7 @@ import AdminExamSchedule from "./pages/admin/AdminExamSchedule";
 import ProfessorExamSchedule from "./pages/professor/ProfessorExamSchedule";
 import ExamDetail from "./pages/portal/ExamDetail";
 import AdminPromoBanners from "./pages/admin/AdminPromoBanners";
+import Scholarships from "./pages/Scholarships";
 
 const queryClient = new QueryClient();
 
@@ -81,6 +82,7 @@ const App = () => (
             <Route path="/programs" element={<Programs />} />
             <Route path="/programs/:id" element={<ProgramDetail />} />
             <Route path="/admissions" element={<Admissions />} />
+            <Route path="/scholarships" element={<Scholarships />} />
             <Route path="/news" element={<News />} />
             <Route path="/news/:id" element={<NewsDetail />} />
             <Route path="/contact" element={<Contact />} />
