@@ -22,6 +22,9 @@ interface SignatureConfig {
   label: string;
   signature_text: string;
   signature_font: "script" | "italic" | "bold";
+  signature_size?: number;
+  signature_offset_x?: number;
+  signature_offset_y?: number;
 }
 
 const LateFeeReceipt = () => {

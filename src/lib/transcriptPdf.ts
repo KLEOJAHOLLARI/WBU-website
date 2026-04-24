@@ -297,7 +297,7 @@ export async function downloadTranscriptPdf(opts: BuildTranscriptPdfOptions): Pr
       doc.setFont("helvetica", "normal");
       doc.setFontSize(8.5);
       doc.setTextColor(90);
-      doc.text(config.title, rightX, nameY + 5, { align: "right" });
+      doc.text(config.title, rightX + offsetX, nameY + 5, { align: "right" });
       doc.setTextColor(0);
     }
   }
