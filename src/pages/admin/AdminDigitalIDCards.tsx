@@ -50,7 +50,7 @@ const AdminDigitalIDCards = () => {
   });
 
   const updateCard = useMutation({
-    mutationFn: async ({ id, patch }: { id: string; patch: Partial<Row> & { verification_token?: string; issue_date?: string } }) => {
+    mutationFn: async ({ id, patch }: { id: string; patch: Record<string, any> }) => {
       const { error } = await supabase.from("student_id_cards").update(patch).eq("id", id);
       if (error) throw error;
     },
