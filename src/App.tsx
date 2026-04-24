@@ -72,6 +72,7 @@ import AdminScholarshipDocs from "./pages/admin/AdminScholarshipDocs";
 import AdminCommunication from "./pages/admin/AdminCommunication";
 import StudentDigitalIDCard from "./pages/portal/StudentDigitalIDCard";
 import AdminDigitalIDCards from "./pages/admin/AdminDigitalIDCards";
+import ProfessorDigitalIDCard from "./pages/professor/ProfessorDigitalIDCard";
 
 const queryClient = new QueryClient();
 
@@ -149,6 +150,7 @@ const App = () => (
             <Route path="/professor/transcripts" element={<ProfessorTranscripts />} />
             <Route path="/professor/exams" element={<ProfessorExamSchedule />} />
             <Route path="/professor/profile" element={<ProfessorProfile />} />
+            <Route path="/professor/id-card" element={<ProfessorDigitalIDCard />} />
             <Route path="*" element={<NotFound />} />
           </Routes>
         </AuthProvider>
