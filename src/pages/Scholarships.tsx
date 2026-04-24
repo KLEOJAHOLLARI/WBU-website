@@ -266,12 +266,33 @@ const generateChecklistPdf = (
 const Scholarships = () => {
   const [baseDocuments, setBaseDocuments] = useState<string[]>(DEFAULT_BASE_DOCUMENTS);
   const [extraDocs, setExtraDocs] = useState<Record<string, string[]>>(DEFAULT_EXTRA_DOCS);
+  const [isLoadingDocs, setIsLoadingDocs] = useState(true);
+  const [docsError, setDocsError] = useState<string | null>(null);
 
   useEffect(() => {
-    fetchScholarshipDocs().then(({ base, extra }) => {
-      setBaseDocuments(base);
-      setExtraDocs(extra);
-    });
+    let cancelled = false;
+    setIsLoadingDocs(true);
+    setDocsError(null);
+    fetchScholarshipDocs()
+      .then(({ base, extra }) => {
+        if (cancelled) return;
+        setBaseDocuments(base);
+        setExtraDocs(extra);
+      })
+      .catch((err) => {
+        if (cancelled) return;
+        const msg =
+          "Couldn't load the latest scholarship requirements. Showing default checklist.";
+        setDocsError(msg);
+        toast.error(msg);
+        console.error("Failed to fetch scholarship docs", err);
+      })
+      .finally(() => {
+        if (!cancelled) setIsLoadingDocs(false);
+      });
+    return () => {
+      cancelled = true;
+    };
   }, []);
 
   return (
