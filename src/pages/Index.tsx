@@ -5,6 +5,7 @@ import Layout from "@/components/Layout";
 import SectionHeading from "@/components/SectionHeading";
 import StudentsCorner from "@/components/StudentsCorner";
 import PromoBanners from "@/components/PromoBanners";
+import StatsCounter from "@/components/StatsCounter";
 import { useQuery } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
 import { useTranslation } from "react-i18next";
@@ -197,6 +198,9 @@ const Index = () => {
           </div>
         </div>
       </section>
+
+      {/* Animated Stats Counter */}
+      <StatsCounter />
 
       {/* Student's Corner */}
       <StudentsCorner />
