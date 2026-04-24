@@ -604,6 +604,36 @@ export type Database = {
           },
         ]
       }
+      message_templates: {
+        Row: {
+          body: string
+          created_at: string
+          created_by: string | null
+          id: string
+          name: string
+          subject: string
+          updated_at: string
+        }
+        Insert: {
+          body: string
+          created_at?: string
+          created_by?: string | null
+          id?: string
+          name: string
+          subject: string
+          updated_at?: string
+        }
+        Update: {
+          body?: string
+          created_at?: string
+          created_by?: string | null
+          id?: string
+          name?: string
+          subject?: string
+          updated_at?: string
+        }
+        Relationships: []
+      }
       news_articles: {
         Row: {
           category: string
@@ -1029,6 +1059,51 @@ export type Database = {
             referencedColumns: ["id"]
           },
         ]
+      }
+      scheduled_announcements: {
+        Row: {
+          body: string
+          created_at: string
+          created_by: string
+          error_message: string | null
+          id: string
+          recipient_count: number
+          scheduled_for: string
+          sent_at: string | null
+          status: string
+          subject: string
+          target_programs: string[]
+          updated_at: string
+        }
+        Insert: {
+          body: string
+          created_at?: string
+          created_by: string
+          error_message?: string | null
+          id?: string
+          recipient_count?: number
+          scheduled_for: string
+          sent_at?: string | null
+          status?: string
+          subject: string
+          target_programs?: string[]
+          updated_at?: string
+        }
+        Update: {
+          body?: string
+          created_at?: string
+          created_by?: string
+          error_message?: string | null
+          id?: string
+          recipient_count?: number
+          scheduled_for?: string
+          sent_at?: string | null
+          status?: string
+          subject?: string
+          target_programs?: string[]
+          updated_at?: string
+        }
+        Relationships: []
       }
       student_documents: {
         Row: {

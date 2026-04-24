@@ -69,6 +69,7 @@ import ExamDetail from "./pages/portal/ExamDetail";
 import AdminPromoBanners from "./pages/admin/AdminPromoBanners";
 import Scholarships from "./pages/Scholarships";
 import AdminScholarshipDocs from "./pages/admin/AdminScholarshipDocs";
+import AdminCommunication from "./pages/admin/AdminCommunication";
 
 const queryClient = new QueryClient();
 
@@ -105,6 +106,7 @@ const App = () => (
             <Route path="/admin/courses" element={<AdminCourses />} />
             <Route path="/admin/accounts" element={<AdminAccounts />} />
             <Route path="/admin/announcements" element={<AdminAnnouncements />} />
+            <Route path="/admin/communication" element={<AdminCommunication />} />
             <Route path="/admin/advisors" element={<AdminAdvisors />} />
             <Route path="/admin/profile" element={<AdminProfile />} />
             <Route path="/admin/transcripts" element={<AdminTranscripts />} />
