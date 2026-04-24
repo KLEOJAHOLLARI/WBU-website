@@ -12,6 +12,7 @@ const navKeys = [
   { to: "/faculty", key: "nav.faculty" },
   { to: "/timetable", key: "nav.timetable" },
   { to: "/admissions", key: "nav.admissions" },
+  { to: "/scholarships", key: "nav.scholarships" },
   { to: "/news", key: "nav.news" },
   { to: "/contact", key: "nav.contact" },
 ];
