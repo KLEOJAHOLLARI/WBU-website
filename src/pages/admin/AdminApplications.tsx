@@ -108,7 +108,7 @@ const AdminApplications = () => {
       if (error) throw error;
       if (data.error) throw new Error(data.error);
 
-      qc.invalidateQueries({ queryKey: ["admin-applications"] });
+      invalidateAll();
       qc.invalidateQueries({ queryKey: ["admin-students"] });
 
       if (!data.account_existed && data.generated_email && data.generated_password) {
