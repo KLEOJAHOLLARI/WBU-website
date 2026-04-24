@@ -268,16 +268,18 @@ const Scholarships = () => {
   const [extraDocs, setExtraDocs] = useState<Record<string, string[]>>(DEFAULT_EXTRA_DOCS);
   const [isLoadingDocs, setIsLoadingDocs] = useState(true);
   const [docsError, setDocsError] = useState<string | null>(null);
+  const [docsUpdatedAt, setDocsUpdatedAt] = useState<string | null>(null);
 
   useEffect(() => {
     let cancelled = false;
     setIsLoadingDocs(true);
     setDocsError(null);
     fetchScholarshipDocs()
-      .then(({ base, extra }) => {
+      .then(({ base, extra, updatedAt }) => {
         if (cancelled) return;
         setBaseDocuments(base);
         setExtraDocs(extra);
+        setDocsUpdatedAt(updatedAt);
       })
       .catch((err) => {
         if (cancelled) return;
