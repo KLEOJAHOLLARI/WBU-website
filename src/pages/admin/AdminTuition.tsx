@@ -392,13 +392,29 @@ const AdminTuition = () => {
   });
 
   const waiveLateFee = useMutation({
-    mutationFn: async (id: string) => {
+    mutationFn: async ({ lf, note }: { lf: any; note: string }) => {
+      const trimmed = (note || "").trim();
+      if (!trimmed) throw new Error("A waive reason is required");
+      const { data: auth } = await supabase.auth.getUser();
+      const admin_id = auth.user?.id ?? null;
+      const SEP = "\n— Waive note: ";
+      const baseReason = (lf.reason || "").split(SEP)[0];
+      const newReason = `${baseReason}${SEP}${trimmed}`;
       const { error } = await supabase.from("tuition_late_fees")
-        .update({ waived: true, waived_at: new Date().toISOString() })
-        .eq("id", id);
+        .update({
+          waived: true,
+          waived_at: new Date().toISOString(),
+          waived_by: admin_id,
+          reason: newReason,
+        })
+        .eq("id", lf.id);
       if (error) throw error;
     },
-    onSuccess: () => { qc.invalidateQueries({ queryKey: ["adm-late-fees"] }); toast.success("Late fee waived"); },
+    onSuccess: () => {
+      qc.invalidateQueries({ queryKey: ["adm-late-fees"] });
+      setWaiveDialog(null);
+      toast.success("Late fee waived");
+    },
     onError: (e: any) => toast.error(e.message),
   });
 
