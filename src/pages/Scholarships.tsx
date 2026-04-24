@@ -442,18 +442,21 @@ const Scholarships = () => {
                 Make sure these documents are ready before starting. Uploading them
                 in your application portal speeds up evaluation considerably.
               </p>
+              <button
+                type="button"
+                onClick={() => generateChecklistPdf()}
+                className="mt-6 inline-flex items-center gap-2 rounded-full bg-accent px-6 py-3 text-sm font-semibold text-accent-foreground shadow-lg shadow-accent/20 transition-all hover:shadow-xl hover:shadow-accent/30 hover:scale-105"
+              >
+                <Download className="h-4 w-4" />
+                Download general checklist (PDF)
+              </button>
+              <p className="mt-3 text-xs text-muted-foreground">
+                Tip: each scholarship card also has its own tailored checklist.
+              </p>
             </motion.div>
 
             <motion.ul {...fadeUp} className="grid gap-3">
-              {[
-                "Completed online admission application",
-                "Official high-school or previous-degree transcripts",
-                "National ID or passport copy",
-                "Motivation letter (max 1 page)",
-                "Two letters of recommendation",
-                "Proof of financial need (for need-based aid)",
-                "Awards, certificates, or portfolio (if applicable)",
-              ].map((d) => (
+              {baseDocuments.map((d) => (
                 <li
                   key={d}
                   className="flex items-start gap-3 rounded-xl border border-border/60 bg-card p-4"
