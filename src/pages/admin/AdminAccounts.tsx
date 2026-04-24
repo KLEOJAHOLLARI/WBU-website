@@ -3,7 +3,7 @@ import AdminLayout from "@/components/AdminLayout";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
 import { useToast } from "@/hooks/use-toast";
-import { Plus, Pencil, Trash2, X, UserPlus, Shield, BookOpen, GraduationCap } from "lucide-react";
+import { Pencil, Trash2, UserPlus, Shield, GraduationCap } from "lucide-react";
 import {
   AlertDialog,
   AlertDialogAction,
@@ -14,8 +14,45 @@ import {
   AlertDialogHeader,
   AlertDialogTitle,
 } from "@/components/ui/alert-dialog";
+import {
+  Dialog,
+  DialogContent,
+  DialogDescription,
+  DialogFooter,
+  DialogHeader,
+  DialogTitle,
+} from "@/components/ui/dialog";
 
 type TabType = "professors" | "students" | "create";
+
+type ProfileRow = {
+  id: string;
+  user_id: string;
+  full_name: string;
+  email: string;
+  phone: string | null;
+  program: string | null;
+  current_year: number;
+  current_semester: number;
+  account_status: string;
+  has_scholarship: boolean;
+  scholarship_percentage: number;
+  student_id: string | null;
+  created_at: string;
+};
+
+type EditForm = {
+  user_id: string;
+  full_name: string;
+  email: string;
+  phone: string;
+  program: string;
+  current_year: number;
+  current_semester: number;
+  account_status: string;
+  has_scholarship: boolean;
+  scholarship_percentage: number;
+};
 
 const AdminAccounts = () => {
   const { toast } = useToast();
@@ -24,6 +61,8 @@ const AdminAccounts = () => {
   const [creating, setCreating] = useState(false);
   const [form, setForm] = useState({ email: "", password: "", full_name: "", phone: "", role: "professor" as string });
   const [deleteTarget, setDeleteTarget] = useState<{ user_id: string; name: string } | null>(null);
+  const [editing, setEditing] = useState<EditForm | null>(null);
+  const [savingEdit, setSavingEdit] = useState(false);
 
   const { data: allRoles = [] } = useQuery({
     queryKey: ["admin-all-roles"],
@@ -39,7 +78,7 @@ const AdminAccounts = () => {
     queryFn: async () => {
       const { data, error } = await supabase.from("profiles").select("*").order("created_at", { ascending: false });
       if (error) throw error;
-      return data;
+      return data as ProfileRow[];
     },
   });
 
@@ -91,10 +130,55 @@ const AdminAccounts = () => {
     setCreating(false);
   };
 
+  const openEdit = (p: ProfileRow) => {
+    setEditing({
+      user_id: p.user_id,
+      full_name: p.full_name || "",
+      email: p.email || "",
+      phone: p.phone || "",
+      program: p.program || "",
+      current_year: p.current_year ?? 1,
+      current_semester: p.current_semester ?? 1,
+      account_status: p.account_status || "pending",
+      has_scholarship: !!p.has_scholarship,
+      scholarship_percentage: p.scholarship_percentage ?? 0,
+    });
+  };
+
+  const saveEdit = async () => {
+    if (!editing) return;
+    setSavingEdit(true);
+    try {
+      const { error } = await supabase
+        .from("profiles")
+        .update({
+          full_name: editing.full_name,
+          email: editing.email,
+          phone: editing.phone || null,
+          program: editing.program || null,
+          current_year: Number(editing.current_year) || 1,
+          current_semester: Number(editing.current_semester) || 1,
+          account_status: editing.account_status,
+          has_scholarship: editing.has_scholarship,
+          scholarship_percentage: Number(editing.scholarship_percentage) || 0,
+        })
+        .eq("user_id", editing.user_id);
+      if (error) throw error;
+      toast({ title: "Account updated" });
+      setEditing(null);
+      qc.invalidateQueries({ queryKey: ["admin-all-profiles"] });
+    } catch (err: any) {
+      toast({ title: "Error updating account", description: err.message, variant: "destructive" });
+    }
+    setSavingEdit(false);
+  };
+
   const inputCls = "w-full rounded-md border border-input bg-background px-3 py-2 text-sm text-foreground focus:outline-none focus:ring-2 focus:ring-ring";
   const tabCls = (t: TabType) => `px-4 py-2 text-sm font-medium rounded-md transition-colors ${tab === t ? "bg-primary text-primary-foreground" : "text-muted-foreground hover:bg-secondary"}`;
 
-  const renderList = (list: typeof profiles, roleLabel: string) => (
+  const isStudentTab = tab === "students";
+
+  const renderList = (list: ProfileRow[], roleLabel: string) => (
     <div className="mt-4 overflow-auto rounded-xl border border-border">
       <table className="w-full text-sm">
         <thead className="border-b border-border bg-secondary">
@@ -102,19 +186,28 @@ const AdminAccounts = () => {
             <th className="px-4 py-3 text-left font-medium text-foreground">Name</th>
             <th className="px-4 py-3 text-left font-medium text-foreground">Email</th>
             <th className="px-4 py-3 text-left font-medium text-foreground">Phone</th>
+            {isStudentTab && <th className="px-4 py-3 text-left font-medium text-foreground">Program</th>}
+            {isStudentTab && <th className="px-4 py-3 text-left font-medium text-foreground">Year/Sem</th>}
+            {isStudentTab && <th className="px-4 py-3 text-left font-medium text-foreground">Status</th>}
             <th className="px-4 py-3 text-left font-medium text-foreground">Roles</th>
-            <th className="px-4 py-3 text-left font-medium text-foreground">Joined</th>
             <th className="px-4 py-3 text-right font-medium text-foreground">Actions</th>
           </tr>
         </thead>
         <tbody>
           {list.length === 0 ? (
-            <tr><td colSpan={6} className="px-4 py-8 text-center text-muted-foreground">No {roleLabel}s yet.</td></tr>
+            <tr><td colSpan={isStudentTab ? 8 : 5} className="px-4 py-8 text-center text-muted-foreground">No {roleLabel}s yet.</td></tr>
           ) : list.map((p) => (
             <tr key={p.id} className="border-b border-border last:border-0">
               <td className="px-4 py-3 font-medium text-foreground">{p.full_name || "—"}</td>
               <td className="px-4 py-3 text-muted-foreground">{p.email}</td>
               <td className="px-4 py-3 text-muted-foreground">{p.phone || "—"}</td>
+              {isStudentTab && <td className="px-4 py-3 text-muted-foreground">{p.program || "—"}</td>}
+              {isStudentTab && <td className="px-4 py-3 text-muted-foreground">Y{p.current_year}/S{p.current_semester}</td>}
+              {isStudentTab && (
+                <td className="px-4 py-3">
+                  <span className="rounded-full bg-secondary px-2 py-0.5 text-xs font-medium text-foreground capitalize">{p.account_status}</span>
+                </td>
+              )}
               <td className="px-4 py-3">
                 <div className="flex gap-1">
                   {getRoles(p.user_id).map(r => (
@@ -122,15 +215,23 @@ const AdminAccounts = () => {
                   ))}
                 </div>
               </td>
-              <td className="px-4 py-3 text-muted-foreground">{new Date(p.created_at).toLocaleDateString()}</td>
               <td className="px-4 py-3 text-right">
-                <button
-                  onClick={() => setDeleteTarget({ user_id: p.user_id, name: p.full_name || p.email })}
-                  className="text-muted-foreground hover:text-destructive transition-colors"
-                  title="Delete user"
-                >
-                  <Trash2 className="h-4 w-4" />
-                </button>
+                <div className="flex justify-end gap-2">
+                  <button
+                    onClick={() => openEdit(p)}
+                    className="text-muted-foreground hover:text-primary transition-colors"
+                    title="Edit user"
+                  >
+                    <Pencil className="h-4 w-4" />
+                  </button>
+                  <button
+                    onClick={() => setDeleteTarget({ user_id: p.user_id, name: p.full_name || p.email })}
+                    className="text-muted-foreground hover:text-destructive transition-colors"
+                    title="Delete user"
+                  >
+                    <Trash2 className="h-4 w-4" />
+                  </button>
+                </div>
               </td>
             </tr>
           ))}
@@ -144,7 +245,7 @@ const AdminAccounts = () => {
       <div className="flex items-center justify-between">
         <div>
           <h1 className="font-display text-2xl font-bold text-foreground">Account Management</h1>
-          <p className="text-sm text-muted-foreground">Create and manage professor & student accounts</p>
+          <p className="text-sm text-muted-foreground">Create, edit and manage professor & student accounts</p>
         </div>
       </div>
 
@@ -208,6 +309,65 @@ const AdminAccounts = () => {
           </form>
         </div>
       )}
+
+      {/* Edit dialog */}
+      <Dialog open={!!editing} onOpenChange={(open) => !open && setEditing(null)}>
+        <DialogContent className="max-w-2xl">
+          <DialogHeader>
+            <DialogTitle>Edit Account</DialogTitle>
+            <DialogDescription>Update profile information for this user.</DialogDescription>
+          </DialogHeader>
+          {editing && (
+            <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
+              <div className="sm:col-span-2">
+                <label className="mb-1 block text-sm font-medium text-foreground">Full Name</label>
+                <input value={editing.full_name} onChange={(e) => setEditing({ ...editing, full_name: e.target.value })} className={inputCls} />
+              </div>
+              <div>
+                <label className="mb-1 block text-sm font-medium text-foreground">Email</label>
+                <input type="email" value={editing.email} onChange={(e) => setEditing({ ...editing, email: e.target.value })} className={inputCls} />
+              </div>
+              <div>
+                <label className="mb-1 block text-sm font-medium text-foreground">Phone</label>
+                <input value={editing.phone} onChange={(e) => setEditing({ ...editing, phone: e.target.value })} className={inputCls} />
+              </div>
+              <div>
+                <label className="mb-1 block text-sm font-medium text-foreground">Program (slug)</label>
+                <input value={editing.program} onChange={(e) => setEditing({ ...editing, program: e.target.value })} className={inputCls} placeholder="e.g. computer-science" />
+              </div>
+              <div>
+                <label className="mb-1 block text-sm font-medium text-foreground">Account Status</label>
+                <select value={editing.account_status} onChange={(e) => setEditing({ ...editing, account_status: e.target.value })} className={inputCls}>
+                  <option value="pending">pending</option>
+                  <option value="approved">approved</option>
+                  <option value="active">active</option>
+                  <option value="suspended">suspended</option>
+                </select>
+              </div>
+              <div>
+                <label className="mb-1 block text-sm font-medium text-foreground">Current Year</label>
+                <input type="number" min={1} max={6} value={editing.current_year} onChange={(e) => setEditing({ ...editing, current_year: Number(e.target.value) })} className={inputCls} />
+              </div>
+              <div>
+                <label className="mb-1 block text-sm font-medium text-foreground">Current Semester</label>
+                <input type="number" min={1} max={2} value={editing.current_semester} onChange={(e) => setEditing({ ...editing, current_semester: Number(e.target.value) })} className={inputCls} />
+              </div>
+              <div className="flex items-center gap-2">
+                <input id="has_scholarship" type="checkbox" checked={editing.has_scholarship} onChange={(e) => setEditing({ ...editing, has_scholarship: e.target.checked })} className="h-4 w-4" />
+                <label htmlFor="has_scholarship" className="text-sm font-medium text-foreground">Has Scholarship</label>
+              </div>
+              <div>
+                <label className="mb-1 block text-sm font-medium text-foreground">Scholarship %</label>
+                <input type="number" min={0} max={100} value={editing.scholarship_percentage} onChange={(e) => setEditing({ ...editing, scholarship_percentage: Number(e.target.value) })} className={inputCls} />
+              </div>
+            </div>
+          )}
+          <DialogFooter>
+            <button onClick={() => setEditing(null)} disabled={savingEdit} className="rounded-md border border-border px-4 py-2 text-sm font-medium text-foreground hover:bg-secondary">Cancel</button>
+            <button onClick={saveEdit} disabled={savingEdit} className="rounded-md bg-primary px-4 py-2 text-sm font-semibold text-primary-foreground disabled:opacity-60">{savingEdit ? "Saving..." : "Save changes"}</button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
 
       <AlertDialog open={!!deleteTarget} onOpenChange={(open) => !open && setDeleteTarget(null)}>
         <AlertDialogContent>
