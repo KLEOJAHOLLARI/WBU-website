@@ -494,6 +494,7 @@ const AdminTuition = () => {
           <TabsTrigger value="latefees">
             Late Fees {lateFeeSettings?.enabled && eligibleForLateFee.length > 0 && <Badge variant="destructive" className="ml-2">{eligibleForLateFee.length}</Badge>}
           </TabsTrigger>
+          <TabsTrigger value="enrollment">Late Enrollment</TabsTrigger>
         </TabsList>
 
         {/* RECEIPT QUEUE TAB */}
