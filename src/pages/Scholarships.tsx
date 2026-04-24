@@ -459,17 +459,42 @@ const Scholarships = () => {
               </p>
             </motion.div>
 
-            <motion.ul {...fadeUp} className="grid gap-3">
-              {baseDocuments.map((d) => (
-                <li
-                  key={d}
-                  className="flex items-start gap-3 rounded-xl border border-border/60 bg-card p-4"
+            <motion.div {...fadeUp} className="grid gap-3">
+              {docsError && (
+                <div
+                  role="alert"
+                  className="flex items-start gap-3 rounded-xl border border-destructive/30 bg-destructive/5 p-4 text-sm text-destructive"
                 >
-                  <FileText className="mt-0.5 h-5 w-5 shrink-0 text-accent" />
-                  <span className="text-sm text-foreground">{d}</span>
-                </li>
-              ))}
-            </motion.ul>
+                  <AlertCircle className="mt-0.5 h-5 w-5 shrink-0" />
+                  <span>{docsError}</span>
+                </div>
+              )}
+              {isLoadingDocs ? (
+                <ul className="grid gap-3" aria-busy="true" aria-label="Loading required documents">
+                  {Array.from({ length: 6 }).map((_, i) => (
+                    <li
+                      key={i}
+                      className="flex items-start gap-3 rounded-xl border border-border/60 bg-card p-4"
+                    >
+                      <Skeleton className="mt-0.5 h-5 w-5 shrink-0 rounded" />
+                      <Skeleton className="h-4 w-3/4" />
+                    </li>
+                  ))}
+                </ul>
+              ) : (
+                <ul className="grid gap-3">
+                  {baseDocuments.map((d) => (
+                    <li
+                      key={d}
+                      className="flex items-start gap-3 rounded-xl border border-border/60 bg-card p-4"
+                    >
+                      <FileText className="mt-0.5 h-5 w-5 shrink-0 text-accent" />
+                      <span className="text-sm text-foreground">{d}</span>
+                    </li>
+                  ))}
+                </ul>
+              )}
+            </motion.div>
           </div>
         </div>
       </section>
