@@ -66,6 +66,10 @@ const StudentRegistration = () => {
 
   const studentYear = activeSemester?.year ?? profile?.current_year ?? 1;
   const studentSemester = activeSemester?.semester ?? profile?.current_semester ?? 1;
+  const registrationOpen = !!activeSemester?.enrollment_open;
+  const enrollmentDeadline = activeSemester?.enrollment_deadline
+    ? new Date(activeSemester.enrollment_deadline)
+    : null;
 
   // Existing enrollments (already approved)
   const { data: enrollments = [] } = useQuery({
