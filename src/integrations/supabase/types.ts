@@ -673,6 +673,45 @@ export type Database = {
         }
         Relationships: []
       }
+      professor_id_cards: {
+        Row: {
+          created_at: string
+          expiry_date: string | null
+          id: string
+          issue_date: string
+          notes: string | null
+          reissue_count: number
+          status: string
+          updated_at: string
+          user_id: string
+          verification_token: string
+        }
+        Insert: {
+          created_at?: string
+          expiry_date?: string | null
+          id?: string
+          issue_date?: string
+          notes?: string | null
+          reissue_count?: number
+          status?: string
+          updated_at?: string
+          user_id: string
+          verification_token?: string
+        }
+        Update: {
+          created_at?: string
+          expiry_date?: string | null
+          id?: string
+          issue_date?: string
+          notes?: string | null
+          reissue_count?: number
+          status?: string
+          updated_at?: string
+          user_id?: string
+          verification_token?: string
+        }
+        Relationships: []
+      }
       professors: {
         Row: {
           bio: string
