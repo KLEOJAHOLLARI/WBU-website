@@ -96,7 +96,17 @@
     "faculty": "Faculty",
     "applyNow": "Apply Now",
     "notFound": "Program Not Found",
-    "backToPrograms": "Back to Programs"
+    "backToPrograms": "Back to Programs",
+    "degreeBachelor": "Bachelor",
+    "degreeMaster": "Master",
+    "degreePhD": "PhD",
+    "faculties": {
+      "Faculty of Engineering": "Faculty of Engineering",
+      "Faculty of Economics": "Faculty of Economics",
+      "Faculty of Law": "Faculty of Law",
+      "Faculty of Medicine": "Faculty of Medicine",
+      "Faculty of Arts & Sciences": "Faculty of Arts & Sciences"
+    }
   },
   "admissions": {
     "title": "Admissions",

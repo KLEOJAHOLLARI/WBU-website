@@ -96,7 +96,17 @@
     "faculty": "Fakulteti",
     "applyNow": "Apliko Tani",
     "notFound": "Programi Nuk u Gjet",
-    "backToPrograms": "Kthehu te Programet"
+    "backToPrograms": "Kthehu te Programet",
+    "degreeBachelor": "Bachelor",
+    "degreeMaster": "Master",
+    "degreePhD": "Doktoraturë",
+    "faculties": {
+      "Faculty of Engineering": "Fakulteti i Inxhinierisë",
+      "Faculty of Economics": "Fakulteti i Ekonomisë",
+      "Faculty of Law": "Fakulteti i Drejtësisë",
+      "Faculty of Medicine": "Fakulteti i Mjekësisë",
+      "Faculty of Arts & Sciences": "Fakulteti i Arteve dhe Shkencave"
+    }
   },
   "admissions": {
     "title": "Pranime",
