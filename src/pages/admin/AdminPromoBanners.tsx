@@ -1,9 +1,9 @@
-import { useState } from "react";
+import { useState, useRef } from "react";
 import AdminLayout from "@/components/AdminLayout";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
 import { useToast } from "@/hooks/use-toast";
-import { Plus, Pencil, Trash2, X, ArrowUp, ArrowDown, Eye, EyeOff } from "lucide-react";
+import { Plus, Pencil, Trash2, X, ArrowUp, ArrowDown, Eye, EyeOff, Upload, Loader2 } from "lucide-react";
 
 const empty = {
   title: "",
@@ -20,6 +20,37 @@ const AdminPromoBanners = () => {
   const qc = useQueryClient();
   const [editing, setEditing] = useState<any>(null);
   const [showForm, setShowForm] = useState(false);
+  const [uploading, setUploading] = useState(false);
+  const fileInputRef = useRef<HTMLInputElement>(null);
+
+  const handleImageUpload = async (file: File) => {
+    if (!file.type.startsWith("image/")) {
+      toast({ title: "Invalid file", description: "Please select an image.", variant: "destructive" });
+      return;
+    }
+    if (file.size > 5 * 1024 * 1024) {
+      toast({ title: "File too large", description: "Max 5MB.", variant: "destructive" });
+      return;
+    }
+    setUploading(true);
+    try {
+      const ext = file.name.split(".").pop() || "jpg";
+      const path = `${Date.now()}-${Math.random().toString(36).slice(2, 8)}.${ext}`;
+      const { error } = await supabase.storage.from("promo-banners").upload(path, file, {
+        cacheControl: "3600",
+        upsert: false,
+      });
+      if (error) throw error;
+      const { data } = supabase.storage.from("promo-banners").getPublicUrl(path);
+      setEditing((prev: any) => ({ ...prev, image_url: data.publicUrl }));
+      toast({ title: "Image uploaded" });
+    } catch (e: any) {
+      toast({ title: "Upload failed", description: e.message, variant: "destructive" });
+    } finally {
+      setUploading(false);
+      if (fileInputRef.current) fileInputRef.current.value = "";
+    }
+  };
 
   const { data: banners = [], isLoading } = useQuery({
     queryKey: ["admin-promo-banners"],
@@ -173,19 +204,52 @@ const AdminPromoBanners = () => {
                 className="rounded-md border border-input bg-background px-3 py-2 text-sm text-foreground focus:outline-none focus:ring-2 focus:ring-ring"
               />
             </div>
-            <input
-              placeholder="Background image URL"
-              value={editing?.image_url || ""}
-              onChange={(e) => setEditing({ ...editing, image_url: e.target.value })}
-              className="w-full rounded-md border border-input bg-background px-3 py-2 text-sm text-foreground focus:outline-none focus:ring-2 focus:ring-ring"
-            />
-            {editing?.image_url && (
-              <img
-                src={editing.image_url}
-                alt="preview"
-                className="h-32 w-full rounded-md border border-border object-cover"
+            <div className="space-y-2">
+              <label className="text-sm font-medium text-foreground">Background image</label>
+              <div className="flex flex-wrap items-center gap-3">
+                <input
+                  ref={fileInputRef}
+                  type="file"
+                  accept="image/*"
+                  className="hidden"
+                  onChange={(e) => {
+                    const f = e.target.files?.[0];
+                    if (f) handleImageUpload(f);
+                  }}
+                />
+                <button
+                  type="button"
+                  onClick={() => fileInputRef.current?.click()}
+                  disabled={uploading}
+                  className="inline-flex items-center gap-2 rounded-md border border-input bg-background px-3 py-2 text-sm font-medium text-foreground hover:bg-muted disabled:opacity-60"
+                >
+                  {uploading ? <Loader2 className="h-4 w-4 animate-spin" /> : <Upload className="h-4 w-4" />}
+                  {uploading ? "Uploading..." : editing?.image_url ? "Replace image" : "Upload image"}
+                </button>
+                {editing?.image_url && (
+                  <button
+                    type="button"
+                    onClick={() => setEditing({ ...editing, image_url: "" })}
+                    className="text-xs text-muted-foreground underline hover:text-destructive"
+                  >
+                    Remove
+                  </button>
+                )}
+              </div>
+              <input
+                placeholder="Or paste an image URL"
+                value={editing?.image_url || ""}
+                onChange={(e) => setEditing({ ...editing, image_url: e.target.value })}
+                className="w-full rounded-md border border-input bg-background px-3 py-2 text-sm text-foreground focus:outline-none focus:ring-2 focus:ring-ring"
               />
-            )}
+              {editing?.image_url && (
+                <img
+                  src={editing.image_url}
+                  alt="preview"
+                  className="h-32 w-full rounded-md border border-border object-cover"
+                />
+              )}
+            </div>
             <div className="grid gap-4 sm:grid-cols-2">
               <input
                 type="number"
