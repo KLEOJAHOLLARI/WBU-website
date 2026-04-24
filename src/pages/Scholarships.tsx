@@ -134,6 +134,162 @@ const faqs = [
   },
 ];
 
+const baseDocuments = [
+  "Completed online admission application",
+  "Official high-school or previous-degree transcripts",
+  "National ID or passport copy",
+  "Motivation letter (max 1 page)",
+  "Two letters of recommendation",
+  "Awards, certificates, or portfolio (if applicable)",
+];
+
+const extraDocsByScholarship: Record<string, string[]> = {
+  "Merit Excellence Scholarship": [
+    "Certified entrance exam result",
+    "Academic transcript with GPA ≥ 9.0 / 90%+",
+  ],
+  "Need-Based Grant": [
+    "Proof of family income (last 6 months)",
+    "Tax statement or social-services letter",
+    "Personal statement explaining financial need",
+  ],
+  "International Student Award": [
+    "Passport copy and proof of residency abroad",
+    "Language proficiency certificate (English/Albanian)",
+    "Equivalence of foreign diploma (if available)",
+  ],
+  "Community Leadership": [
+    "Documentation of volunteer / community service",
+    "Two recommendation letters (mentor / NGO / school)",
+    "Leadership essay (max 1 page)",
+  ],
+  "Alumni Family Discount": [
+    "Proof of relation to a WBU alumnus (parent / sibling)",
+    "Alumnus diploma copy or graduation year reference",
+  ],
+  "Sports & Arts Talent": [
+    "National ranking certificate or competition results",
+    "Coach / mentor recommendation letter",
+    "Portfolio, recordings, or performance evidence",
+  ],
+};
+
+const generateChecklistPdf = (scholarship?: (typeof scholarships)[number]) => {
+  const doc = new jsPDF({ unit: "pt", format: "a4" });
+  const pageW = doc.internal.pageSize.getWidth();
+  const pageH = doc.internal.pageSize.getHeight();
+  const margin = 48;
+  let y = margin;
+
+  // Header band
+  doc.setFillColor(15, 23, 42); // slate-900
+  doc.rect(0, 0, pageW, 90, "F");
+  doc.setTextColor(255, 255, 255);
+  doc.setFont("helvetica", "bold");
+  doc.setFontSize(20);
+  doc.text("WBU — Scholarship Application Checklist", margin, 42);
+  doc.setFont("helvetica", "normal");
+  doc.setFontSize(11);
+  doc.text("Western Balkan University", margin, 64);
+  doc.text(
+    `Generated: ${new Date().toLocaleDateString()}`,
+    pageW - margin,
+    64,
+    { align: "right" }
+  );
+
+  y = 130;
+
+  // Scholarship title block
+  doc.setTextColor(20, 20, 20);
+  doc.setFont("helvetica", "bold");
+  doc.setFontSize(15);
+  doc.text(scholarship ? scholarship.name : "All Scholarships", margin, y);
+  y += 20;
+
+  if (scholarship) {
+    doc.setFont("helvetica", "bold");
+    doc.setFontSize(11);
+    doc.setTextColor(13, 148, 136); // teal
+    doc.text(scholarship.coverage, margin, y);
+    y += 18;
+
+    doc.setFont("helvetica", "normal");
+    doc.setFontSize(11);
+    doc.setTextColor(60, 60, 60);
+    const desc = doc.splitTextToSize(scholarship.description, pageW - margin * 2);
+    doc.text(desc, margin, y);
+    y += desc.length * 14 + 10;
+
+    // Eligibility
+    doc.setFont("helvetica", "bold");
+    doc.setFontSize(12);
+    doc.setTextColor(20, 20, 20);
+    doc.text("Eligibility", margin, y);
+    y += 16;
+    doc.setFont("helvetica", "normal");
+    doc.setFontSize(11);
+    doc.setTextColor(50, 50, 50);
+    scholarship.eligibility.forEach((e) => {
+      doc.text(`•  ${e}`, margin + 4, y);
+      y += 16;
+    });
+    y += 10;
+  }
+
+  // Documents checklist
+  const docsList = scholarship
+    ? [...baseDocuments, ...(extraDocsByScholarship[scholarship.name] || [])]
+    : baseDocuments;
+
+  doc.setFont("helvetica", "bold");
+  doc.setFontSize(13);
+  doc.setTextColor(20, 20, 20);
+  doc.text("Required Documents", margin, y);
+  y += 20;
+
+  doc.setFont("helvetica", "normal");
+  doc.setFontSize(11);
+  doc.setTextColor(40, 40, 40);
+
+  const lineH = 22;
+  docsList.forEach((d) => {
+    if (y > pageH - margin - 60) {
+      doc.addPage();
+      y = margin;
+    }
+    // checkbox
+    doc.setDrawColor(120, 120, 120);
+    doc.setLineWidth(1);
+    doc.rect(margin, y - 11, 12, 12);
+    const wrapped = doc.splitTextToSize(d, pageW - margin * 2 - 24);
+    doc.text(wrapped, margin + 22, y);
+    y += Math.max(lineH, wrapped.length * 14 + 8);
+  });
+
+  // Footer note
+  if (y > pageH - margin - 80) {
+    doc.addPage();
+    y = margin;
+  }
+  y += 10;
+  doc.setDrawColor(220, 220, 220);
+  doc.line(margin, y, pageW - margin, y);
+  y += 18;
+  doc.setFont("helvetica", "italic");
+  doc.setFontSize(10);
+  doc.setTextColor(110, 110, 110);
+  const note =
+    "Tip: Tick each box once the document is ready, then upload everything through your online application at wbu.lovable.app/admissions. For questions contact admissions@wbu.edu.";
+  const noteLines = doc.splitTextToSize(note, pageW - margin * 2);
+  doc.text(noteLines, margin, y);
+
+  const safeName = (scholarship?.name || "WBU-Scholarships")
+    .replace(/[^a-z0-9]+/gi, "-")
+    .toLowerCase();
+  doc.save(`${safeName}-checklist.pdf`);
+};
+
 const Scholarships = () => {
   return (
     <Layout>
