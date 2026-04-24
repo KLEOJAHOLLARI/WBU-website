@@ -100,7 +100,8 @@ const Programs = () => {
             transition={{ duration: 0.5 }}
             className="font-display text-4xl font-bold leading-tight text-foreground sm:text-5xl md:text-6xl"
           >
-            {degree} <span className="block sm:inline">Programs</span>
+            {t(`programs.degree${degree}`, degree)}{" "}
+            <span className="block sm:inline">{t("programs.title", "Programs")}</span>
           </motion.h1>
           <div className="mt-5 h-1 w-40 rounded-full bg-accent sm:w-56" />
 
@@ -116,7 +117,7 @@ const Programs = () => {
                     : "bg-secondary text-muted-foreground hover:bg-secondary/70 hover:text-foreground"
                 }`}
               >
-                {d}
+                {t(`programs.degree${d}`, d)}
                 <span className="ml-2 text-xs opacity-70">({counts[d] || 0})</span>
               </button>
             ))}
@@ -186,11 +187,11 @@ const Programs = () => {
                         {/* Text */}
                         <div className="min-w-0 flex-1">
                           <h3 className="truncate text-base font-medium text-foreground transition-colors group-hover:text-accent sm:text-lg">
-                            {p.title}
+                            {t(`programTitles.${p.slug}`, { defaultValue: p.title })}
                           </h3>
                           {p.faculty && (
                             <p className="mt-0.5 truncate text-xs text-muted-foreground sm:text-sm">
-                              {p.faculty} · {p.duration}
+                              {t(`programs.faculties.${p.faculty}`, { defaultValue: p.faculty })} · {p.duration}
                             </p>
                           )}
                         </div>
