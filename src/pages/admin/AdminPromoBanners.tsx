@@ -223,7 +223,7 @@ const AdminPromoBanners = () => {
                   className="hidden"
                   onChange={(e) => {
                     const f = e.target.files?.[0];
-                    if (f) handleImageUpload(f);
+                    if (f) handleFileSelected(f);
                   }}
                 />
                 <button
