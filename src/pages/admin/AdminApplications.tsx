@@ -264,53 +264,64 @@ const AdminApplications = () => {
         </table>
       </div>
 
-      {/* Detail panel */}
-      {viewing && (() => {
-        const app = applications.find((a) => a.id === viewing);
-        if (!app) return null;
-        return (
-          <div className="mt-6 rounded-xl border border-border bg-card p-6">
-            <div className="mb-4 flex items-center justify-between">
-              <h2 className="font-display text-lg font-semibold text-foreground">Application Details</h2>
-              <button onClick={() => setViewing(null)} className="text-muted-foreground hover:text-foreground text-sm">Close</button>
-            </div>
-            <div className="grid gap-4 sm:grid-cols-2">
-              <div><p className="text-xs text-muted-foreground">Full Name</p><p className="font-medium text-foreground">{app.full_name}</p></div>
-              <div><p className="text-xs text-muted-foreground">Email</p><p className="text-foreground">{app.email}</p></div>
-              <div><p className="text-xs text-muted-foreground">Phone</p><p className="text-foreground">{app.phone || "—"}</p></div>
-              <div><p className="text-xs text-muted-foreground">Program</p><p className="text-foreground">{app.program}</p></div>
-              <div><p className="text-xs text-muted-foreground">Gender</p><p className="text-foreground">{app.gender || "—"}</p></div>
-              <div><p className="text-xs text-muted-foreground">Birthplace</p><p className="text-foreground">{app.birthplace || "—"}</p></div>
-              <div><p className="text-xs text-muted-foreground">Personal ID</p><p className="text-foreground">{app.personal_id || "—"}</p></div>
-              <div><p className="text-xs text-muted-foreground">Status</p>{statusBadge(app.status)}</div>
-              <div><p className="text-xs text-muted-foreground">Date</p><p className="text-foreground">{new Date(app.created_at).toLocaleString()}</p></div>
-            </div>
-            <div className="mt-4">
-              <p className="text-xs text-muted-foreground">Motivation Letter</p>
-              <p className="mt-1 whitespace-pre-wrap rounded-lg border border-border bg-secondary p-4 text-sm text-foreground">{app.motivation}</p>
-            </div>
-            {app.document_url && (
-              <div className="mt-4">
-                <p className="mb-2 text-xs text-muted-foreground">Uploaded Document</p>
-                <iframe
-                  src={getDocUrl(app.document_url)}
-                  className="h-[500px] w-full rounded-lg border border-border"
-                  title="Application Document"
-                />
-                <a
-                  href={getDocUrl(app.document_url)}
-                  target="_blank"
-                  rel="noopener noreferrer"
-                  download
-                  className="mt-2 inline-flex items-center gap-1 text-sm text-primary hover:underline"
-                >
-                  <FileText className="h-3.5 w-3.5" /> Download PDF
-                </a>
-              </div>
-            )}
-          </div>
-        );
-      })()}
+      {/* Detail modal */}
+      <Dialog open={!!viewing} onOpenChange={(o) => !o && setViewing(null)}>
+        <DialogContent className="max-w-3xl max-h-[90vh] overflow-y-auto">
+          {(() => {
+            const app = applications.find((a) => a.id === viewing);
+            if (!app) return null;
+            const docs = parseDocs(app.document_url);
+            return (
+              <>
+                <DialogHeader>
+                  <DialogTitle>Application Details</DialogTitle>
+                </DialogHeader>
+                <div className="grid gap-4 sm:grid-cols-2">
+                  <div><p className="text-xs text-muted-foreground">Full Name</p><p className="font-medium text-foreground">{app.full_name}</p></div>
+                  <div><p className="text-xs text-muted-foreground">Email</p><p className="text-foreground">{app.email}</p></div>
+                  <div><p className="text-xs text-muted-foreground">Phone</p><p className="text-foreground">{app.phone || "—"}</p></div>
+                  <div><p className="text-xs text-muted-foreground">Program</p><p className="text-foreground">{app.program}</p></div>
+                  <div><p className="text-xs text-muted-foreground">Gender</p><p className="text-foreground">{app.gender || "—"}</p></div>
+                  <div><p className="text-xs text-muted-foreground">Birthplace</p><p className="text-foreground">{app.birthplace || "—"}</p></div>
+                  <div><p className="text-xs text-muted-foreground">Personal ID</p><p className="text-foreground">{app.personal_id || "—"}</p></div>
+                  <div><p className="text-xs text-muted-foreground">Status</p>{statusBadge(app.status)}</div>
+                  <div><p className="text-xs text-muted-foreground">Date</p><p className="text-foreground">{new Date(app.created_at).toLocaleString()}</p></div>
+                </div>
+                <div className="mt-2">
+                  <p className="text-xs text-muted-foreground">Motivation Letter</p>
+                  <p className="mt-1 whitespace-pre-wrap rounded-lg border border-border bg-secondary p-4 text-sm text-foreground">{app.motivation}</p>
+                </div>
+                {docs.length > 0 && (
+                  <div className="mt-2 space-y-4">
+                    <p className="text-xs text-muted-foreground">Uploaded Documents ({docs.length})</p>
+                    {docs.map((d, i) => (
+                      <div key={d}>
+                        <div className="mb-1 flex items-center justify-between">
+                          <p className="text-sm font-medium text-foreground">Document {i + 1}</p>
+                          <a
+                            href={getDocUrl(d)}
+                            target="_blank"
+                            rel="noopener noreferrer"
+                            download
+                            className="inline-flex items-center gap-1 text-sm text-primary hover:underline"
+                          >
+                            <FileText className="h-3.5 w-3.5" /> Download
+                          </a>
+                        </div>
+                        <iframe
+                          src={getDocUrl(d)}
+                          className="h-[400px] w-full rounded-lg border border-border"
+                          title={`Application Document ${i + 1}`}
+                        />
+                      </div>
+                    ))}
+                  </div>
+                )}
+              </>
+            );
+          })()}
+        </DialogContent>
+      </Dialog>
     </AdminLayout>
   );
 };
