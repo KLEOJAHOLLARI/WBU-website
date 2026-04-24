@@ -7,11 +7,12 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Switch } from "@/components/ui/switch";
+import { Slider } from "@/components/ui/slider";
 import {
   Select, SelectContent, SelectItem, SelectTrigger, SelectValue,
 } from "@/components/ui/select";
 import { Skeleton } from "@/components/ui/skeleton";
-import { ShieldCheck } from "lucide-react";
+import { ShieldCheck, RotateCcw } from "lucide-react";
 
 interface SignatureConfig {
   enabled: boolean;
@@ -19,11 +20,15 @@ interface SignatureConfig {
   admin_name: string;
   title: string;
   label: string;
-  /** Text used to render the stylised signature on the PDF. Falls back to admin_name. */
   signature_text: string;
-  /** Font style used to render the signature text. */
   signature_font: "script" | "italic" | "bold";
-  /** Legacy field kept for backwards-compat with prior uploads. Always null in new flow. */
+  /** Font size in pt used when rendering the signature on PDFs. */
+  signature_size: number;
+  /** Horizontal offset in pt relative to the default right-aligned anchor. */
+  signature_offset_x: number;
+  /** Vertical offset in pt relative to the default baseline. */
+  signature_offset_y: number;
+  /** Legacy — kept for backwards-compat with older configs. */
   signature_path: string | null;
 }
 
@@ -35,6 +40,9 @@ const DEFAULTS: SignatureConfig = {
   label: "Verified by Administration",
   signature_text: "",
   signature_font: "script",
+  signature_size: 28,
+  signature_offset_x: 0,
+  signature_offset_y: 0,
   signature_path: null,
 };
 
@@ -108,6 +116,9 @@ const TranscriptSignatureSettings = () => {
         label: form.label,
         signature_text: form.signature_text || form.admin_name,
         signature_font: form.signature_font,
+        signature_size: form.signature_size,
+        signature_offset_x: form.signature_offset_x,
+        signature_offset_y: form.signature_offset_y,
         signature_path: null,
       };
       const { data: existing } = await supabase
@@ -143,24 +154,29 @@ const TranscriptSignatureSettings = () => {
   }
 
   const previewText = form.signature_text || form.admin_name || "Your signature";
+  // Map pt (used by PDF) → px roughly (1pt ≈ 1.333px) for on-screen preview parity.
+  const previewPx = Math.round(form.signature_size * 1.333);
+
+  const resetPosition = () =>
+    setForm((f) => ({ ...f, signature_offset_x: 0, signature_offset_y: 0, signature_size: 28 }));
 
   return (
     <Card>
       <CardHeader className="pb-3">
         <CardTitle className="flex items-center gap-2 text-base">
           <ShieldCheck className="h-4 w-4 text-primary" />
-          Transcript Signature & Verification
+          Transcript & Receipt Signature
         </CardTitle>
         <p className="text-sm text-muted-foreground">
-          Configure the official admin signature shown on every downloaded transcript PDF. The
-          signature is rendered as styled text — no image upload required.
+          Configure the official admin signature shown on every downloaded transcript PDF and printed
+          receipt. Size and position controls ensure it renders correctly on every device.
         </p>
       </CardHeader>
       <CardContent className="space-y-6">
         <div className="flex items-center justify-between rounded-lg border border-border bg-muted/30 px-4 py-3">
           <div>
-            <p className="text-sm font-medium text-foreground">Include signature on transcripts</p>
-            <p className="text-xs text-muted-foreground">When off, transcripts download without a signature block.</p>
+            <p className="text-sm font-medium text-foreground">Include signature on documents</p>
+            <p className="text-xs text-muted-foreground">When off, documents render without a signature block.</p>
           </div>
           <Switch
             checked={form.enabled}
@@ -238,22 +254,114 @@ const TranscriptSignatureSettings = () => {
           </div>
         </div>
 
+        {/* Size & position controls */}
+        <div className="rounded-lg border border-border bg-muted/20 p-4 space-y-5">
+          <div className="flex items-center justify-between">
+            <div>
+              <p className="text-sm font-semibold text-foreground">Size & position</p>
+              <p className="text-xs text-muted-foreground">
+                Values use PDF points (1 inch = 72 pt). Offsets are applied on top of the default
+                layout on every generated document.
+              </p>
+            </div>
+            <Button variant="ghost" size="sm" onClick={resetPosition}>
+              <RotateCcw className="mr-1 h-3.5 w-3.5" /> Reset
+            </Button>
+          </div>
+
+          <div>
+            <div className="flex items-center justify-between">
+              <Label>Signature size</Label>
+              <span className="text-xs font-medium text-muted-foreground tabular-nums">
+                {form.signature_size} pt
+              </span>
+            </div>
+            <Slider
+              value={[form.signature_size]}
+              min={10}
+              max={60}
+              step={1}
+              onValueChange={([v]) => setForm((f) => ({ ...f, signature_size: v }))}
+              className="mt-2"
+            />
+          </div>
+
+          <div className="grid gap-4 md:grid-cols-2">
+            <div>
+              <div className="flex items-center justify-between">
+                <Label>Horizontal offset (X)</Label>
+                <span className="text-xs font-medium text-muted-foreground tabular-nums">
+                  {form.signature_offset_x > 0 ? "+" : ""}
+                  {form.signature_offset_x} pt
+                </span>
+              </div>
+              <Slider
+                value={[form.signature_offset_x]}
+                min={-60}
+                max={60}
+                step={1}
+                onValueChange={([v]) => setForm((f) => ({ ...f, signature_offset_x: v }))}
+                className="mt-2"
+              />
+              <p className="mt-1 text-[11px] text-muted-foreground">
+                Negative = left, positive = right.
+              </p>
+            </div>
+            <div>
+              <div className="flex items-center justify-between">
+                <Label>Vertical offset (Y)</Label>
+                <span className="text-xs font-medium text-muted-foreground tabular-nums">
+                  {form.signature_offset_y > 0 ? "+" : ""}
+                  {form.signature_offset_y} pt
+                </span>
+              </div>
+              <Slider
+                value={[form.signature_offset_y]}
+                min={-40}
+                max={40}
+                step={1}
+                onValueChange={([v]) => setForm((f) => ({ ...f, signature_offset_y: v }))}
+                className="mt-2"
+              />
+              <p className="mt-1 text-[11px] text-muted-foreground">
+                Negative = up, positive = down.
+              </p>
+            </div>
+          </div>
+        </div>
+
+        {/* Live preview frame */}
         <div>
-          <Label className="mb-2 block">Signature preview</Label>
-          <div className="flex h-24 items-center justify-center rounded-lg border border-dashed border-border bg-muted/20 px-6">
-            <span
-              className="truncate text-3xl text-foreground"
-              style={{
-                fontFamily: FONT_PREVIEW[form.signature_font],
-                fontStyle: form.signature_font === "italic" ? "italic" : "normal",
-                fontWeight: form.signature_font === "bold" ? 700 : 400,
-              }}
-            >
-              {previewText}
-            </span>
+          <Label className="mb-2 block">Live preview (approximates the PDF)</Label>
+          <div className="relative h-48 overflow-hidden rounded-lg border border-dashed border-border bg-muted/20">
+            {/* Simulated signature block (right-aligned, similar to PDF layout) */}
+            <div className="absolute inset-0 p-6">
+              <div className="absolute right-6 bottom-6 w-64 text-right">
+                <div
+                  className="inline-block whitespace-nowrap text-foreground transition-transform"
+                  style={{
+                    fontFamily: FONT_PREVIEW[form.signature_font],
+                    fontStyle: form.signature_font === "italic" ? "italic" : "normal",
+                    fontWeight: form.signature_font === "bold" ? 700 : 400,
+                    fontSize: `${previewPx}px`,
+                    lineHeight: 1,
+                    transform: `translate(${form.signature_offset_x}px, ${form.signature_offset_y}px)`,
+                  }}
+                >
+                  {previewText}
+                </div>
+                <div className="mt-2 border-t border-foreground/70 pt-1">
+                  <p className="text-xs font-semibold text-foreground">
+                    {form.admin_name || "Administrator name"}
+                  </p>
+                  <p className="text-[10px] text-muted-foreground">{form.title || "Title"}</p>
+                </div>
+              </div>
+            </div>
           </div>
           <p className="mt-2 text-xs text-muted-foreground">
-            This is exactly how the signature will appear on the transcript PDF.
+            The preview uses the same offsets and size that will be applied on generated PDFs and
+            printed receipts.
           </p>
         </div>
 
