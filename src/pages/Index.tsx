@@ -3,6 +3,7 @@ import { motion } from "framer-motion";
 import { BookOpen, Users, Globe, Award, ArrowRight, Calendar, Sparkles } from "lucide-react";
 import Layout from "@/components/Layout";
 import SectionHeading from "@/components/SectionHeading";
+import StudentsCorner from "@/components/StudentsCorner";
 import { useQuery } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
 import { useTranslation } from "react-i18next";
@@ -195,6 +196,9 @@ const Index = () => {
           </div>
         </div>
       </section>
+
+      {/* Student's Corner */}
+      <StudentsCorner />
 
       {/* Latest News */}
       <section className="section-padding">
