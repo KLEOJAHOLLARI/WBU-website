@@ -50,7 +50,7 @@ const StudentDigitalIDCard = () => {
     try {
       const canvas = await html2canvas(el, { backgroundColor: null, scale: 3 });
       const link = document.createElement("a");
-      link.download = `wbu-id-card-${profile?.student_id || "card"}.png`;
+      link.download = `wbu-id-card-${fullProfile?.student_id || "card"}.png`;
       link.href = canvas.toDataURL("image/png");
       link.click();
       toast({ title: "Saved", description: "Card image downloaded." });
