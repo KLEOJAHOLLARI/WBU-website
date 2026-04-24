@@ -156,6 +156,38 @@ const ProfessorAdvisor = () => {
 
   const { isHighlighted } = useHighlightParam("request", "req", requests.length > 0);
 
+  // History filters
+  const [historySearch, setHistorySearch] = useState("");
+  const [historyStatus, setHistoryStatus] = useState<"all" | "accepted" | "rejected">("all");
+  const [historyFrom, setHistoryFrom] = useState("");
+  const [historyTo, setHistoryTo] = useState("");
+
+  const filteredHistory = useMemo(() => {
+    const q = historySearch.trim().toLowerCase();
+    const fromTs = historyFrom ? new Date(historyFrom).getTime() : null;
+    const toTs = historyTo ? new Date(historyTo).getTime() + 24 * 60 * 60 * 1000 - 1 : null;
+    return processedRequests.filter((r) => {
+      if (historyStatus !== "all" && r.status !== historyStatus) return false;
+      if (q) {
+        const hay = `${r.student?.full_name || ""} ${r.student?.email || ""} ${r.student?.student_id || ""} ${r.course?.name || ""} ${r.course?.code || ""}`.toLowerCase();
+        if (!hay.includes(q)) return false;
+      }
+      const ts = new Date(r.updated_at).getTime();
+      if (fromTs !== null && ts < fromTs) return false;
+      if (toTs !== null && ts > toTs) return false;
+      return true;
+    });
+  }, [processedRequests, historySearch, historyStatus, historyFrom, historyTo]);
+
+  const hasHistoryFilters =
+    historySearch.trim() !== "" || historyStatus !== "all" || historyFrom !== "" || historyTo !== "";
+  const clearHistoryFilters = () => {
+    setHistorySearch("");
+    setHistoryStatus("all");
+    setHistoryFrom("");
+    setHistoryTo("");
+  };
+
   const statusBadge = (status: string) => {
     switch (status) {
       case "accepted":
