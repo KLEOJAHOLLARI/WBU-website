@@ -134,7 +134,7 @@ const AdminApplications = () => {
       if (error) throw error;
     },
     onSuccess: (_d, vars) => {
-      qc.invalidateQueries({ queryKey: ["admin-applications"] });
+      invalidateAll();
       toast({ title: `Application ${vars.status}` });
     },
     onError: (e: any) => toast({ title: "Error", description: e.message, variant: "destructive" }),
@@ -146,20 +146,14 @@ const AdminApplications = () => {
       if (error) throw error;
     },
     onSuccess: () => {
-      qc.invalidateQueries({ queryKey: ["admin-applications"] });
+      invalidateAll();
       toast({ title: "Application deleted" });
     },
   });
 
-  const filtered = statusFilter === "all"
-    ? applications
-    : applications.filter((a) => a.status === statusFilter);
-
   const { isHighlighted } = useHighlightParam("focus", "app", !isLoading && applications.length > 0, (id) => {
     setViewing(id);
   });
-
-  const pendingCount = applications.filter((a) => a.status === "pending").length;
 
   const getDocUrl = (path: string) => {
     const { data } = supabase.storage.from("application-documents").getPublicUrl(path);
