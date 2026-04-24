@@ -180,7 +180,11 @@ const extraDocsByScholarship: Record<string, string[]> = {
   ],
 };
 
-const generateChecklistPdf = (scholarship?: (typeof scholarships)[number]) => {
+const generateChecklistPdf = (
+  baseDocuments: string[],
+  extraDocsByScholarship: Record<string, string[]>,
+  scholarship?: (typeof scholarships)[number],
+) => {
   const doc = new jsPDF({ unit: "pt", format: "a4" });
   const pageW = doc.internal.pageSize.getWidth();
   const pageH = doc.internal.pageSize.getHeight();
