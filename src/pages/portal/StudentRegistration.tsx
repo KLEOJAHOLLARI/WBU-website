@@ -217,6 +217,26 @@ const StudentRegistration = () => {
     setCart((p) => p.filter((c) => c.id !== id));
 
   const renderStatusAlert = () => {
+    if (!registrationOpen) {
+      return (
+        <div className="rounded-xl border border-border bg-muted/40 p-4 flex items-start gap-3">
+          <Lock className="h-5 w-5 text-muted-foreground mt-0.5 shrink-0" />
+          <div className="flex-1">
+            <p className="font-semibold text-foreground">
+              Course registration is currently closed
+            </p>
+            <p className="text-sm text-muted-foreground">
+              Registration for{" "}
+              <span className="font-medium text-foreground">
+                {activeSemester?.name ?? "the current semester"}
+              </span>{" "}
+              has not been opened by the administration yet. You'll be able to build and
+              submit your course list as soon as it's approved and opened.
+            </p>
+          </div>
+        </div>
+      );
+    }
     if (hasPending) {
       return (
         <div className="rounded-xl border border-amber-500/30 bg-amber-500/5 p-4 flex items-start gap-3">
@@ -257,6 +277,25 @@ const StudentRegistration = () => {
             </p>
             <p className="text-sm text-muted-foreground">
               Your previous courses have been added to your dashboard. Add more below.
+            </p>
+          </div>
+        </div>
+      );
+    }
+    if (enrollmentDeadline) {
+      return (
+        <div className="rounded-xl border border-emerald-500/30 bg-emerald-500/5 p-4 flex items-start gap-3">
+          <CheckCircle2 className="h-5 w-5 text-emerald-600 mt-0.5 shrink-0" />
+          <div className="flex-1">
+            <p className="font-semibold text-emerald-700 dark:text-emerald-400">
+              Registration is open
+            </p>
+            <p className="text-sm text-muted-foreground">
+              Submit your course list before{" "}
+              <span className="font-medium text-foreground">
+                {enrollmentDeadline.toLocaleDateString()}
+              </span>
+              .
             </p>
           </div>
         </div>
