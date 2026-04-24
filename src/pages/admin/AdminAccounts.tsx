@@ -283,17 +283,50 @@ const AdminAccounts = () => {
         </button>
       </div>
 
+      {(tab === "professors" || tab === "students") && (
+        <div className="mt-4 grid grid-cols-1 gap-2 sm:grid-cols-[1fr_auto_auto_auto] sm:items-center">
+          <input
+            value={search}
+            onChange={(e) => setSearch(e.target.value)}
+            placeholder="Search by name, email, phone, program, student ID..."
+            className={inputCls}
+          />
+          {tab === "students" && (
+            <select value={programFilter} onChange={(e) => setProgramFilter(e.target.value)} className={inputCls}>
+              <option value="all">All programs</option>
+              {programOptions.map((p) => <option key={p} value={p}>{p}</option>)}
+            </select>
+          )}
+          <select value={statusFilter} onChange={(e) => setStatusFilter(e.target.value)} className={inputCls}>
+            <option value="all">All statuses</option>
+            {statusOptions.map((s) => <option key={s} value={s} className="capitalize">{s}</option>)}
+          </select>
+          {(search || programFilter !== "all" || statusFilter !== "all") && (
+            <button
+              onClick={() => { setSearch(""); setProgramFilter("all"); setStatusFilter("all"); }}
+              className="rounded-md border border-border px-3 py-2 text-sm font-medium text-foreground hover:bg-secondary"
+            >
+              Clear
+            </button>
+          )}
+        </div>
+      )}
+
       {tab === "professors" && (
         <div>
-          <h2 className="mt-4 font-display text-lg font-semibold text-foreground">Professor Accounts</h2>
-          {isLoading ? <p className="mt-4 text-muted-foreground">Loading...</p> : renderList(professorProfiles, "professor")}
+          <h2 className="mt-4 font-display text-lg font-semibold text-foreground">
+            Professor Accounts <span className="text-sm font-normal text-muted-foreground">({filteredProfessors.length} of {professorProfiles.length})</span>
+          </h2>
+          {isLoading ? <p className="mt-4 text-muted-foreground">Loading...</p> : renderList(filteredProfessors, "professor")}
         </div>
       )}
 
       {tab === "students" && (
         <div>
-          <h2 className="mt-4 font-display text-lg font-semibold text-foreground">Student Accounts</h2>
-          {isLoading ? <p className="mt-4 text-muted-foreground">Loading...</p> : renderList(studentProfiles, "student")}
+          <h2 className="mt-4 font-display text-lg font-semibold text-foreground">
+            Student Accounts <span className="text-sm font-normal text-muted-foreground">({filteredStudents.length} of {studentProfiles.length})</span>
+          </h2>
+          {isLoading ? <p className="mt-4 text-muted-foreground">Loading...</p> : renderList(filteredStudents, "student")}
         </div>
       )}
 
