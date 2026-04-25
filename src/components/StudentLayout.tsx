@@ -5,7 +5,7 @@ import { useQuery } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
 import {
   GraduationCap, LayoutDashboard, FileText, Upload, Mail, LogOut,
-  CalendarDays, BookOpen, UserCircle, Menu, ScrollText, ArrowLeft, ClipboardList, CreditCard, Calculator, ClipboardEdit, IdCard,
+  CalendarDays, BookOpen, UserCircle, Menu, ScrollText, ArrowLeft, ClipboardList, CreditCard, Calculator, ClipboardEdit, IdCard, History,
 } from "lucide-react";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Sheet, SheetContent, SheetTrigger } from "@/components/ui/sheet";
@@ -38,6 +38,7 @@ const navGroups = [
     label: "Other",
     items: [
       { to: "/portal/id-card", label: "Digital ID Card", icon: IdCard },
+      { to: "/portal/access-history", label: "Access History", icon: History },
       { to: "/portal/messages", label: "Messages", icon: Mail, badge: true },
       { to: "/portal/profile", label: "My Profile", icon: UserCircle },
     ],
