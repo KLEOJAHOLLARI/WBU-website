@@ -574,6 +574,54 @@ export type Database = {
           },
         ]
       }
+      generated_documents: {
+        Row: {
+          created_at: string
+          document_type: string
+          file_path: string
+          generated_by: string | null
+          id: string
+          issued_at: string
+          reference_code: string
+          status: string
+          template_key: string
+          title: string
+          updated_at: string
+          user_id: string
+          variables: Json
+        }
+        Insert: {
+          created_at?: string
+          document_type: string
+          file_path: string
+          generated_by?: string | null
+          id?: string
+          issued_at?: string
+          reference_code?: string
+          status?: string
+          template_key: string
+          title: string
+          updated_at?: string
+          user_id: string
+          variables?: Json
+        }
+        Update: {
+          created_at?: string
+          document_type?: string
+          file_path?: string
+          generated_by?: string | null
+          id?: string
+          issued_at?: string
+          reference_code?: string
+          status?: string
+          template_key?: string
+          title?: string
+          updated_at?: string
+          user_id?: string
+          variables?: Json
+        }
+        Relationships: []
+      }
       grade_components: {
         Row: {
           count: number
