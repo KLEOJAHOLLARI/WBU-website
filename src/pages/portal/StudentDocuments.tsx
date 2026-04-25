@@ -4,7 +4,7 @@ import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/hooks/useAuth";
 import { toast } from "@/hooks/use-toast";
-import { Upload, Trash2, FileText, CheckCircle, Clock, XCircle } from "lucide-react";
+import { Upload, Trash2, FileText, CheckCircle, Clock, XCircle, Download, Award } from "lucide-react";
 
 const statusIcon = (status: string) => {
   switch (status) {
@@ -32,6 +32,29 @@ const StudentDocuments = () => {
     },
     enabled: !!user,
   });
+
+  const { data: issued = [] } = useQuery({
+    queryKey: ["student-issued-documents", user?.id],
+    queryFn: async () => {
+      const { data, error } = await supabase
+        .from("generated_documents")
+        .select("*")
+        .eq("user_id", user!.id)
+        .order("created_at", { ascending: false });
+      if (error) throw error;
+      return data;
+    },
+    enabled: !!user,
+  });
+
+  const downloadIssued = async (file_path: string, title: string) => {
+    const { data, error } = await supabase.storage.from("generated-documents").createSignedUrl(file_path, 60);
+    if (error) return toast({ title: "Download failed", description: error.message, variant: "destructive" });
+    const a = document.createElement("a");
+    a.href = data.signedUrl;
+    a.download = `${title}.pdf`;
+    a.click();
+  };
 
   const deleteMutation = useMutation({
     mutationFn: async (doc: { id: string; file_path: string }) => {
@@ -130,6 +153,36 @@ const StudentDocuments = () => {
           ))
         )}
       </div>
+
+      {issued.length > 0 && (
+        <div className="mt-10">
+          <h2 className="font-display text-lg font-bold text-foreground">Documents Issued by University</h2>
+          <p className="text-sm text-muted-foreground">Official documents generated for you by the administration</p>
+          <div className="mt-4 space-y-3">
+            {issued.map((doc) => (
+              <div key={doc.id} className="flex items-center justify-between rounded-xl border border-border bg-card p-4">
+                <div className="flex items-center gap-3">
+                  <div className="flex h-10 w-10 items-center justify-center rounded-lg bg-primary/10">
+                    <Award className="h-5 w-5 text-primary" />
+                  </div>
+                  <div>
+                    <p className="font-medium text-foreground">{doc.title}</p>
+                    <p className="text-xs text-muted-foreground">
+                      Ref: {doc.reference_code} · Issued {new Date(doc.issued_at).toLocaleDateString()}
+                    </p>
+                  </div>
+                </div>
+                <button
+                  onClick={() => downloadIssued(doc.file_path, doc.title)}
+                  className="inline-flex items-center gap-1.5 rounded-md bg-primary px-3 py-2 text-xs font-semibold text-primary-foreground hover:bg-primary/90"
+                >
+                  <Download className="h-3.5 w-3.5" /> Download
+                </button>
+              </div>
+            ))}
+          </div>
+        </div>
+      )}
     </StudentLayout>
   );
 };

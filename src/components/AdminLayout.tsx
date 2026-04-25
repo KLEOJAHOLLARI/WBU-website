@@ -6,7 +6,7 @@ import { supabase } from "@/integrations/supabase/client";
 import {
   GraduationCap, LayoutDashboard, BookOpen, Newspaper, Mail, FileText, Users,
   LogOut, CalendarDays, UserPlus, Megaphone, UserCircle, UserCheck, Menu, ScrollText, ArrowLeft,
-  BarChart3, Calendar, CreditCard, ShieldCheck, Send, IdCard, ScanLine, Activity,
+  BarChart3, Calendar, CreditCard, ShieldCheck, Send, IdCard, ScanLine, Activity, FileSignature,
 } from "lucide-react";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Sheet, SheetContent, SheetTrigger } from "@/components/ui/sheet";
@@ -49,6 +49,7 @@ const navGroups: { label: string; items: { to: string; label: string; icon: any;
       { to: "/admin/semesters", label: "Semesters", icon: Calendar },
       { to: "/admin/tuition", label: "Tuition", icon: CreditCard },
       { to: "/admin/scholarship-docs", label: "Scholarship Docs", icon: FileText },
+      { to: "/admin/documents", label: "Document Generator", icon: FileSignature },
     ],
   },
   {
