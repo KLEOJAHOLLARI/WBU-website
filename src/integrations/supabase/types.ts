@@ -59,6 +59,92 @@ export type Database = {
         }
         Relationships: []
       }
+      access_gates: {
+        Row: {
+          created_at: string
+          id: string
+          is_active: boolean
+          location: string
+          name: string
+          updated_at: string
+        }
+        Insert: {
+          created_at?: string
+          id?: string
+          is_active?: boolean
+          location?: string
+          name: string
+          updated_at?: string
+        }
+        Update: {
+          created_at?: string
+          id?: string
+          is_active?: boolean
+          location?: string
+          name?: string
+          updated_at?: string
+        }
+        Relationships: []
+      }
+      access_logs: {
+        Row: {
+          action: string
+          card_id: string | null
+          card_type: string
+          created_at: string
+          gate_id: string | null
+          gate_name: string
+          id: string
+          notes: string | null
+          role: string
+          scanned_at: string
+          scanned_by: string | null
+          status: string
+          user_id: string
+          verification_token: string | null
+        }
+        Insert: {
+          action: string
+          card_id?: string | null
+          card_type?: string
+          created_at?: string
+          gate_id?: string | null
+          gate_name?: string
+          id?: string
+          notes?: string | null
+          role?: string
+          scanned_at?: string
+          scanned_by?: string | null
+          status?: string
+          user_id: string
+          verification_token?: string | null
+        }
+        Update: {
+          action?: string
+          card_id?: string | null
+          card_type?: string
+          created_at?: string
+          gate_id?: string | null
+          gate_name?: string
+          id?: string
+          notes?: string | null
+          role?: string
+          scanned_at?: string
+          scanned_by?: string | null
+          status?: string
+          user_id?: string
+          verification_token?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "access_logs_gate_id_fkey"
+            columns: ["gate_id"]
+            isOneToOne: false
+            referencedRelation: "access_gates"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       announcements: {
         Row: {
           author_id: string
@@ -1571,6 +1657,16 @@ export type Database = {
           _user_id: string
         }
         Returns: boolean
+      }
+      record_card_scan: {
+        Args: {
+          _card_type?: string
+          _force_action?: string
+          _gate_id?: string
+          _gate_name?: string
+          _verification_token: string
+        }
+        Returns: Json
       }
     }
     Enums: {
