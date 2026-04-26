@@ -139,6 +139,10 @@ const CardHistorySheet = ({
   const totalScans = logs.length;
   const deniedCount = logs.filter(l => l.status === "denied" || l.status === "expired" || l.status === "inactive").length;
   const lastScanAt = logs[0]?.scanned_at;
+  const checkIns = logs.filter(l => l.action === "check_in" && l.status === "success").length;
+  const checkOuts = logs.filter(l => l.action === "check_out" && l.status === "success").length;
+  const successTotal = checkIns + checkOuts;
+  const inPct = successTotal > 0 ? (checkIns / successTotal) * 100 : 0;
 
   return (
     <Sheet open={!!target} onOpenChange={o => !o && onClose()}>
