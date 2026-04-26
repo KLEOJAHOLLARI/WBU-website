@@ -456,6 +456,39 @@ export type Database = {
         }
         Relationships: []
       }
+      document_template_overrides: {
+        Row: {
+          created_at: string
+          description: string | null
+          display_name: string | null
+          id: string
+          template_key: string
+          updated_at: string
+          updated_by: string | null
+          variables: Json
+        }
+        Insert: {
+          created_at?: string
+          description?: string | null
+          display_name?: string | null
+          id?: string
+          template_key: string
+          updated_at?: string
+          updated_by?: string | null
+          variables?: Json
+        }
+        Update: {
+          created_at?: string
+          description?: string | null
+          display_name?: string | null
+          id?: string
+          template_key?: string
+          updated_at?: string
+          updated_by?: string | null
+          variables?: Json
+        }
+        Relationships: []
+      }
       enrollment_requests: {
         Row: {
           course_id: string
