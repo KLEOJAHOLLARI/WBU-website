@@ -136,6 +136,9 @@ const CardHistorySheet = ({
   });
 
   const insideNow = logs.length > 0 && logs[0].status === "success" && logs[0].action === "check_in";
+  const totalScans = logs.length;
+  const deniedCount = logs.filter(l => l.status === "denied" || l.status === "expired" || l.status === "inactive").length;
+  const lastScanAt = logs[0]?.scanned_at;
 
   return (
     <Sheet open={!!target} onOpenChange={o => !o && onClose()}>
@@ -149,7 +152,28 @@ const CardHistorySheet = ({
             {insideNow && <Badge variant="secondary" className="ml-2">Inside campus</Badge>}
           </SheetDescription>
         </SheetHeader>
-        <div className="mt-6 space-y-2">
+
+        <div className="mt-6 grid grid-cols-3 gap-2">
+          <div className="rounded-lg border bg-card p-3">
+            <div className="text-[10px] uppercase tracking-wide text-muted-foreground">Total scans</div>
+            <div className="mt-1 text-xl font-bold text-foreground">{totalScans}</div>
+          </div>
+          <div className="rounded-lg border bg-card p-3">
+            <div className="text-[10px] uppercase tracking-wide text-muted-foreground">Denied</div>
+            <div className={`mt-1 text-xl font-bold ${deniedCount > 0 ? "text-destructive" : "text-foreground"}`}>{deniedCount}</div>
+          </div>
+          <div className="rounded-lg border bg-card p-3">
+            <div className="text-[10px] uppercase tracking-wide text-muted-foreground">Last scan</div>
+            <div className="mt-1 text-sm font-semibold text-foreground leading-tight">
+              {lastScanAt ? formatDistanceToNow(new Date(lastScanAt), { addSuffix: true }) : "—"}
+            </div>
+            {lastScanAt && (
+              <div className="text-[10px] text-muted-foreground mt-0.5">{format(new Date(lastScanAt), "dd MMM HH:mm")}</div>
+            )}
+          </div>
+        </div>
+
+        <div className="mt-4 space-y-2">
           {isLoading ? (
             <div className="flex justify-center py-8"><Loader2 className="h-5 w-5 animate-spin text-muted-foreground" /></div>
           ) : logs.length === 0 ? (
