@@ -14,7 +14,7 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import { Tabs, TabsList, TabsTrigger, TabsContent } from "@/components/ui/tabs";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from "@/components/ui/dialog";
 import { FileText, Download, Trash2, Search, Sparkles, FileSignature, Award, Mail } from "lucide-react";
-import { TEMPLATES, getTemplate, generateDocumentBlob, DOC_TYPE_LABEL, type DocumentType } from "@/lib/documentTemplates";
+import { TEMPLATES, getTemplate, generateDocumentBlob, DOC_TYPE_LABEL, applyOverride, type DocumentType } from "@/lib/documentTemplates";
 
 const TYPE_ICON: Record<DocumentType, any> = {
   certificate: Award,
@@ -62,7 +62,18 @@ const AdminDocuments = () => {
     },
   });
 
-  const template = useMemo(() => getTemplate(templateKey)!, [templateKey]);
+  // Template overrides (admin-customized fields)
+  const { data: overrides = [] } = useQuery({
+    queryKey: ["doc-template-overrides"],
+    queryFn: async () => {
+      const { data, error } = await supabase.from("document_template_overrides").select("*");
+      if (error) throw error;
+      return data as any[];
+    },
+  });
+
+  const overrideFor = (key: string) => overrides.find(o => o.template_key === key);
+  const template = useMemo(() => applyOverride(getTemplate(templateKey)!, overrideFor(templateKey) as any), [templateKey, overrides]);
   const student = students.find(s => s.user_id === studentId);
 
   // Auto-fill from student when student/template changes
@@ -86,7 +97,7 @@ const AdminDocuments = () => {
 
   const onSelectTemplate = (key: string) => {
     setTemplateKey(key);
-    const tpl = getTemplate(key)!;
+    const tpl = applyOverride(getTemplate(key)!, overrideFor(key) as any);
     const next: Record<string, string> = {};
     tpl.variables.forEach(v => {
       if (v.defaultValue) next[v.key] = v.defaultValue;
