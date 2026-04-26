@@ -50,6 +50,7 @@ const navGroups: { label: string; items: { to: string; label: string; icon: any;
       { to: "/admin/tuition", label: "Tuition", icon: CreditCard },
       { to: "/admin/scholarship-docs", label: "Scholarship Docs", icon: FileText },
       { to: "/admin/documents", label: "Document Generator", icon: FileSignature },
+      { to: "/admin/document-templates", label: "Template Fields", icon: FileSignature },
     ],
   },
   {
