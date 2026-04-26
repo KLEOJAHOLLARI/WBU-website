@@ -177,6 +177,39 @@ const CardHistorySheet = ({
           </div>
         </div>
 
+        <div className="mt-3 rounded-lg border bg-card p-3">
+          <div className="flex items-center justify-between mb-2">
+            <div className="text-[10px] uppercase tracking-wide text-muted-foreground">In / Out breakdown</div>
+            <div className="text-[10px] text-muted-foreground">{successTotal} successful</div>
+          </div>
+          <div className="grid grid-cols-2 gap-3">
+            <div className="flex items-center gap-2">
+              <div className="flex h-9 w-9 items-center justify-center rounded-md bg-green-500/10 text-green-700 dark:text-green-400 border border-green-500/30">
+                <LogIn className="h-4 w-4" />
+              </div>
+              <div>
+                <div className="text-lg font-bold text-foreground leading-none">{checkIns}</div>
+                <div className="text-[10px] text-muted-foreground mt-0.5">Check-ins</div>
+              </div>
+            </div>
+            <div className="flex items-center gap-2">
+              <div className="flex h-9 w-9 items-center justify-center rounded-md bg-blue-500/10 text-blue-700 dark:text-blue-400 border border-blue-500/30">
+                <LogOut className="h-4 w-4" />
+              </div>
+              <div>
+                <div className="text-lg font-bold text-foreground leading-none">{checkOuts}</div>
+                <div className="text-[10px] text-muted-foreground mt-0.5">Check-outs</div>
+              </div>
+            </div>
+          </div>
+          {successTotal > 0 && (
+            <div className="mt-3 h-1.5 w-full overflow-hidden rounded-full bg-muted flex">
+              <div className="bg-green-500/70 h-full" style={{ width: `${inPct}%` }} />
+              <div className="bg-blue-500/70 h-full" style={{ width: `${100 - inPct}%` }} />
+            </div>
+          )}
+        </div>
+
         <div className="mt-4 space-y-2">
           {isLoading ? (
             <div className="flex justify-center py-8"><Loader2 className="h-5 w-5 animate-spin text-muted-foreground" /></div>
