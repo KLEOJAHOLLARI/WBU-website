@@ -354,6 +354,8 @@ const AdminDigitalIDCards = () => {
           </DialogFooter>
         </DialogContent>
       </Dialog>
+
+      <CardHistorySheet target={historyFor} onClose={() => setHistoryFor(null)} />
     </AdminLayout>
   );
 };
