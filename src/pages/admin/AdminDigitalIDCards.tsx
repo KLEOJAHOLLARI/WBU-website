@@ -105,6 +105,79 @@ const StatusBadge = ({ status }: { status: string }) => {
   return <Badge variant="secondary" className="uppercase">{status}</Badge>;
 };
 
+const STATUS_COLORS: Record<string, string> = {
+  success: "bg-green-500/10 text-green-700 dark:text-green-400 border-green-500/30",
+  denied: "bg-red-500/10 text-red-700 dark:text-red-400 border-red-500/30",
+  expired: "bg-amber-500/10 text-amber-700 dark:text-amber-400 border-amber-500/30",
+  inactive: "bg-orange-500/10 text-orange-700 dark:text-orange-400 border-orange-500/30",
+};
+
+const CardHistorySheet = ({
+  target,
+  onClose,
+}: {
+  target: { user_id: string; name: string; status: string } | null;
+  onClose: () => void;
+}) => {
+  const { data: logs = [], isLoading } = useQuery({
+    queryKey: ["card-history", target?.user_id],
+    queryFn: async () => {
+      if (!target) return [];
+      const { data, error } = await supabase
+        .from("access_logs")
+        .select("id, action, status, scanned_at, gate_name, card_type")
+        .eq("user_id", target.user_id)
+        .order("scanned_at", { ascending: false })
+        .limit(50);
+      if (error) throw error;
+      return data;
+    },
+    enabled: !!target,
+  });
+
+  const insideNow = logs.length > 0 && logs[0].status === "success" && logs[0].action === "check_in";
+
+  return (
+    <Sheet open={!!target} onOpenChange={o => !o && onClose()}>
+      <SheetContent className="w-full sm:max-w-lg overflow-y-auto">
+        <SheetHeader>
+          <SheetTitle className="flex items-center gap-2">
+            <History className="h-5 w-5" /> {target?.name}
+          </SheetTitle>
+          <SheetDescription>
+            Card status: <StatusBadge status={target?.status || ""} />
+            {insideNow && <Badge variant="secondary" className="ml-2">Inside campus</Badge>}
+          </SheetDescription>
+        </SheetHeader>
+        <div className="mt-6 space-y-2">
+          {isLoading ? (
+            <div className="flex justify-center py-8"><Loader2 className="h-5 w-5 animate-spin text-muted-foreground" /></div>
+          ) : logs.length === 0 ? (
+            <p className="text-sm text-muted-foreground text-center py-8">No scans recorded for this card yet.</p>
+          ) : (
+            logs.map(l => (
+              <div key={l.id} className={`border rounded-lg p-3 ${STATUS_COLORS[l.status] || "bg-muted"}`}>
+                <div className="flex items-center justify-between gap-2">
+                  <div className="font-medium text-sm capitalize">
+                    {l.action.replace("_", " ")}
+                    <span className="ml-2 text-xs uppercase opacity-70">[{l.status}]</span>
+                  </div>
+                  <div className="text-xs opacity-80">
+                    {formatDistanceToNow(new Date(l.scanned_at), { addSuffix: true })}
+                  </div>
+                </div>
+                <div className="text-xs opacity-80 mt-1">
+                  {l.gate_name} · {l.card_type} card · {format(new Date(l.scanned_at), "dd MMM HH:mm")}
+                </div>
+              </div>
+            ))
+          )}
+        </div>
+      </SheetContent>
+    </Sheet>
+  );
+};
+
 const AdminDigitalIDCards = () => {
   const [search, setSearch] = useState("");
   const [editing, setEditing] = useState<{ id: string; issue_date: string; table: "student_id_cards" | "professor_id_cards" } | null>(null);
