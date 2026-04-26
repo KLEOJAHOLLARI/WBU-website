@@ -7,10 +7,11 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Badge } from "@/components/ui/badge";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
-import { Loader2, RefreshCw, Power, PowerOff, Search, Calendar, IdCard } from "lucide-react";
+import { Loader2, RefreshCw, Power, PowerOff, Search, Calendar, IdCard, History, CalendarX } from "lucide-react";
 import { toast } from "@/hooks/use-toast";
-import { format } from "date-fns";
-import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from "@/components/ui/dialog";
+import { format, formatDistanceToNow } from "date-fns";
+import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter, DialogDescription } from "@/components/ui/dialog";
+import { Sheet, SheetContent, SheetHeader, SheetTitle, SheetDescription } from "@/components/ui/sheet";
 import { Label } from "@/components/ui/label";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 
@@ -57,16 +58,20 @@ const ActionButtons = ({
   row,
   onSuspend,
   onActivate,
+  onExpire,
   onEditDate,
   onReissue,
+  onHistory,
 }: {
   row: BaseRow;
   onSuspend: () => void;
   onActivate: () => void;
+  onExpire: () => void;
   onEditDate: () => void;
   onReissue: () => void;
+  onHistory: () => void;
 }) => (
-  <div className="inline-flex gap-1">
+  <div className="inline-flex flex-wrap gap-1 justify-end">
     {row.status === "active" ? (
       <Button size="sm" variant="outline" onClick={onSuspend}>
         <PowerOff className="mr-1 h-3.5 w-3.5" /> Suspend
@@ -76,8 +81,16 @@ const ActionButtons = ({
         <Power className="mr-1 h-3.5 w-3.5" /> Activate
       </Button>
     )}
+    {row.status !== "expired" && (
+      <Button size="sm" variant="outline" onClick={onExpire}>
+        <CalendarX className="mr-1 h-3.5 w-3.5" /> Expire
+      </Button>
+    )}
     <Button size="sm" variant="outline" onClick={onEditDate}>
       <Calendar className="mr-1 h-3.5 w-3.5" /> Date
+    </Button>
+    <Button size="sm" variant="outline" onClick={onHistory}>
+      <History className="mr-1 h-3.5 w-3.5" /> Logs
     </Button>
     <Button size="sm" onClick={onReissue}>
       <RefreshCw className="mr-1 h-3.5 w-3.5" /> Reissue
@@ -85,13 +98,91 @@ const ActionButtons = ({
   </div>
 );
 
-const StatusBadge = ({ status }: { status: string }) =>
-  status === "active" ? <Badge>Active</Badge> : <Badge variant="destructive" className="uppercase">{status}</Badge>;
+const StatusBadge = ({ status }: { status: string }) => {
+  if (status === "active") return <Badge>Active</Badge>;
+  if (status === "expired") return <Badge variant="destructive" className="uppercase">Expired</Badge>;
+  if (status === "suspended") return <Badge variant="destructive" className="uppercase">Suspended</Badge>;
+  return <Badge variant="secondary" className="uppercase">{status}</Badge>;
+};
+
+const STATUS_COLORS: Record<string, string> = {
+  success: "bg-green-500/10 text-green-700 dark:text-green-400 border-green-500/30",
+  denied: "bg-red-500/10 text-red-700 dark:text-red-400 border-red-500/30",
+  expired: "bg-amber-500/10 text-amber-700 dark:text-amber-400 border-amber-500/30",
+  inactive: "bg-orange-500/10 text-orange-700 dark:text-orange-400 border-orange-500/30",
+};
+
+const CardHistorySheet = ({
+  target,
+  onClose,
+}: {
+  target: { user_id: string; name: string; status: string } | null;
+  onClose: () => void;
+}) => {
+  const { data: logs = [], isLoading } = useQuery({
+    queryKey: ["card-history", target?.user_id],
+    queryFn: async () => {
+      if (!target) return [];
+      const { data, error } = await supabase
+        .from("access_logs")
+        .select("id, action, status, scanned_at, gate_name, card_type")
+        .eq("user_id", target.user_id)
+        .order("scanned_at", { ascending: false })
+        .limit(50);
+      if (error) throw error;
+      return data;
+    },
+    enabled: !!target,
+  });
+
+  const insideNow = logs.length > 0 && logs[0].status === "success" && logs[0].action === "check_in";
+
+  return (
+    <Sheet open={!!target} onOpenChange={o => !o && onClose()}>
+      <SheetContent className="w-full sm:max-w-lg overflow-y-auto">
+        <SheetHeader>
+          <SheetTitle className="flex items-center gap-2">
+            <History className="h-5 w-5" /> {target?.name}
+          </SheetTitle>
+          <SheetDescription>
+            Card status: <StatusBadge status={target?.status || ""} />
+            {insideNow && <Badge variant="secondary" className="ml-2">Inside campus</Badge>}
+          </SheetDescription>
+        </SheetHeader>
+        <div className="mt-6 space-y-2">
+          {isLoading ? (
+            <div className="flex justify-center py-8"><Loader2 className="h-5 w-5 animate-spin text-muted-foreground" /></div>
+          ) : logs.length === 0 ? (
+            <p className="text-sm text-muted-foreground text-center py-8">No scans recorded for this card yet.</p>
+          ) : (
+            logs.map(l => (
+              <div key={l.id} className={`border rounded-lg p-3 ${STATUS_COLORS[l.status] || "bg-muted"}`}>
+                <div className="flex items-center justify-between gap-2">
+                  <div className="font-medium text-sm capitalize">
+                    {l.action.replace("_", " ")}
+                    <span className="ml-2 text-xs uppercase opacity-70">[{l.status}]</span>
+                  </div>
+                  <div className="text-xs opacity-80">
+                    {formatDistanceToNow(new Date(l.scanned_at), { addSuffix: true })}
+                  </div>
+                </div>
+                <div className="text-xs opacity-80 mt-1">
+                  {l.gate_name} · {l.card_type} card · {format(new Date(l.scanned_at), "dd MMM HH:mm")}
+                </div>
+              </div>
+            ))
+          )}
+        </div>
+      </SheetContent>
+    </Sheet>
+  );
+};
 
 const AdminDigitalIDCards = () => {
   const [search, setSearch] = useState("");
   const [editing, setEditing] = useState<{ id: string; issue_date: string; table: "student_id_cards" | "professor_id_cards" } | null>(null);
   const [editDate, setEditDate] = useState("");
+  const [historyFor, setHistoryFor] = useState<{ user_id: string; name: string; status: string } | null>(null);
 
   const updateStudent = useUpdate("student_id_cards", "admin-id-cards");
   const updateProf = useUpdate("professor_id_cards", "admin-prof-id-cards");
@@ -244,8 +335,10 @@ const AdminDigitalIDCards = () => {
                               row={row}
                               onSuspend={() => updateStudent.mutate({ id: row.id, patch: { status: "suspended" } })}
                               onActivate={() => updateStudent.mutate({ id: row.id, patch: { status: "active" } })}
+                              onExpire={() => updateStudent.mutate({ id: row.id, patch: { status: "expired" } })}
                               onEditDate={() => { setEditing({ id: row.id, issue_date: row.issue_date, table: "student_id_cards" }); setEditDate(row.issue_date); }}
                               onReissue={() => reissueStudent(row)}
+                              onHistory={() => setHistoryFor({ user_id: row.user_id, name: row.profile?.full_name || "Card", status: row.status })}
                             />
                           </TableCell>
                         </TableRow>
@@ -295,8 +388,10 @@ const AdminDigitalIDCards = () => {
                               row={row}
                               onSuspend={() => updateProf.mutate({ id: row.id, patch: { status: "suspended" } })}
                               onActivate={() => updateProf.mutate({ id: row.id, patch: { status: "active" } })}
+                              onExpire={() => updateProf.mutate({ id: row.id, patch: { status: "expired" } })}
                               onEditDate={() => { setEditing({ id: row.id, issue_date: row.issue_date, table: "professor_id_cards" }); setEditDate(row.issue_date); }}
                               onReissue={() => reissueProf(row)}
+                              onHistory={() => setHistoryFor({ user_id: row.user_id, name: row.profile?.full_name || "Card", status: row.status })}
                             />
                           </TableCell>
                         </TableRow>
@@ -332,6 +427,8 @@ const AdminDigitalIDCards = () => {
           </DialogFooter>
         </DialogContent>
       </Dialog>
+
+      <CardHistorySheet target={historyFor} onClose={() => setHistoryFor(null)} />
     </AdminLayout>
   );
 };
