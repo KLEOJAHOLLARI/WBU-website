@@ -77,6 +77,7 @@ import AdminAccessLogs from "./pages/admin/AdminAccessLogs";
 import AdminGateActivity from "./pages/admin/AdminGateActivity";
 import StudentAccessHistory from "./pages/portal/StudentAccessHistory";
 import AdminDocuments from "./pages/admin/AdminDocuments";
+import AdminDocumentTemplates from "./pages/admin/AdminDocumentTemplates";
 
 const queryClient = new QueryClient();
 
@@ -129,6 +130,7 @@ const App = () => (
             <Route path="/admin/access-logs" element={<AdminAccessLogs />} />
             <Route path="/admin/gate-activity" element={<AdminGateActivity />} />
             <Route path="/admin/documents" element={<AdminDocuments />} />
+            <Route path="/admin/document-templates" element={<AdminDocumentTemplates />} />
             <Route path="/portal/login" element={<StudentLogin />} />
             <Route path="/portal/register" element={<StudentRegister />} />
             <Route path="/portal" element={<StudentDashboard />} />
