@@ -223,7 +223,8 @@ const AdminDocuments = () => {
                 <Card className="p-4">
                   <Label className="text-xs uppercase tracking-wider text-muted-foreground">Template</Label>
                   <div className="mt-3 space-y-2">
-                    {TEMPLATES.map(t => {
+                    {TEMPLATES.map(base => {
+                      const t = applyOverride(base, overrideFor(base.key) as any);
                       const Icon = TYPE_ICON[t.type];
                       const active = templateKey === t.key;
                       return (
