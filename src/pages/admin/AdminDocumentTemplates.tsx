@@ -84,12 +84,12 @@ const AdminDocumentTemplates = () => {
         template_key: draft.template_key,
         display_name: draft.display_name?.trim() || null,
         description: draft.description?.trim() || null,
-        variables: draft.variables,
+        variables: draft.variables as any,
         updated_by: user?.id ?? null,
       };
       const { error } = await supabase
         .from("document_template_overrides")
-        .upsert(payload, { onConflict: "template_key" });
+        .upsert([payload], { onConflict: "template_key" });
       if (error) throw error;
     },
     onSuccess: () => {
