@@ -7,10 +7,11 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Badge } from "@/components/ui/badge";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
-import { Loader2, RefreshCw, Power, PowerOff, Search, Calendar, IdCard } from "lucide-react";
+import { Loader2, RefreshCw, Power, PowerOff, Search, Calendar, IdCard, History, CalendarX } from "lucide-react";
 import { toast } from "@/hooks/use-toast";
-import { format } from "date-fns";
-import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from "@/components/ui/dialog";
+import { format, formatDistanceToNow } from "date-fns";
+import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter, DialogDescription } from "@/components/ui/dialog";
+import { Sheet, SheetContent, SheetHeader, SheetTitle, SheetDescription } from "@/components/ui/sheet";
 import { Label } from "@/components/ui/label";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 
@@ -57,16 +58,20 @@ const ActionButtons = ({
   row,
   onSuspend,
   onActivate,
+  onExpire,
   onEditDate,
   onReissue,
+  onHistory,
 }: {
   row: BaseRow;
   onSuspend: () => void;
   onActivate: () => void;
+  onExpire: () => void;
   onEditDate: () => void;
   onReissue: () => void;
+  onHistory: () => void;
 }) => (
-  <div className="inline-flex gap-1">
+  <div className="inline-flex flex-wrap gap-1 justify-end">
     {row.status === "active" ? (
       <Button size="sm" variant="outline" onClick={onSuspend}>
         <PowerOff className="mr-1 h-3.5 w-3.5" /> Suspend
@@ -76,8 +81,16 @@ const ActionButtons = ({
         <Power className="mr-1 h-3.5 w-3.5" /> Activate
       </Button>
     )}
+    {row.status !== "expired" && (
+      <Button size="sm" variant="outline" onClick={onExpire}>
+        <CalendarX className="mr-1 h-3.5 w-3.5" /> Expire
+      </Button>
+    )}
     <Button size="sm" variant="outline" onClick={onEditDate}>
       <Calendar className="mr-1 h-3.5 w-3.5" /> Date
+    </Button>
+    <Button size="sm" variant="outline" onClick={onHistory}>
+      <History className="mr-1 h-3.5 w-3.5" /> Logs
     </Button>
     <Button size="sm" onClick={onReissue}>
       <RefreshCw className="mr-1 h-3.5 w-3.5" /> Reissue
@@ -85,8 +98,12 @@ const ActionButtons = ({
   </div>
 );
 
-const StatusBadge = ({ status }: { status: string }) =>
-  status === "active" ? <Badge>Active</Badge> : <Badge variant="destructive" className="uppercase">{status}</Badge>;
+const StatusBadge = ({ status }: { status: string }) => {
+  if (status === "active") return <Badge>Active</Badge>;
+  if (status === "expired") return <Badge variant="destructive" className="uppercase">Expired</Badge>;
+  if (status === "suspended") return <Badge variant="destructive" className="uppercase">Suspended</Badge>;
+  return <Badge variant="secondary" className="uppercase">{status}</Badge>;
+};
 
 const AdminDigitalIDCards = () => {
   const [search, setSearch] = useState("");
