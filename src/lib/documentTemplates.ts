@@ -351,6 +351,29 @@ export const TEMPLATES: DocumentTemplate[] = [
 
 export const getTemplate = (key: string) => TEMPLATES.find(t => t.key === key);
 
+// ---------- Overrides ----------
+export interface TemplateOverride {
+  template_key: string;
+  display_name?: string | null;
+  description?: string | null;
+  variables?: TemplateVariable[] | null;
+}
+
+/** Merge stored override (from admin UI) on top of the built-in template. */
+export const applyOverride = (template: DocumentTemplate, override?: TemplateOverride | null): DocumentTemplate => {
+  if (!override) return template;
+  const baseVarsByKey = new Map(template.variables.map(v => [v.key, v]));
+  const merged: TemplateVariable[] = (override.variables && override.variables.length > 0)
+    ? override.variables.map(v => ({ ...(baseVarsByKey.get(v.key) || {} as TemplateVariable), ...v }))
+    : template.variables;
+  return {
+    ...template,
+    name: override.display_name?.trim() || template.name,
+    description: override.description?.trim() || template.description,
+    variables: merged,
+  };
+};
+
 export const generateDocumentBlob = async (
   template: DocumentTemplate,
   variables: Record<string, string>,
