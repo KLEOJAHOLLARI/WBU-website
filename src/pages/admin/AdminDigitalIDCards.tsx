@@ -109,6 +109,7 @@ const AdminDigitalIDCards = () => {
   const [search, setSearch] = useState("");
   const [editing, setEditing] = useState<{ id: string; issue_date: string; table: "student_id_cards" | "professor_id_cards" } | null>(null);
   const [editDate, setEditDate] = useState("");
+  const [historyFor, setHistoryFor] = useState<{ user_id: string; name: string; status: string } | null>(null);
 
   const updateStudent = useUpdate("student_id_cards", "admin-id-cards");
   const updateProf = useUpdate("professor_id_cards", "admin-prof-id-cards");
@@ -261,8 +262,10 @@ const AdminDigitalIDCards = () => {
                               row={row}
                               onSuspend={() => updateStudent.mutate({ id: row.id, patch: { status: "suspended" } })}
                               onActivate={() => updateStudent.mutate({ id: row.id, patch: { status: "active" } })}
+                              onExpire={() => updateStudent.mutate({ id: row.id, patch: { status: "expired" } })}
                               onEditDate={() => { setEditing({ id: row.id, issue_date: row.issue_date, table: "student_id_cards" }); setEditDate(row.issue_date); }}
                               onReissue={() => reissueStudent(row)}
+                              onHistory={() => setHistoryFor({ user_id: row.user_id, name: row.profile?.full_name || "Card", status: row.status })}
                             />
                           </TableCell>
                         </TableRow>
@@ -312,8 +315,10 @@ const AdminDigitalIDCards = () => {
                               row={row}
                               onSuspend={() => updateProf.mutate({ id: row.id, patch: { status: "suspended" } })}
                               onActivate={() => updateProf.mutate({ id: row.id, patch: { status: "active" } })}
+                              onExpire={() => updateProf.mutate({ id: row.id, patch: { status: "expired" } })}
                               onEditDate={() => { setEditing({ id: row.id, issue_date: row.issue_date, table: "professor_id_cards" }); setEditDate(row.issue_date); }}
                               onReissue={() => reissueProf(row)}
+                              onHistory={() => setHistoryFor({ user_id: row.user_id, name: row.profile?.full_name || "Card", status: row.status })}
                             />
                           </TableCell>
                         </TableRow>
