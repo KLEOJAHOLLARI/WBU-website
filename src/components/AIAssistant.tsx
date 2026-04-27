@@ -354,8 +354,10 @@ export default function AIAssistant() {
                         )}
                       >
                         {m.role === "assistant" ? (
-                          <div className="prose prose-sm dark:prose-invert max-w-none [&_p]:my-1 [&_ul]:my-1 [&_a]:text-primary [&_a]:underline">
-                            <ReactMarkdown>{m.content || "…"}</ReactMarkdown>
+                          <div className="prose prose-sm dark:prose-invert max-w-none [&_p]:my-1 [&_ul]:my-1 [&_a]:text-primary">
+                            <ReactMarkdown components={{ a: renderAnchor }}>
+                              {m.content || "…"}
+                            </ReactMarkdown>
                           </div>
                         ) : (
                           <span className="whitespace-pre-wrap">{m.content}</span>
