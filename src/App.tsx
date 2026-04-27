@@ -78,6 +78,7 @@ import AdminGateActivity from "./pages/admin/AdminGateActivity";
 import StudentAccessHistory from "./pages/portal/StudentAccessHistory";
 import AdminDocuments from "./pages/admin/AdminDocuments";
 import AdminDocumentTemplates from "./pages/admin/AdminDocumentTemplates";
+import AIAssistant from "./components/AIAssistant";
 
 const queryClient = new QueryClient();
 
@@ -163,6 +164,7 @@ const App = () => (
             <Route path="/professor/id-card" element={<ProfessorDigitalIDCard />} />
             <Route path="*" element={<NotFound />} />
           </Routes>
+          <AIAssistant />
         </AuthProvider>
       </BrowserRouter>
     </TooltipProvider>
