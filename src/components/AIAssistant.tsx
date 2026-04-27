@@ -2,16 +2,27 @@ import { useEffect, useMemo, useRef, useState } from "react";
 import { useLocation, useNavigate } from "react-router-dom";
 import { useTranslation } from "react-i18next";
 import ReactMarkdown from "react-markdown";
-import { Bot, MessageSquare, Send, Sparkles, X, Minus, Loader2 } from "lucide-react";
+import {
+  Bot,
+  MessageSquare,
+  Send,
+  Sparkles,
+  X,
+  Minus,
+  Loader2,
+  Square,
+  RotateCcw,
+  Copy,
+  Check,
+  Trash2,
+} from "lucide-react";
 import { Button } from "@/components/ui/button";
-import { Input } from "@/components/ui/input";
 import { ScrollArea } from "@/components/ui/scroll-area";
 import { useAuth } from "@/hooks/useAuth";
-import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
 import { cn } from "@/lib/utils";
 
-type Msg = { role: "user" | "assistant"; content: string };
+type Msg = { role: "user" | "assistant"; content: string; ts?: number };
 
 const SUGGESTIONS_BY_ROLE: Record<string, { en: string[]; sq: string[] }> = {
   guest: {
@@ -39,8 +50,14 @@ function pickRole(isAdmin: boolean, isProfessor: boolean, signedIn: boolean): ke
   return "guest";
 }
 
+function formatTime(ts?: number) {
+  if (!ts) return "";
+  const d = new Date(ts);
+  return d.toLocaleTimeString([], { hour: "2-digit", minute: "2-digit" });
+}
+
 export default function AIAssistant() {
-  const { t, i18n } = useTranslation();
+  const { i18n } = useTranslation();
   const { session, isAdmin, isProfessor } = useAuth();
   const navigate = useNavigate();
   const location = useLocation();
@@ -50,14 +67,15 @@ export default function AIAssistant() {
   const [input, setInput] = useState("");
   const [messages, setMessages] = useState<Msg[]>([]);
   const [loading, setLoading] = useState(false);
+  const [copiedIdx, setCopiedIdx] = useState<number | null>(null);
   const abortRef = useRef<AbortController | null>(null);
   const scrollRef = useRef<HTMLDivElement>(null);
+  const textareaRef = useRef<HTMLTextAreaElement>(null);
 
   const lang = (i18n.language?.startsWith("sq") ? "sq" : "en") as "en" | "sq";
   const role = pickRole(isAdmin, isProfessor, !!session);
   const suggestions = SUGGESTIONS_BY_ROLE[role][lang];
 
-  // Hide on print / login pages where chat would be noise
   const hidden = useMemo(() => {
     const p = location.pathname;
     return (
@@ -68,29 +86,48 @@ export default function AIAssistant() {
     );
   }, [location.pathname]);
 
+  // Autoscroll on new content
   useEffect(() => {
     if (open && !minimized) {
-      setTimeout(() => {
-        scrollRef.current?.scrollTo({ top: scrollRef.current.scrollHeight, behavior: "smooth" });
-      }, 50);
+      requestAnimationFrame(() => {
+        const el = scrollRef.current?.querySelector("[data-radix-scroll-area-viewport]") as HTMLElement | null;
+        (el ?? scrollRef.current)?.scrollTo({ top: 1e9, behavior: "smooth" });
+      });
     }
-  }, [messages, open, minimized]);
+  }, [messages, loading, open, minimized]);
+
+  // Auto-grow textarea
+  useEffect(() => {
+    const el = textareaRef.current;
+    if (!el) return;
+    el.style.height = "auto";
+    el.style.height = Math.min(el.scrollHeight, 140) + "px";
+  }, [input]);
 
   const greeting = useMemo<Msg>(() => {
     const text =
       lang === "sq"
-        ? `Përshëndetje! Unë jam asistenti i WBU. Mund të të ndihmoj me **${role === "admin" ? "administrim" : role === "professor" ? "lëndët dhe notat" : role === "student" ? "lëndët, notat, tarifat dhe provimet" : "informacion mbi universitetin"}**. Si mund të të ndihmoj sot?`
-        : `Hi! I'm the WBU assistant. I can help you with **${role === "admin" ? "admin tasks" : role === "professor" ? "courses & grading" : role === "student" ? "your courses, grades, tuition & exams" : "information about the university"}**. How can I help today?`;
-    return { role: "assistant", content: text };
+        ? `Përshëndetje! 👋 Unë jam **WBU Assistant**. Mund të të ndihmoj me **${role === "admin" ? "administrim" : role === "professor" ? "lëndët dhe notat" : role === "student" ? "lëndët, notat, tarifat dhe provimet" : "informacion mbi universitetin"}**. Si mund të të ndihmoj sot?`
+        : `Hi! 👋 I'm **WBU Assistant**. I can help with **${role === "admin" ? "admin tasks" : role === "professor" ? "courses & grading" : role === "student" ? "your courses, grades, tuition & exams" : "information about the university"}**. How can I help today?`;
+    return { role: "assistant", content: text, ts: Date.now() };
   }, [lang, role]);
 
   const visibleMessages = messages.length === 0 ? [greeting] : messages;
 
-  async function send(text: string) {
+  async function send(text: string, replaceLastAssistant = false) {
     const trimmed = text.trim();
     if (!trimmed || loading) return;
     setInput("");
-    const next: Msg[] = [...messages, { role: "user", content: trimmed }];
+
+    let next: Msg[];
+    if (replaceLastAssistant) {
+      // strip trailing assistant if present, keep messages up to the last user
+      const arr = [...messages];
+      while (arr.length && arr[arr.length - 1].role === "assistant") arr.pop();
+      next = arr;
+    } else {
+      next = [...messages, { role: "user", content: trimmed, ts: Date.now() }];
+    }
     setMessages(next);
     setLoading(true);
 
@@ -109,7 +146,7 @@ export default function AIAssistant() {
         headers,
         signal: controller.signal,
         body: JSON.stringify({
-          messages: next,
+          messages: next.map(({ role, content }) => ({ role, content })),
           context: { path: location.pathname, language: lang },
         }),
       });
@@ -128,8 +165,7 @@ export default function AIAssistant() {
       let acc = "";
       let done = false;
 
-      // push placeholder assistant message
-      setMessages((prev) => [...prev, { role: "assistant", content: "" }]);
+      setMessages((prev) => [...prev, { role: "assistant", content: "", ts: Date.now() }]);
 
       while (!done) {
         const { value, done: d } = await reader.read();
@@ -155,7 +191,7 @@ export default function AIAssistant() {
               acc += delta;
               setMessages((prev) => {
                 const copy = [...prev];
-                copy[copy.length - 1] = { role: "assistant", content: acc };
+                copy[copy.length - 1] = { role: "assistant", content: acc, ts: copy[copy.length - 1].ts };
                 return copy;
               });
             }
@@ -176,32 +212,54 @@ export default function AIAssistant() {
     }
   }
 
-  // Intercept link clicks inside messages → router for internal, confirm for external
+  function stop() {
+    abortRef.current?.abort();
+  }
+
+  function regenerate() {
+    // find last user message
+    for (let i = messages.length - 1; i >= 0; i--) {
+      if (messages[i].role === "user") {
+        send(messages[i].content, true);
+        return;
+      }
+    }
+  }
+
+  function clearChat() {
+    if (loading) return;
+    setMessages([]);
+  }
+
+  async function copyMessage(text: string, idx: number) {
+    try {
+      await navigator.clipboard.writeText(text);
+      setCopiedIdx(idx);
+      setTimeout(() => setCopiedIdx(null), 1500);
+    } catch {
+      toast.error(lang === "sq" ? "Kopjimi dështoi." : "Copy failed.");
+    }
+  }
+
+  // Intercept link clicks → router for internal, confirm for external
   function onMessageClick(e: React.MouseEvent<HTMLDivElement>) {
     const target = e.target as HTMLElement;
     const a = target.closest("a") as HTMLAnchorElement | null;
     if (!a) return;
     const href = a.getAttribute("href") ?? "";
     if (!href || href.startsWith("#")) return;
-
-    // Internal link → SPA navigation
     if (href.startsWith("/")) {
       e.preventDefault();
       navigate(href);
       setMinimized(true);
       return;
     }
-
-    // mailto: / tel: → let browser handle natively
     if (/^(mailto:|tel:)/i.test(href)) return;
-
-    // External http(s) → confirm before leaving
     if (/^https?:\/\//i.test(href)) {
       e.preventDefault();
       try {
         const url = new URL(href);
-        const sameOrigin = url.origin === window.location.origin;
-        if (sameOrigin) {
+        if (url.origin === window.location.origin) {
           navigate(url.pathname + url.search + url.hash);
           setMinimized(true);
           return;
@@ -210,37 +268,25 @@ export default function AIAssistant() {
           lang === "sq"
             ? `Po largohesh nga faqja për të vizituar:\n\n${url.hostname}\n\nVazhdo?`
             : `You are about to leave this site to visit:\n\n${url.hostname}\n\nContinue?`;
-        if (window.confirm(msg)) {
-          window.open(href, "_blank", "noopener,noreferrer");
-        }
+        if (window.confirm(msg)) window.open(href, "_blank", "noopener,noreferrer");
       } catch {
         toast.error(lang === "sq" ? "Lidhje e pavlefshme." : "Invalid link.");
       }
     }
   }
 
-  // Render anchors with tooltips + safe targets
   function renderAnchor({ href = "", children, ...rest }: any) {
     const isInternal = href.startsWith("/");
-    const isHash = href.startsWith("#");
-    const isMailTel = /^(mailto:|tel:)/i.test(href);
     const isExternal = /^https?:\/\//i.test(href) && !isInternal;
-
     let title: string | undefined;
     if (isInternal) title = lang === "sq" ? `Hap brenda faqes: ${href}` : `Open in app: ${href}`;
     else if (isExternal) {
       try {
-        title =
-          lang === "sq"
-            ? `Lidhje e jashtme: ${new URL(href).hostname}`
-            : `External link: ${new URL(href).hostname}`;
+        title = lang === "sq" ? `Lidhje e jashtme: ${new URL(href).hostname}` : `External link: ${new URL(href).hostname}`;
       } catch {
         title = lang === "sq" ? "Lidhje e jashtme" : "External link";
       }
-    } else if (isMailTel) {
-      title = href;
     }
-
     return (
       <a
         {...rest}
@@ -259,6 +305,9 @@ export default function AIAssistant() {
   }
 
   if (hidden) return null;
+
+  const lastIsAssistantStreaming =
+    loading && messages[messages.length - 1]?.role === "assistant" && !messages[messages.length - 1]?.content;
 
   return (
     <>
@@ -289,7 +338,7 @@ export default function AIAssistant() {
             "fixed z-50 flex flex-col bg-card border border-border rounded-2xl shadow-2xl overflow-hidden transition-all",
             minimized
               ? "bottom-5 right-5 h-14 w-72"
-              : "bottom-5 right-5 w-[min(92vw,400px)] h-[min(85vh,620px)]",
+              : "bottom-5 right-5 w-[min(92vw,420px)] h-[min(85vh,640px)]",
           )}
           role="dialog"
           aria-label="AI assistant"
@@ -297,17 +346,33 @@ export default function AIAssistant() {
           {/* Header */}
           <div className="flex items-center justify-between gap-2 px-4 py-3 bg-gradient-to-r from-primary to-primary/80 text-primary-foreground">
             <div className="flex items-center gap-2 min-w-0">
-              <div className="h-8 w-8 rounded-full bg-primary-foreground/20 flex items-center justify-center shrink-0">
+              <div className="relative h-8 w-8 rounded-full bg-primary-foreground/20 flex items-center justify-center shrink-0">
                 <Bot className="h-4 w-4" />
+                <span className="absolute bottom-0 right-0 h-2 w-2 rounded-full bg-emerald-400 ring-2 ring-primary" />
               </div>
               <div className="min-w-0">
                 <div className="text-sm font-semibold leading-tight truncate">
                   {lang === "sq" ? "Asistenti WBU" : "WBU Assistant"}
                 </div>
-                <div className="text-[11px] opacity-80 capitalize truncate">{role}</div>
+                <div className="text-[11px] opacity-80 capitalize truncate">
+                  {loading ? (lang === "sq" ? "duke shkruar…" : "typing…") : (lang === "sq" ? "online" : "online")} • {role}
+                </div>
               </div>
             </div>
             <div className="flex items-center gap-1">
+              {messages.length > 0 && !minimized && (
+                <Button
+                  variant="ghost"
+                  size="icon"
+                  className="h-7 w-7 text-primary-foreground hover:bg-primary-foreground/20"
+                  onClick={clearChat}
+                  disabled={loading}
+                  aria-label={lang === "sq" ? "Pastro bisedën" : "Clear chat"}
+                  title={lang === "sq" ? "Pastro bisedën" : "Clear chat"}
+                >
+                  <Trash2 className="h-4 w-4" />
+                </Button>
+              )}
               <Button
                 variant="ghost"
                 size="icon"
@@ -337,46 +402,56 @@ export default function AIAssistant() {
               {/* Messages */}
               <ScrollArea className="flex-1" ref={scrollRef as any}>
                 <div className="p-4 space-y-3" onClick={onMessageClick}>
-                  {visibleMessages.map((m, i) => (
-                    <div
-                      key={i}
-                      className={cn(
-                        "flex gap-2",
-                        m.role === "user" ? "justify-end" : "justify-start",
-                      )}
-                    >
-                      <div
-                        className={cn(
-                          "max-w-[85%] rounded-2xl px-3 py-2 text-sm leading-relaxed",
-                          m.role === "user"
-                            ? "bg-primary text-primary-foreground rounded-br-sm"
-                            : "bg-muted text-foreground rounded-bl-sm",
-                        )}
-                      >
-                        {m.role === "assistant" ? (
-                          <div className="prose prose-sm dark:prose-invert max-w-none [&_p]:my-1 [&_ul]:my-1 [&_a]:text-primary">
-                            <ReactMarkdown components={{ a: renderAnchor }}>
-                              {m.content || "…"}
-                            </ReactMarkdown>
-                          </div>
-                        ) : (
-                          <span className="whitespace-pre-wrap">{m.content}</span>
-                        )}
+                  {visibleMessages.map((m, i) => {
+                    const isUser = m.role === "user";
+                    const showActions = !isUser && m.content && !(loading && i === visibleMessages.length - 1);
+                    return (
+                      <div key={i} className={cn("group flex flex-col gap-1", isUser ? "items-end" : "items-start")}>
+                        <div
+                          className={cn(
+                            "max-w-[85%] rounded-2xl px-3 py-2 text-sm leading-relaxed shadow-sm",
+                            isUser
+                              ? "bg-primary text-primary-foreground rounded-br-sm"
+                              : "bg-muted text-foreground rounded-bl-sm",
+                          )}
+                        >
+                          {isUser ? (
+                            <span className="whitespace-pre-wrap">{m.content}</span>
+                          ) : (
+                            <div className="prose prose-sm dark:prose-invert max-w-none [&_p]:my-1 [&_ul]:my-1 [&_ol]:my-1 [&_a]:text-primary">
+                              {m.content ? (
+                                <ReactMarkdown components={{ a: renderAnchor }}>{m.content}</ReactMarkdown>
+                              ) : (
+                                <span className="inline-flex items-center gap-1 text-muted-foreground">
+                                  <span className="h-1.5 w-1.5 bg-current rounded-full animate-bounce [animation-delay:-0.3s]" />
+                                  <span className="h-1.5 w-1.5 bg-current rounded-full animate-bounce [animation-delay:-0.15s]" />
+                                  <span className="h-1.5 w-1.5 bg-current rounded-full animate-bounce" />
+                                </span>
+                              )}
+                            </div>
+                          )}
+                        </div>
+                        <div className={cn("flex items-center gap-2 px-1 text-[10px] text-muted-foreground", isUser ? "flex-row-reverse" : "")}>
+                          <span>{formatTime(m.ts)}</span>
+                          {showActions && (
+                            <button
+                              onClick={() => copyMessage(m.content, i)}
+                              className="opacity-0 group-hover:opacity-100 transition-opacity hover:text-foreground inline-flex items-center gap-1"
+                              aria-label={lang === "sq" ? "Kopjo" : "Copy"}
+                              title={lang === "sq" ? "Kopjo" : "Copy"}
+                            >
+                              {copiedIdx === i ? <Check className="h-3 w-3" /> : <Copy className="h-3 w-3" />}
+                            </button>
+                          )}
+                        </div>
                       </div>
-                    </div>
-                  ))}
-                  {loading && messages[messages.length - 1]?.role === "user" && (
-                    <div className="flex gap-2 justify-start">
-                      <div className="bg-muted rounded-2xl rounded-bl-sm px-3 py-2 text-sm">
-                        <Loader2 className="h-4 w-4 animate-spin" />
-                      </div>
-                    </div>
-                  )}
+                    );
+                  })}
                 </div>
               </ScrollArea>
 
-              {/* Suggestions */}
-              {messages.length === 0 && (
+              {/* Suggestions / regenerate row */}
+              {messages.length === 0 ? (
                 <div className="px-3 pb-2 flex flex-wrap gap-1.5">
                   {suggestions.map((s) => (
                     <button
@@ -388,6 +463,19 @@ export default function AIAssistant() {
                     </button>
                   ))}
                 </div>
+              ) : (
+                !loading &&
+                messages[messages.length - 1]?.role === "assistant" && (
+                  <div className="px-3 pb-2 flex justify-center">
+                    <button
+                      onClick={regenerate}
+                      className="text-xs rounded-full border border-border bg-background hover:bg-accent hover:text-accent-foreground px-3 py-1.5 transition-colors inline-flex items-center gap-1.5"
+                    >
+                      <RotateCcw className="h-3 w-3" />
+                      {lang === "sq" ? "Rigjenero" : "Regenerate"}
+                    </button>
+                  </div>
+                )
               )}
 
               {/* Composer */}
@@ -396,18 +484,32 @@ export default function AIAssistant() {
                   e.preventDefault();
                   send(input);
                 }}
-                className="p-3 border-t border-border flex items-center gap-2 bg-background"
+                className="p-3 border-t border-border flex items-end gap-2 bg-background"
               >
-                <Input
+                <textarea
+                  ref={textareaRef}
                   value={input}
                   onChange={(e) => setInput(e.target.value)}
-                  placeholder={lang === "sq" ? "Pyet diçka…" : "Ask anything…"}
+                  onKeyDown={(e) => {
+                    if (e.key === "Enter" && !e.shiftKey) {
+                      e.preventDefault();
+                      send(input);
+                    }
+                  }}
+                  rows={1}
+                  placeholder={lang === "sq" ? "Pyet diçka… (Shift+Enter për rresht të ri)" : "Ask anything… (Shift+Enter for new line)"}
                   disabled={loading}
-                  className="flex-1"
+                  className="flex-1 resize-none rounded-md border border-input bg-background px-3 py-2 text-sm leading-5 focus:outline-none focus:ring-2 focus:ring-ring max-h-[140px]"
                 />
-                <Button type="submit" size="icon" disabled={loading || !input.trim()} aria-label="Send">
-                  {loading ? <Loader2 className="h-4 w-4 animate-spin" /> : <Send className="h-4 w-4" />}
-                </Button>
+                {loading ? (
+                  <Button type="button" size="icon" variant="destructive" onClick={stop} aria-label="Stop">
+                    <Square className="h-4 w-4" />
+                  </Button>
+                ) : (
+                  <Button type="submit" size="icon" disabled={!input.trim()} aria-label="Send">
+                    <Send className="h-4 w-4" />
+                  </Button>
+                )}
               </form>
             </>
           )}
