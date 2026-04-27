@@ -205,7 +205,7 @@ export default function AIAssistant() {
         >
           <div className="relative">
             <Sparkles className="h-5 w-5" />
-            <span className="absolute -top-0.5 -right-0.5 h-2 w-2 rounded-full bg-emerald-400 animate-pulse" />
+            <span className="absolute -top-0.5 -right-0.5 h-2 w-2 rounded-full bg-accent animate-pulse" />
           </div>
           <span className="hidden sm:inline text-sm font-medium">
             {lang === "sq" ? "Asistenti AI" : "AI Assistant"}
