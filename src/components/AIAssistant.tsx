@@ -176,17 +176,86 @@ export default function AIAssistant() {
     }
   }
 
-  // Intercept link clicks inside messages → use react-router for internal paths
+  // Intercept link clicks inside messages → router for internal, confirm for external
   function onMessageClick(e: React.MouseEvent<HTMLDivElement>) {
     const target = e.target as HTMLElement;
     const a = target.closest("a") as HTMLAnchorElement | null;
     if (!a) return;
     const href = a.getAttribute("href") ?? "";
+    if (!href || href.startsWith("#")) return;
+
+    // Internal link → SPA navigation
     if (href.startsWith("/")) {
       e.preventDefault();
       navigate(href);
       setMinimized(true);
+      return;
     }
+
+    // mailto: / tel: → let browser handle natively
+    if (/^(mailto:|tel:)/i.test(href)) return;
+
+    // External http(s) → confirm before leaving
+    if (/^https?:\/\//i.test(href)) {
+      e.preventDefault();
+      try {
+        const url = new URL(href);
+        const sameOrigin = url.origin === window.location.origin;
+        if (sameOrigin) {
+          navigate(url.pathname + url.search + url.hash);
+          setMinimized(true);
+          return;
+        }
+        const msg =
+          lang === "sq"
+            ? `Po largohesh nga faqja për të vizituar:\n\n${url.hostname}\n\nVazhdo?`
+            : `You are about to leave this site to visit:\n\n${url.hostname}\n\nContinue?`;
+        if (window.confirm(msg)) {
+          window.open(href, "_blank", "noopener,noreferrer");
+        }
+      } catch {
+        toast.error(lang === "sq" ? "Lidhje e pavlefshme." : "Invalid link.");
+      }
+    }
+  }
+
+  // Render anchors with tooltips + safe targets
+  function renderAnchor({ href = "", children, ...rest }: any) {
+    const isInternal = href.startsWith("/");
+    const isHash = href.startsWith("#");
+    const isMailTel = /^(mailto:|tel:)/i.test(href);
+    const isExternal = /^https?:\/\//i.test(href) && !isInternal;
+
+    let title: string | undefined;
+    if (isInternal) title = lang === "sq" ? `Hap brenda faqes: ${href}` : `Open in app: ${href}`;
+    else if (isExternal) {
+      try {
+        title =
+          lang === "sq"
+            ? `Lidhje e jashtme: ${new URL(href).hostname}`
+            : `External link: ${new URL(href).hostname}`;
+      } catch {
+        title = lang === "sq" ? "Lidhje e jashtme" : "External link";
+      }
+    } else if (isMailTel) {
+      title = href;
+    }
+
+    return (
+      <a
+        {...rest}
+        href={href}
+        title={title}
+        target={isExternal ? "_blank" : undefined}
+        rel={isExternal ? "noopener noreferrer" : undefined}
+        className={cn(
+          "underline underline-offset-2",
+          isExternal && "after:content-['_↗'] after:text-[0.85em] after:opacity-70",
+        )}
+      >
+        {children}
+      </a>
+    );
   }
 
   if (hidden) return null;
