@@ -348,7 +348,7 @@ export default function AIAssistant() {
             <div className="flex items-center gap-2 min-w-0">
               <div className="relative h-8 w-8 rounded-full bg-primary-foreground/20 flex items-center justify-center shrink-0">
                 <Bot className="h-4 w-4" />
-                <span className="absolute bottom-0 right-0 h-2 w-2 rounded-full bg-emerald-400 ring-2 ring-primary" />
+                <span className="absolute bottom-0 right-0 h-2 w-2 rounded-full bg-accent ring-2 ring-primary" />
               </div>
               <div className="min-w-0">
                 <div className="text-sm font-semibold leading-tight truncate">
