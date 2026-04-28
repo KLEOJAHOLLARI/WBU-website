@@ -432,20 +432,72 @@ const AttendanceSheetDialog = ({ open, onClose, course, professorName, totalWeek
             </div>
           </div>
 
+          {/* No active semester warning */}
+          {!semester && (
+            <div className="flex items-start gap-2 rounded-lg border border-amber-300 bg-amber-500/10 px-3 py-2 text-sm text-amber-800 dark:text-amber-300">
+              <AlertTriangle className="mt-0.5 h-4 w-4 shrink-0" />
+              <div>
+                <div className="font-medium">No active semester configured</div>
+                <div className="text-xs opacity-80">Ask an administrator to set a current semester so weeks can be auto-detected.</div>
+              </div>
+            </div>
+          )}
+
+          {/* Smart current-week chips */}
+          {semesterWeeks && (
+            <div className="flex flex-wrap items-center gap-2">
+              <span className="inline-flex items-center gap-1.5 rounded-full border border-primary/30 bg-primary/10 px-2.5 py-1 text-xs font-semibold text-primary">
+                <CalendarDays className="h-3.5 w-3.5" />
+                Current Week: Week {semesterWeeks.currentWeek}
+              </span>
+              {weekRange && (
+                <span className="inline-flex items-center rounded-full border border-border bg-secondary px-2.5 py-1 text-xs text-muted-foreground">
+                  {fmt(weekRange.start)} – {fmt(weekRange.end)}
+                </span>
+              )}
+              {week === semesterWeeks.currentWeek ? (
+                <span className="inline-flex items-center rounded-full border border-emerald-300 bg-emerald-500/10 px-2.5 py-1 text-xs font-medium text-emerald-700 dark:text-emerald-300">
+                  Auto-selected
+                </span>
+              ) : (
+                <button
+                  type="button"
+                  onClick={() => setWeek(semesterWeeks.currentWeek)}
+                  className="rounded-full border border-input bg-background px-2.5 py-1 text-xs font-medium text-foreground hover:bg-secondary transition-colors"
+                >
+                  Reset to current week
+                </button>
+              )}
+            </div>
+          )}
+
           <div className="grid grid-cols-1 gap-3 sm:grid-cols-2">
             <div>
               <label className="mb-1 block text-xs font-medium text-muted-foreground">Week</label>
-              <select className={inputBase} value={week} onChange={(e) => setWeek(Number(e.target.value))}>
-                {Array.from({ length: totalWeeks }).map((_, i) => (
-                  <option key={i + 1} value={i + 1}>
-                    Week {i + 1}
-                    {weekRange && i + 1 === week ? "" : ""}
-                  </option>
-                ))}
+              <select
+                className={inputBase}
+                value={week}
+                onChange={(e) => setWeek(Number(e.target.value))}
+                disabled={!semesterWeeks}
+              >
+                {(semesterWeeks?.weeks ?? Array.from({ length: totalWeeks }).map((_, i) => ({
+                  number: i + 1, start: null as any, end: null as any, isCurrent: false, isFuture: false, isPast: false,
+                }))).map((w) => {
+                  const label = w.start
+                    ? `Week ${w.number} · ${fmt(w.start)} – ${fmt(w.end)}`
+                    : `Week ${w.number}`;
+                  const suffix = w.isCurrent ? " — Current" : w.isFuture ? " — Upcoming" : "";
+                  return (
+                    <option key={w.number} value={w.number} disabled={w.isFuture}>
+                      {label}{suffix}
+                    </option>
+                  );
+                })}
               </select>
               {weekRange && (
                 <p className="mt-1 text-[11px] text-muted-foreground">
                   {fmt(weekRange.start)} – {fmt(weekRange.end)}
+                  {semesterWeeks && week < semesterWeeks.currentWeek && " · past week"}
                 </p>
               )}
             </div>
