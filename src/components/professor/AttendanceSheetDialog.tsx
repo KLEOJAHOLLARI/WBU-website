@@ -2,7 +2,7 @@ import { useState, useMemo, useEffect } from "react";
 import { useQuery } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
 import { jsPDF } from "jspdf";
-import { Printer, Download, X, Loader2, CheckCircle2, FileText } from "lucide-react";
+import { Printer, Download, X, Loader2, CheckCircle2, FileText, CalendarDays, AlertTriangle } from "lucide-react";
 import { useActiveSemester } from "@/hooks/useActiveSemester";
 import { toast } from "@/hooks/use-toast";
 
@@ -30,8 +30,58 @@ const inputBase =
 const fmt = (d: Date) =>
   d.toLocaleDateString("en-GB", { day: "2-digit", month: "short", year: "numeric" });
 
+const weeklyMonday = (weekOneMonday: Date, weekIndex: number) => {
+  const d = new Date(weekOneMonday);
+  d.setDate(weekOneMonday.getDate() + weekIndex * 7);
+  return d;
+};
+
 const AttendanceSheetDialog = ({ open, onClose, course, professorName, totalWeeks = 15 }: Props) => {
   const { data: semester } = useActiveSemester();
+
+  // ---- Semester week math (auto-detect current week) ----
+  const semesterWeeks = useMemo(() => {
+    if (!semester?.start_date) return null;
+    const start = new Date(semester.start_date);
+    const day = start.getDay(); // 0=Sun
+    const offsetToMonday = day === 0 ? -6 : 1 - day;
+    const weekOneMonday = new Date(start);
+    weekOneMonday.setDate(start.getDate() + offsetToMonday);
+    weekOneMonday.setHours(0, 0, 0, 0);
+
+    const end = semester.end_date ? new Date(semester.end_date) : null;
+    let computedTotal = totalWeeks;
+    if (end) {
+      const diffDays = Math.ceil((end.getTime() - weekOneMonday.getTime()) / (1000 * 60 * 60 * 24));
+      const weeks = Math.max(1, Math.ceil(diffDays / 7));
+      computedTotal = Math.max(1, Math.min(30, weeks));
+    }
+
+    const today = new Date();
+    today.setHours(0, 0, 0, 0);
+    const diffMs = today.getTime() - weekOneMonday.getTime();
+    let currentWeek = Math.floor(diffMs / (7 * 24 * 60 * 60 * 1000)) + 1;
+    if (currentWeek < 1) currentWeek = 1;
+    if (currentWeek > computedTotal) currentWeek = computedTotal;
+
+    const weeks = Array.from({ length: computedTotal }).map((_, i) => {
+      const ws = new Date(weeklyMonday(weekOneMonday, i));
+      const we = new Date(ws);
+      we.setDate(ws.getDate() + 6);
+      const n = i + 1;
+      return {
+        number: n,
+        start: ws,
+        end: we,
+        isCurrent: n === currentWeek,
+        isFuture: n > currentWeek,
+        isPast: n < currentWeek,
+      };
+    });
+
+    return { weekOneMonday, totalWeeks: computedTotal, currentWeek, weeks };
+  }, [semester, totalWeeks]);
+
   const [week, setWeek] = useState<number>(1);
   const [sessionType, setSessionType] = useState<"Lecture" | "Lab" | "Seminar">("Lecture");
   const [group, setGroup] = useState<string>("");
@@ -104,25 +154,15 @@ const AttendanceSheetDialog = ({ open, onClose, course, professorName, totalWeek
     enabled: !!sessionIdsKey,
   });
 
-  // Compute week date range from active semester
+  // Date range for currently selected week (from precomputed semesterWeeks)
   const weekRange = useMemo(() => {
-    if (!semester?.start_date) return null;
-    const start = new Date(semester.start_date);
-    // Move to Monday of week 1
-    const day = start.getDay(); // 0=Sun
-    const offsetToMonday = day === 0 ? -6 : 1 - day;
-    const monday = new Date(start);
-    monday.setDate(start.getDate() + offsetToMonday);
-    const weekStart = new Date(monday);
-    weekStart.setDate(monday.getDate() + (week - 1) * 7);
-    const weekEnd = new Date(weekStart);
-    weekEnd.setDate(weekStart.getDate() + 6);
-    return { start: weekStart, end: weekEnd };
-  }, [semester, week]);
+    const w = semesterWeeks?.weeks.find((x) => x.number === week);
+    return w ? { start: w.start, end: w.end } : null;
+  }, [semesterWeeks, week]);
 
   useEffect(() => {
     if (open) {
-      setWeek(1);
+      setWeek(semesterWeeks?.currentWeek ?? 1);
       setSessionType("Lecture");
       setGroup("");
       setSection("");
@@ -130,7 +170,7 @@ const AttendanceSheetDialog = ({ open, onClose, course, professorName, totalWeek
       setTime("");
       setDateOverride("");
     }
-  }, [open]);
+  }, [open, semesterWeeks?.currentWeek]);
 
   const hasExisting = existingSessions.length > 0;
 
@@ -392,20 +432,72 @@ const AttendanceSheetDialog = ({ open, onClose, course, professorName, totalWeek
             </div>
           </div>
 
+          {/* No active semester warning */}
+          {!semester && (
+            <div className="flex items-start gap-2 rounded-lg border border-amber-300 bg-amber-500/10 px-3 py-2 text-sm text-amber-800 dark:text-amber-300">
+              <AlertTriangle className="mt-0.5 h-4 w-4 shrink-0" />
+              <div>
+                <div className="font-medium">No active semester configured</div>
+                <div className="text-xs opacity-80">Ask an administrator to set a current semester so weeks can be auto-detected.</div>
+              </div>
+            </div>
+          )}
+
+          {/* Smart current-week chips */}
+          {semesterWeeks && (
+            <div className="flex flex-wrap items-center gap-2">
+              <span className="inline-flex items-center gap-1.5 rounded-full border border-primary/30 bg-primary/10 px-2.5 py-1 text-xs font-semibold text-primary">
+                <CalendarDays className="h-3.5 w-3.5" />
+                Current Week: Week {semesterWeeks.currentWeek}
+              </span>
+              {weekRange && (
+                <span className="inline-flex items-center rounded-full border border-border bg-secondary px-2.5 py-1 text-xs text-muted-foreground">
+                  {fmt(weekRange.start)} – {fmt(weekRange.end)}
+                </span>
+              )}
+              {week === semesterWeeks.currentWeek ? (
+                <span className="inline-flex items-center rounded-full border border-emerald-300 bg-emerald-500/10 px-2.5 py-1 text-xs font-medium text-emerald-700 dark:text-emerald-300">
+                  Auto-selected
+                </span>
+              ) : (
+                <button
+                  type="button"
+                  onClick={() => setWeek(semesterWeeks.currentWeek)}
+                  className="rounded-full border border-input bg-background px-2.5 py-1 text-xs font-medium text-foreground hover:bg-secondary transition-colors"
+                >
+                  Reset to current week
+                </button>
+              )}
+            </div>
+          )}
+
           <div className="grid grid-cols-1 gap-3 sm:grid-cols-2">
             <div>
               <label className="mb-1 block text-xs font-medium text-muted-foreground">Week</label>
-              <select className={inputBase} value={week} onChange={(e) => setWeek(Number(e.target.value))}>
-                {Array.from({ length: totalWeeks }).map((_, i) => (
-                  <option key={i + 1} value={i + 1}>
-                    Week {i + 1}
-                    {weekRange && i + 1 === week ? "" : ""}
-                  </option>
-                ))}
+              <select
+                className={inputBase}
+                value={week}
+                onChange={(e) => setWeek(Number(e.target.value))}
+                disabled={!semesterWeeks}
+              >
+                {(semesterWeeks?.weeks ?? Array.from({ length: totalWeeks }).map((_, i) => ({
+                  number: i + 1, start: null as any, end: null as any, isCurrent: false, isFuture: false, isPast: false,
+                }))).map((w) => {
+                  const label = w.start
+                    ? `Week ${w.number} · ${fmt(w.start)} – ${fmt(w.end)}`
+                    : `Week ${w.number}`;
+                  const suffix = w.isCurrent ? " — Current" : w.isFuture ? " — Upcoming" : "";
+                  return (
+                    <option key={w.number} value={w.number} disabled={w.isFuture}>
+                      {label}{suffix}
+                    </option>
+                  );
+                })}
               </select>
               {weekRange && (
                 <p className="mt-1 text-[11px] text-muted-foreground">
                   {fmt(weekRange.start)} – {fmt(weekRange.end)}
+                  {semesterWeeks && week < semesterWeeks.currentWeek && " · past week"}
                 </p>
               )}
             </div>
