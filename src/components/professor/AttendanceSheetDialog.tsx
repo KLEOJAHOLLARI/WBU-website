@@ -154,25 +154,15 @@ const AttendanceSheetDialog = ({ open, onClose, course, professorName, totalWeek
     enabled: !!sessionIdsKey,
   });
 
-  // Compute week date range from active semester
+  // Date range for currently selected week (from precomputed semesterWeeks)
   const weekRange = useMemo(() => {
-    if (!semester?.start_date) return null;
-    const start = new Date(semester.start_date);
-    // Move to Monday of week 1
-    const day = start.getDay(); // 0=Sun
-    const offsetToMonday = day === 0 ? -6 : 1 - day;
-    const monday = new Date(start);
-    monday.setDate(start.getDate() + offsetToMonday);
-    const weekStart = new Date(monday);
-    weekStart.setDate(monday.getDate() + (week - 1) * 7);
-    const weekEnd = new Date(weekStart);
-    weekEnd.setDate(weekStart.getDate() + 6);
-    return { start: weekStart, end: weekEnd };
-  }, [semester, week]);
+    const w = semesterWeeks?.weeks.find((x) => x.number === week);
+    return w ? { start: w.start, end: w.end } : null;
+  }, [semesterWeeks, week]);
 
   useEffect(() => {
     if (open) {
-      setWeek(1);
+      setWeek(semesterWeeks?.currentWeek ?? 1);
       setSessionType("Lecture");
       setGroup("");
       setSection("");
@@ -180,7 +170,7 @@ const AttendanceSheetDialog = ({ open, onClose, course, professorName, totalWeek
       setTime("");
       setDateOverride("");
     }
-  }, [open]);
+  }, [open, semesterWeeks?.currentWeek]);
 
   const hasExisting = existingSessions.length > 0;
 
