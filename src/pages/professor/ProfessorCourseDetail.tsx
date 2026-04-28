@@ -1319,6 +1319,13 @@ const ProfessorCourseDetail = () => {
           />
         )}
       </div>
+
+      <AttendanceSheetDialog
+        open={sheetOpen}
+        onClose={() => setSheetOpen(false)}
+        course={course as any}
+        professorName={myProfile?.full_name || ""}
+      />
     </ProfessorLayout>
   );
 };
