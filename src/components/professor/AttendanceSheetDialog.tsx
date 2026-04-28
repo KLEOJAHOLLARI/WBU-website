@@ -84,10 +84,15 @@ const AttendanceSheetDialog = ({ open, onClose, course, professorName, totalWeek
     enabled: !!course?.id && open,
   });
 
+  const sessionIdsKey = useMemo(
+    () => existingSessions.map((s) => s.id).sort().join(","),
+    [existingSessions]
+  );
+
   const { data: existingRecords = [] } = useQuery({
-    queryKey: ["attendance-sheet-records", existingSessions.map((s) => s.id)],
+    queryKey: ["attendance-sheet-records", course?.id, week, sessionIdsKey],
     queryFn: async () => {
-      const ids = existingSessions.map((s) => s.id);
+      const ids = sessionIdsKey ? sessionIdsKey.split(",") : [];
       if (!ids.length) return [];
       const { data, error } = await supabase
         .from("attendance_records")
@@ -96,7 +101,7 @@ const AttendanceSheetDialog = ({ open, onClose, course, professorName, totalWeek
       if (error) throw error;
       return data || [];
     },
-    enabled: existingSessions.length > 0,
+    enabled: !!sessionIdsKey,
   });
 
   // Compute week date range from active semester
