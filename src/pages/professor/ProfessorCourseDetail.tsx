@@ -12,6 +12,7 @@ import {
 import ProfessorAnalyticsTab from "@/components/professor/ProfessorAnalyticsTab";
 import ProfessorQuizTab from "@/components/professor/ProfessorQuizTab";
 import ProfessorBulkMessage from "@/components/professor/ProfessorBulkMessage";
+import AttendanceSheetDialog from "@/components/professor/AttendanceSheetDialog";
 import { Badge } from "@/components/ui/badge";
 import { Progress } from "@/components/ui/progress";
 import { computeAttendanceForEnrollment } from "@/lib/attendance";
