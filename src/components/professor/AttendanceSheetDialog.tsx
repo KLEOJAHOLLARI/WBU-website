@@ -2,7 +2,7 @@ import { useState, useMemo, useEffect } from "react";
 import { useQuery } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
 import { jsPDF } from "jspdf";
-import { Printer, Download, X, Loader2, CheckCircle2, FileText } from "lucide-react";
+import { Printer, Download, X, Loader2, CheckCircle2, FileText, CalendarDays, AlertTriangle } from "lucide-react";
 import { useActiveSemester } from "@/hooks/useActiveSemester";
 import { toast } from "@/hooks/use-toast";
 
