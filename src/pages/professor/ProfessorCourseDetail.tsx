@@ -7,11 +7,12 @@ import { toast } from "@/hooks/use-toast";
 import {
   Plus, Trash2, Save, ArrowLeft, Users, CalendarDays,
   BarChart3, ClipboardCheck, AlertTriangle, CheckCircle2, Loader2,
-  Search, TrendingUp, Award, FileText, Upload, Download, File, X, PieChart as PieChartIcon, HelpCircle, Mail, BookOpen, Link2, ExternalLink
+  Search, TrendingUp, Award, FileText, Upload, Download, File, X, PieChart as PieChartIcon, HelpCircle, Mail, BookOpen, Link2, ExternalLink, Printer
 } from "lucide-react";
 import ProfessorAnalyticsTab from "@/components/professor/ProfessorAnalyticsTab";
 import ProfessorQuizTab from "@/components/professor/ProfessorQuizTab";
 import ProfessorBulkMessage from "@/components/professor/ProfessorBulkMessage";
+import AttendanceSheetDialog from "@/components/professor/AttendanceSheetDialog";
 import { Badge } from "@/components/ui/badge";
 import { Progress } from "@/components/ui/progress";
 import { computeAttendanceForEnrollment } from "@/lib/attendance";
@@ -89,6 +90,18 @@ const ProfessorCourseDetail = () => {
   const [uploading, setUploading] = useState(false);
   const [uploadingSyllabus, setUploadingSyllabus] = useState(false);
   const [syllabusUrlInput, setSyllabusUrlInput] = useState("");
+  const [sheetOpen, setSheetOpen] = useState(false);
+
+  // Professor's own profile (for sheet header / signature)
+  const { data: myProfile } = useQuery({
+    queryKey: ["my-professor-profile"],
+    queryFn: async () => {
+      const { data: { user } } = await supabase.auth.getUser();
+      if (!user) return null;
+      const { data } = await supabase.from("profiles").select("full_name").eq("user_id", user.id).maybeSingle();
+      return data;
+    },
+  });
 
   /* ─── queries ─── */
   const { data: course, isLoading: loadingCourse } = useQuery({
@@ -727,6 +740,21 @@ const ProfessorCourseDetail = () => {
         {/* ═══════ ATTENDANCE ═══════ */}
         {tab === "attendance" && (
           <div className="space-y-6">
+            {/* Print sheet toolbar */}
+            <div className="flex flex-wrap items-center justify-between gap-2 rounded-xl border border-border bg-card px-4 py-3">
+              <div>
+                <h3 className="text-sm font-semibold text-foreground">Printable Attendance Sheet</h3>
+                <p className="text-xs text-muted-foreground">Generate a paper sheet for class signatures.</p>
+              </div>
+              <button
+                onClick={() => setSheetOpen(true)}
+                className="inline-flex items-center gap-1.5 rounded-md bg-primary px-4 py-2 text-sm font-semibold text-primary-foreground hover:bg-primary/90 transition-colors"
+              >
+                <Printer className="h-4 w-4" />
+                Print Attendance Sheet
+              </button>
+            </div>
+
             {/* Add session form */}
             <div className="rounded-xl border border-border bg-card p-4">
               <h3 className="mb-3 text-sm font-semibold text-foreground">New Attendance Session</h3>
@@ -1291,6 +1319,13 @@ const ProfessorCourseDetail = () => {
           />
         )}
       </div>
+
+      <AttendanceSheetDialog
+        open={sheetOpen}
+        onClose={() => setSheetOpen(false)}
+        course={course as any}
+        professorName={myProfile?.full_name || ""}
+      />
     </ProfessorLayout>
   );
 };
