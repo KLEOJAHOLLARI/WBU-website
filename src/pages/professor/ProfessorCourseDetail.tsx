@@ -740,6 +740,21 @@ const ProfessorCourseDetail = () => {
         {/* ═══════ ATTENDANCE ═══════ */}
         {tab === "attendance" && (
           <div className="space-y-6">
+            {/* Print sheet toolbar */}
+            <div className="flex flex-wrap items-center justify-between gap-2 rounded-xl border border-border bg-card px-4 py-3">
+              <div>
+                <h3 className="text-sm font-semibold text-foreground">Printable Attendance Sheet</h3>
+                <p className="text-xs text-muted-foreground">Generate a paper sheet for class signatures.</p>
+              </div>
+              <button
+                onClick={() => setSheetOpen(true)}
+                className="inline-flex items-center gap-1.5 rounded-md bg-primary px-4 py-2 text-sm font-semibold text-primary-foreground hover:bg-primary/90 transition-colors"
+              >
+                <Printer className="h-4 w-4" />
+                Print Attendance Sheet
+              </button>
+            </div>
+
             {/* Add session form */}
             <div className="rounded-xl border border-border bg-card p-4">
               <h3 className="mb-3 text-sm font-semibold text-foreground">New Attendance Session</h3>
