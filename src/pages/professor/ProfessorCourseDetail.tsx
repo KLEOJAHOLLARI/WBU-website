@@ -90,6 +90,18 @@ const ProfessorCourseDetail = () => {
   const [uploading, setUploading] = useState(false);
   const [uploadingSyllabus, setUploadingSyllabus] = useState(false);
   const [syllabusUrlInput, setSyllabusUrlInput] = useState("");
+  const [sheetOpen, setSheetOpen] = useState(false);
+
+  // Professor's own profile (for sheet header / signature)
+  const { data: myProfile } = useQuery({
+    queryKey: ["my-professor-profile"],
+    queryFn: async () => {
+      const { data: { user } } = await supabase.auth.getUser();
+      if (!user) return null;
+      const { data } = await supabase.from("profiles").select("full_name").eq("user_id", user.id).maybeSingle();
+      return data;
+    },
+  });
 
   /* ─── queries ─── */
   const { data: course, isLoading: loadingCourse } = useQuery({
