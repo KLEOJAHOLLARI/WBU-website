@@ -30,6 +30,12 @@ const inputBase =
 const fmt = (d: Date) =>
   d.toLocaleDateString("en-GB", { day: "2-digit", month: "short", year: "numeric" });
 
+const weeklyMonday = (weekOneMonday: Date, weekIndex: number) => {
+  const d = new Date(weekOneMonday);
+  d.setDate(weekOneMonday.getDate() + weekIndex * 7);
+  return d;
+};
+
 const AttendanceSheetDialog = ({ open, onClose, course, professorName, totalWeeks = 15 }: Props) => {
   const { data: semester } = useActiveSemester();
 
