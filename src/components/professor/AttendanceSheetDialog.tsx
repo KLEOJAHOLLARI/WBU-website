@@ -32,6 +32,50 @@ const fmt = (d: Date) =>
 
 const AttendanceSheetDialog = ({ open, onClose, course, professorName, totalWeeks = 15 }: Props) => {
   const { data: semester } = useActiveSemester();
+
+  // ---- Semester week math (auto-detect current week) ----
+  const semesterWeeks = useMemo(() => {
+    if (!semester?.start_date) return null;
+    const start = new Date(semester.start_date);
+    const day = start.getDay(); // 0=Sun
+    const offsetToMonday = day === 0 ? -6 : 1 - day;
+    const weekOneMonday = new Date(start);
+    weekOneMonday.setDate(start.getDate() + offsetToMonday);
+    weekOneMonday.setHours(0, 0, 0, 0);
+
+    const end = semester.end_date ? new Date(semester.end_date) : null;
+    let computedTotal = totalWeeks;
+    if (end) {
+      const diffDays = Math.ceil((end.getTime() - weekOneMonday.getTime()) / (1000 * 60 * 60 * 24));
+      const weeks = Math.max(1, Math.ceil(diffDays / 7));
+      computedTotal = Math.max(1, Math.min(30, weeks));
+    }
+
+    const today = new Date();
+    today.setHours(0, 0, 0, 0);
+    const diffMs = today.getTime() - weekOneMonday.getTime();
+    let currentWeek = Math.floor(diffMs / (7 * 24 * 60 * 60 * 1000)) + 1;
+    if (currentWeek < 1) currentWeek = 1;
+    if (currentWeek > computedTotal) currentWeek = computedTotal;
+
+    const weeks = Array.from({ length: computedTotal }).map((_, i) => {
+      const ws = new Date(weeklyMonday(weekOneMonday, i));
+      const we = new Date(ws);
+      we.setDate(ws.getDate() + 6);
+      const n = i + 1;
+      return {
+        number: n,
+        start: ws,
+        end: we,
+        isCurrent: n === currentWeek,
+        isFuture: n > currentWeek,
+        isPast: n < currentWeek,
+      };
+    });
+
+    return { weekOneMonday, totalWeeks: computedTotal, currentWeek, weeks };
+  }, [semester, totalWeeks]);
+
   const [week, setWeek] = useState<number>(1);
   const [sessionType, setSessionType] = useState<"Lecture" | "Lab" | "Seminar">("Lecture");
   const [group, setGroup] = useState<string>("");
