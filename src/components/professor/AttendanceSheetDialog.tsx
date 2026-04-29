@@ -118,26 +118,74 @@ const AttendanceSheetDialog = ({ open, onClose, course, professorName, totalWeek
     enabled: !!course?.id && open,
   });
 
-  // Existing attendance for this course/week
-  const { data: existingSessions = [] } = useQuery({
-    queryKey: ["attendance-sheet-sessions", course?.id, week],
+  // All attendance sessions for this course (for per-week status)
+  const { data: allSessions = [] } = useQuery({
+    queryKey: ["attendance-sheet-all-sessions", course?.id],
     queryFn: async () => {
       if (!course?.id) return [];
       const { data, error } = await supabase
         .from("attendance_sessions")
         .select("id, session_date, week_number")
-        .eq("course_id", course.id)
-        .eq("week_number", week);
+        .eq("course_id", course.id);
       if (error) throw error;
       return data || [];
     },
     enabled: !!course?.id && open,
   });
 
+  const existingSessions = useMemo(
+    () => allSessions.filter((s) => s.week_number === week),
+    [allSessions, week]
+  );
+
+  // Map: week_number -> session ids
+  const sessionsByWeek = useMemo(() => {
+    const m = new Map<number, string[]>();
+    allSessions.forEach((s) => {
+      const arr = m.get(s.week_number) || [];
+      arr.push(s.id);
+      m.set(s.week_number, arr);
+    });
+    return m;
+  }, [allSessions]);
+
   const sessionIdsKey = useMemo(
     () => existingSessions.map((s) => s.id).sort().join(","),
     [existingSessions]
   );
+
+  // All records across the course's sessions (to know which weeks have records)
+  const allSessionIdsKey = useMemo(
+    () => allSessions.map((s) => s.id).sort().join(","),
+    [allSessions]
+  );
+
+  const { data: allRecords = [] } = useQuery({
+    queryKey: ["attendance-sheet-all-records", course?.id, allSessionIdsKey],
+    queryFn: async () => {
+      const ids = allSessionIdsKey ? allSessionIdsKey.split(",") : [];
+      if (!ids.length) return [];
+      const { data, error } = await supabase
+        .from("attendance_records")
+        .select("session_id")
+        .in("session_id", ids);
+      if (error) throw error;
+      return data || [];
+    },
+    enabled: !!allSessionIdsKey,
+  });
+
+  // Set of week numbers that have at least one record
+  const recordedWeeks = useMemo(() => {
+    const sessionToWeek = new Map<string, number>();
+    allSessions.forEach((s) => sessionToWeek.set(s.id, s.week_number));
+    const set = new Set<number>();
+    allRecords.forEach((r) => {
+      const w = sessionToWeek.get(r.session_id);
+      if (w != null) set.add(w);
+    });
+    return set;
+  }, [allSessions, allRecords]);
 
   const { data: existingRecords = [] } = useQuery({
     queryKey: ["attendance-sheet-records", course?.id, week, sessionIdsKey],
