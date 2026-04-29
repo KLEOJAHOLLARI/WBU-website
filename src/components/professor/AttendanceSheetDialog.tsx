@@ -531,13 +531,22 @@ const AttendanceSheetDialog = ({ open, onClose, course, professorName, totalWeek
                 {(semesterWeeks?.weeks ?? Array.from({ length: totalWeeks }).map((_, i) => ({
                   number: i + 1, start: null as any, end: null as any, isCurrent: false, isFuture: false, isPast: false,
                 }))).map((w) => {
+                  const hasSession = sessionsByWeek.has(w.number);
+                  const hasRecords = recordedWeeks.has(w.number);
+                  const statusLabel = hasRecords
+                    ? " ✓ Recorded"
+                    : hasSession
+                    ? " • Session created"
+                    : w.isFuture
+                    ? ""
+                    : " • Not recorded yet";
                   const label = w.start
                     ? `Week ${w.number} · ${fmt(w.start)} – ${fmt(w.end)}`
                     : `Week ${w.number}`;
                   const suffix = w.isCurrent ? " — Current" : w.isFuture ? " — Upcoming" : "";
                   return (
                     <option key={w.number} value={w.number} disabled={w.isFuture}>
-                      {label}{suffix}
+                      {label}{suffix}{statusLabel}
                     </option>
                   );
                 })}
