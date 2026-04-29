@@ -118,26 +118,74 @@ const AttendanceSheetDialog = ({ open, onClose, course, professorName, totalWeek
     enabled: !!course?.id && open,
   });
 
-  // Existing attendance for this course/week
-  const { data: existingSessions = [] } = useQuery({
-    queryKey: ["attendance-sheet-sessions", course?.id, week],
+  // All attendance sessions for this course (for per-week status)
+  const { data: allSessions = [] } = useQuery({
+    queryKey: ["attendance-sheet-all-sessions", course?.id],
     queryFn: async () => {
       if (!course?.id) return [];
       const { data, error } = await supabase
         .from("attendance_sessions")
         .select("id, session_date, week_number")
-        .eq("course_id", course.id)
-        .eq("week_number", week);
+        .eq("course_id", course.id);
       if (error) throw error;
       return data || [];
     },
     enabled: !!course?.id && open,
   });
 
+  const existingSessions = useMemo(
+    () => allSessions.filter((s) => s.week_number === week),
+    [allSessions, week]
+  );
+
+  // Map: week_number -> session ids
+  const sessionsByWeek = useMemo(() => {
+    const m = new Map<number, string[]>();
+    allSessions.forEach((s) => {
+      const arr = m.get(s.week_number) || [];
+      arr.push(s.id);
+      m.set(s.week_number, arr);
+    });
+    return m;
+  }, [allSessions]);
+
   const sessionIdsKey = useMemo(
     () => existingSessions.map((s) => s.id).sort().join(","),
     [existingSessions]
   );
+
+  // All records across the course's sessions (to know which weeks have records)
+  const allSessionIdsKey = useMemo(
+    () => allSessions.map((s) => s.id).sort().join(","),
+    [allSessions]
+  );
+
+  const { data: allRecords = [] } = useQuery({
+    queryKey: ["attendance-sheet-all-records", course?.id, allSessionIdsKey],
+    queryFn: async () => {
+      const ids = allSessionIdsKey ? allSessionIdsKey.split(",") : [];
+      if (!ids.length) return [];
+      const { data, error } = await supabase
+        .from("attendance_records")
+        .select("session_id")
+        .in("session_id", ids);
+      if (error) throw error;
+      return data || [];
+    },
+    enabled: !!allSessionIdsKey,
+  });
+
+  // Set of week numbers that have at least one record
+  const recordedWeeks = useMemo(() => {
+    const sessionToWeek = new Map<string, number>();
+    allSessions.forEach((s) => sessionToWeek.set(s.id, s.week_number));
+    const set = new Set<number>();
+    allRecords.forEach((r) => {
+      const w = sessionToWeek.get(r.session_id);
+      if (w != null) set.add(w);
+    });
+    return set;
+  }, [allSessions, allRecords]);
 
   const { data: existingRecords = [] } = useQuery({
     queryKey: ["attendance-sheet-records", course?.id, week, sessionIdsKey],
@@ -483,21 +531,37 @@ const AttendanceSheetDialog = ({ open, onClose, course, professorName, totalWeek
                 {(semesterWeeks?.weeks ?? Array.from({ length: totalWeeks }).map((_, i) => ({
                   number: i + 1, start: null as any, end: null as any, isCurrent: false, isFuture: false, isPast: false,
                 }))).map((w) => {
+                  const hasSession = sessionsByWeek.has(w.number);
+                  const hasRecords = recordedWeeks.has(w.number);
+                  const statusLabel = hasRecords
+                    ? " ✓ Recorded"
+                    : hasSession
+                    ? " • Session created"
+                    : w.isFuture
+                    ? ""
+                    : " • Not recorded yet";
                   const label = w.start
                     ? `Week ${w.number} · ${fmt(w.start)} – ${fmt(w.end)}`
                     : `Week ${w.number}`;
                   const suffix = w.isCurrent ? " — Current" : w.isFuture ? " — Upcoming" : "";
                   return (
                     <option key={w.number} value={w.number} disabled={w.isFuture}>
-                      {label}{suffix}
+                      {label}{suffix}{statusLabel}
                     </option>
                   );
                 })}
               </select>
               {weekRange && (
-                <p className="mt-1 text-[11px] text-muted-foreground">
-                  {fmt(weekRange.start)} – {fmt(weekRange.end)}
-                  {semesterWeeks && week < semesterWeeks.currentWeek && " · past week"}
+                <p className="mt-1 flex items-center gap-1.5 text-[11px] text-muted-foreground">
+                  <span>{fmt(weekRange.start)} – {fmt(weekRange.end)}</span>
+                  {semesterWeeks && week < semesterWeeks.currentWeek && <span>· past week</span>}
+                  {recordedWeeks.has(week) ? (
+                    <span className="ml-1 inline-flex items-center rounded-full border border-emerald-300 bg-emerald-500/10 px-1.5 py-0.5 font-medium text-emerald-700 dark:text-emerald-300">✓ Recorded</span>
+                  ) : sessionsByWeek.has(week) ? (
+                    <span className="ml-1 inline-flex items-center rounded-full border border-amber-300 bg-amber-500/10 px-1.5 py-0.5 font-medium text-amber-700 dark:text-amber-300">Session created</span>
+                  ) : (
+                    <span className="ml-1 inline-flex items-center rounded-full border border-border bg-secondary px-1.5 py-0.5 font-medium">Not recorded yet</span>
+                  )}
                 </p>
               )}
             </div>
