@@ -590,7 +590,6 @@ const AttendanceSheetDialog = ({ open, onClose, course, professorName, totalWeek
                   <span className="h-1.5 w-1.5 rounded-full bg-slate-400" /> Upcoming
                 </span>
               </div>
-              </select>
               {weekRange && (
                 <p className="mt-1 flex items-center gap-1.5 text-[11px] text-muted-foreground">
                   <span>{fmt(weekRange.start)} – {fmt(weekRange.end)}</span>
