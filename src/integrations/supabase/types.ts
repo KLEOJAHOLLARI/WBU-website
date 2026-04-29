@@ -311,6 +311,117 @@ export type Database = {
           },
         ]
       }
+      calendar_events: {
+        Row: {
+          audience: string
+          color: string
+          created_at: string
+          created_by: string | null
+          description: string
+          end_date: string | null
+          end_time: string | null
+          event_type: string
+          id: string
+          is_published: boolean
+          location: string
+          program: string | null
+          start_date: string
+          start_time: string | null
+          title: string
+          updated_at: string
+        }
+        Insert: {
+          audience?: string
+          color?: string
+          created_at?: string
+          created_by?: string | null
+          description?: string
+          end_date?: string | null
+          end_time?: string | null
+          event_type?: string
+          id?: string
+          is_published?: boolean
+          location?: string
+          program?: string | null
+          start_date: string
+          start_time?: string | null
+          title: string
+          updated_at?: string
+        }
+        Update: {
+          audience?: string
+          color?: string
+          created_at?: string
+          created_by?: string | null
+          description?: string
+          end_date?: string | null
+          end_time?: string | null
+          event_type?: string
+          id?: string
+          is_published?: boolean
+          location?: string
+          program?: string | null
+          start_date?: string
+          start_time?: string | null
+          title?: string
+          updated_at?: string
+        }
+        Relationships: []
+      }
+      complaint_submissions: {
+        Row: {
+          admin_response: string | null
+          category: string
+          created_at: string
+          id: string
+          is_anonymous: boolean
+          message: string
+          priority: string
+          responded_at: string | null
+          responded_by: string | null
+          status: string
+          subject: string
+          submitter_email: string
+          submitter_name: string
+          updated_at: string
+          user_id: string | null
+        }
+        Insert: {
+          admin_response?: string | null
+          category?: string
+          created_at?: string
+          id?: string
+          is_anonymous?: boolean
+          message: string
+          priority?: string
+          responded_at?: string | null
+          responded_by?: string | null
+          status?: string
+          subject: string
+          submitter_email?: string
+          submitter_name?: string
+          updated_at?: string
+          user_id?: string | null
+        }
+        Update: {
+          admin_response?: string | null
+          category?: string
+          created_at?: string
+          id?: string
+          is_anonymous?: boolean
+          message?: string
+          priority?: string
+          responded_at?: string | null
+          responded_by?: string | null
+          status?: string
+          subject?: string
+          submitter_email?: string
+          submitter_name?: string
+          updated_at?: string
+          user_id?: string | null
+        }
+        Relationships: []
+      }
       contact_submissions: {
         Row: {
           created_at: string
@@ -1137,6 +1248,66 @@ export type Database = {
         }
         Relationships: []
       }
+      push_notification_reads: {
+        Row: {
+          id: string
+          notification_id: string
+          read_at: string
+          user_id: string
+        }
+        Insert: {
+          id?: string
+          notification_id: string
+          read_at?: string
+          user_id: string
+        }
+        Update: {
+          id?: string
+          notification_id?: string
+          read_at?: string
+          user_id?: string
+        }
+        Relationships: []
+      }
+      push_notifications: {
+        Row: {
+          audience_program: string | null
+          audience_role: string
+          audience_year: number | null
+          body: string
+          created_at: string
+          id: string
+          link: string | null
+          sent_at: string
+          sent_by: string
+          title: string
+        }
+        Insert: {
+          audience_program?: string | null
+          audience_role?: string
+          audience_year?: number | null
+          body: string
+          created_at?: string
+          id?: string
+          link?: string | null
+          sent_at?: string
+          sent_by: string
+          title: string
+        }
+        Update: {
+          audience_program?: string | null
+          audience_role?: string
+          audience_year?: number | null
+          body?: string
+          created_at?: string
+          id?: string
+          link?: string | null
+          sent_at?: string
+          sent_by?: string
+          title?: string
+        }
+        Relationships: []
+      }
       quiz_attempts: {
         Row: {
           answers: Json | null
@@ -1265,6 +1436,96 @@ export type Database = {
             referencedColumns: ["id"]
           },
         ]
+      }
+      room_bookings: {
+        Row: {
+          booking_date: string
+          created_at: string
+          end_time: string
+          id: string
+          notes: string
+          purpose: string
+          requested_by: string
+          review_note: string | null
+          reviewed_at: string | null
+          reviewed_by: string | null
+          room_id: string
+          start_time: string
+          status: string
+          updated_at: string
+        }
+        Insert: {
+          booking_date: string
+          created_at?: string
+          end_time: string
+          id?: string
+          notes?: string
+          purpose: string
+          requested_by: string
+          review_note?: string | null
+          reviewed_at?: string | null
+          reviewed_by?: string | null
+          room_id: string
+          start_time: string
+          status?: string
+          updated_at?: string
+        }
+        Update: {
+          booking_date?: string
+          created_at?: string
+          end_time?: string
+          id?: string
+          notes?: string
+          purpose?: string
+          requested_by?: string
+          review_note?: string | null
+          reviewed_at?: string | null
+          reviewed_by?: string | null
+          room_id?: string
+          start_time?: string
+          status?: string
+          updated_at?: string
+        }
+        Relationships: []
+      }
+      rooms: {
+        Row: {
+          building: string
+          capacity: number
+          created_at: string
+          equipment: string
+          floor: string
+          id: string
+          is_active: boolean
+          name: string
+          room_type: string
+          updated_at: string
+        }
+        Insert: {
+          building?: string
+          capacity?: number
+          created_at?: string
+          equipment?: string
+          floor?: string
+          id?: string
+          is_active?: boolean
+          name: string
+          room_type?: string
+          updated_at?: string
+        }
+        Update: {
+          building?: string
+          capacity?: number
+          created_at?: string
+          equipment?: string
+          floor?: string
+          id?: string
+          is_active?: boolean
+          name?: string
+          room_type?: string
+          updated_at?: string
+        }
+        Relationships: []
       }
       scheduled_announcements: {
         Row: {
