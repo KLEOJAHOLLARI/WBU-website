@@ -544,13 +544,52 @@ const AttendanceSheetDialog = ({ open, onClose, course, professorName, totalWeek
                     ? `Week ${w.number} · ${fmt(w.start)} – ${fmt(w.end)}`
                     : `Week ${w.number}`;
                   const suffix = w.isCurrent ? " — Current" : w.isFuture ? " — Upcoming" : "";
+
+                  // Color-code by status (inline styles — required for native <option>)
+                  let optStyle: React.CSSProperties = {};
+                  if (w.isFuture) {
+                    optStyle = { backgroundColor: "#f1f5f9", color: "#94a3b8" };
+                  } else if (hasRecords) {
+                    optStyle = { backgroundColor: "#dcfce7", color: "#166534", fontWeight: 600 };
+                  } else if (hasSession) {
+                    optStyle = { backgroundColor: "#fef3c7", color: "#92400e", fontWeight: 500 };
+                  } else {
+                    optStyle = { backgroundColor: "#fee2e2", color: "#991b1b" };
+                  }
+                  if (w.isCurrent && !hasRecords && !hasSession) {
+                    optStyle = { backgroundColor: "#dbeafe", color: "#1e40af", fontWeight: 600 };
+                  }
+
                   return (
-                    <option key={w.number} value={w.number} disabled={w.isFuture}>
+                    <option
+                      key={w.number}
+                      value={w.number}
+                      disabled={w.isFuture}
+                      style={optStyle}
+                    >
                       {label}{suffix}{statusLabel}
                     </option>
                   );
                 })}
               </select>
+              {/* Color legend */}
+              <div className="mt-1.5 flex flex-wrap items-center gap-1.5 text-[10px]">
+                <span className="inline-flex items-center gap-1 rounded-full border border-emerald-300 bg-emerald-500/10 px-1.5 py-0.5 font-medium text-emerald-700 dark:text-emerald-300">
+                  <span className="h-1.5 w-1.5 rounded-full bg-emerald-500" /> Recorded
+                </span>
+                <span className="inline-flex items-center gap-1 rounded-full border border-amber-300 bg-amber-500/10 px-1.5 py-0.5 font-medium text-amber-700 dark:text-amber-300">
+                  <span className="h-1.5 w-1.5 rounded-full bg-amber-500" /> Session created
+                </span>
+                <span className="inline-flex items-center gap-1 rounded-full border border-rose-300 bg-rose-500/10 px-1.5 py-0.5 font-medium text-rose-700 dark:text-rose-300">
+                  <span className="h-1.5 w-1.5 rounded-full bg-rose-500" /> Not recorded
+                </span>
+                <span className="inline-flex items-center gap-1 rounded-full border border-blue-300 bg-blue-500/10 px-1.5 py-0.5 font-medium text-blue-700 dark:text-blue-300">
+                  <span className="h-1.5 w-1.5 rounded-full bg-blue-500" /> Current
+                </span>
+                <span className="inline-flex items-center gap-1 rounded-full border border-border bg-secondary px-1.5 py-0.5 font-medium text-muted-foreground">
+                  <span className="h-1.5 w-1.5 rounded-full bg-slate-400" /> Upcoming
+                </span>
+              </div>
               {weekRange && (
                 <p className="mt-1 flex items-center gap-1.5 text-[11px] text-muted-foreground">
                   <span>{fmt(weekRange.start)} – {fmt(weekRange.end)}</span>
