@@ -552,9 +552,16 @@ const AttendanceSheetDialog = ({ open, onClose, course, professorName, totalWeek
                 })}
               </select>
               {weekRange && (
-                <p className="mt-1 text-[11px] text-muted-foreground">
-                  {fmt(weekRange.start)} – {fmt(weekRange.end)}
-                  {semesterWeeks && week < semesterWeeks.currentWeek && " · past week"}
+                <p className="mt-1 flex items-center gap-1.5 text-[11px] text-muted-foreground">
+                  <span>{fmt(weekRange.start)} – {fmt(weekRange.end)}</span>
+                  {semesterWeeks && week < semesterWeeks.currentWeek && <span>· past week</span>}
+                  {recordedWeeks.has(week) ? (
+                    <span className="ml-1 inline-flex items-center rounded-full border border-emerald-300 bg-emerald-500/10 px-1.5 py-0.5 font-medium text-emerald-700 dark:text-emerald-300">✓ Recorded</span>
+                  ) : sessionsByWeek.has(week) ? (
+                    <span className="ml-1 inline-flex items-center rounded-full border border-amber-300 bg-amber-500/10 px-1.5 py-0.5 font-medium text-amber-700 dark:text-amber-300">Session created</span>
+                  ) : (
+                    <span className="ml-1 inline-flex items-center rounded-full border border-border bg-secondary px-1.5 py-0.5 font-medium">Not recorded yet</span>
+                  )}
                 </p>
               )}
             </div>
