@@ -78,6 +78,10 @@ import AdminGateActivity from "./pages/admin/AdminGateActivity";
 import StudentAccessHistory from "./pages/portal/StudentAccessHistory";
 import AdminDocuments from "./pages/admin/AdminDocuments";
 import AdminDocumentTemplates from "./pages/admin/AdminDocumentTemplates";
+import AdminCalendar from "./pages/admin/AdminCalendar";
+import AdminRooms from "./pages/admin/AdminRooms";
+import AdminComplaints from "./pages/admin/AdminComplaints";
+import AdminPushNotifications from "./pages/admin/AdminPushNotifications";
 import AIAssistant from "./components/AIAssistant";
 
 const queryClient = new QueryClient();
@@ -132,6 +136,10 @@ const App = () => (
             <Route path="/admin/gate-activity" element={<AdminGateActivity />} />
             <Route path="/admin/documents" element={<AdminDocuments />} />
             <Route path="/admin/document-templates" element={<AdminDocumentTemplates />} />
+            <Route path="/admin/calendar" element={<AdminCalendar />} />
+            <Route path="/admin/rooms" element={<AdminRooms />} />
+            <Route path="/admin/complaints" element={<AdminComplaints />} />
+            <Route path="/admin/push-notifications" element={<AdminPushNotifications />} />
             <Route path="/portal/login" element={<StudentLogin />} />
             <Route path="/portal/register" element={<StudentRegister />} />
             <Route path="/portal" element={<StudentDashboard />} />
