@@ -13,6 +13,7 @@ import Admissions from "./pages/Admissions";
 import News from "./pages/News";
 import NewsDetail from "./pages/NewsDetail";
 import Contact from "./pages/Contact";
+import Complaints from "./pages/Complaints";
 import Timetable from "./pages/Timetable";
 import AdminLogin from "./pages/admin/AdminLogin";
 import AdminDashboard from "./pages/admin/AdminDashboard";
@@ -103,6 +104,7 @@ const App = () => (
             <Route path="/news" element={<News />} />
             <Route path="/news/:id" element={<NewsDetail />} />
             <Route path="/contact" element={<Contact />} />
+            <Route path="/complaints" element={<Complaints />} />
             <Route path="/faculty" element={<Faculty />} />
             <Route path="/faculty/:id" element={<FacultyProfile />} />
             <Route path="/professors/:id" element={<FacultyProfile />} />
