@@ -45,8 +45,21 @@ const saveReadIds = (ids: Set<string>) => {
 };
 
 const StudentNotifications = () => {
-  const { user, profile } = useAuth();
+  const { user } = useAuth();
   const qc = useQueryClient();
+
+  const { data: profile } = useQuery({
+    queryKey: ["notif-center-profile", user?.id],
+    queryFn: async () => {
+      const { data } = await supabase
+        .from("profiles")
+        .select("program,current_year")
+        .eq("user_id", user!.id)
+        .maybeSingle();
+      return data as { program: string | null; current_year: number | null } | null;
+    },
+    enabled: !!user,
+  });
   const [readAnnouncementIds, setReadAnnouncementIds] = useState<Set<string>>(loadReadIds);
 
   // Push notifications targeted to this student
