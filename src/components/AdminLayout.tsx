@@ -208,7 +208,7 @@ const AdminLayout = ({ children }: { children: ReactNode }) => {
             </Avatar>
           </div>
         </div>
-        <div className="p-4 md:p-8">{children}</div>
+        <div className="flex-1 overflow-auto p-4 md:p-8">{children}</div>
       </main>
     </div>
   );
