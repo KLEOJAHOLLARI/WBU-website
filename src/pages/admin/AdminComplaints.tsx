@@ -108,9 +108,15 @@ const AdminComplaints = () => {
         </TabsList>
       </Tabs>
 
+      {error && (
+        <div className="mt-4">
+          <AdminErrorBanner error={error} onRetry={() => refetch()} />
+        </div>
+      )}
+
       <div className="mt-4 space-y-3">
         {isLoading ? (
-          <p className="text-muted-foreground">Loading...</p>
+          <ListRowsSkeleton rows={5} />
         ) : filtered.length === 0 ? (
           <div className="rounded-xl border border-dashed border-border p-10 text-center text-muted-foreground">
             No submissions in this category.
