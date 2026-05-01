@@ -1,5 +1,5 @@
 import AdminLayout from "@/components/AdminLayout";
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
 import { Button } from "@/components/ui/button";
@@ -8,6 +8,8 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import { Tabs, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { toast } from "sonner";
 import { MessageSquareWarning, Trash2, Send } from "lucide-react";
+import { ListRowsSkeleton } from "@/components/admin/AdminSkeleton";
+import AdminErrorBanner from "@/components/admin/AdminErrorBanner";
 
 type Complaint = {
   id: string; user_id: string | null; is_anonymous: boolean;
@@ -37,7 +39,7 @@ const AdminComplaints = () => {
   const [filter, setFilter] = useState<string>("all");
   const [responses, setResponses] = useState<Record<string, string>>({});
 
-  const { data: complaints = [], isLoading } = useQuery({
+  const { data: complaints = [], isLoading, error, refetch } = useQuery({
     queryKey: ["admin-complaints"],
     queryFn: async () => {
       const { data, error } = await supabase
@@ -48,6 +50,10 @@ const AdminComplaints = () => {
       return data as Complaint[];
     },
   });
+
+  useEffect(() => {
+    if (error) toast.error("Couldn't load complaints");
+  }, [error]);
 
   const update = useMutation({
     mutationFn: async ({ id, patch }: { id: string; patch: Partial<Complaint> }) => {
@@ -102,9 +108,15 @@ const AdminComplaints = () => {
         </TabsList>
       </Tabs>
 
+      {error && (
+        <div className="mt-4">
+          <AdminErrorBanner error={error} onRetry={() => refetch()} />
+        </div>
+      )}
+
       <div className="mt-4 space-y-3">
         {isLoading ? (
-          <p className="text-muted-foreground">Loading...</p>
+          <ListRowsSkeleton rows={5} />
         ) : filtered.length === 0 ? (
           <div className="rounded-xl border border-dashed border-border p-10 text-center text-muted-foreground">
             No submissions in this category.

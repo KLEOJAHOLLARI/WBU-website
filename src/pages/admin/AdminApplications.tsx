@@ -6,6 +6,9 @@ import { useToast } from "@/hooks/use-toast";
 import { CheckCircle, XCircle, Eye, FileText, Trash2, Copy, UserPlus, Search, ChevronLeft, ChevronRight } from "lucide-react";
 import { useHighlightParam, highlightClasses } from "@/hooks/useHighlightParam";
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
+import { TableRowsSkeleton } from "@/components/admin/AdminSkeleton";
+import AdminErrorBanner from "@/components/admin/AdminErrorBanner";
+import { toast as sonnerToast } from "sonner";
 
 const PAGE_SIZE = 20;
 
@@ -37,7 +40,7 @@ const AdminApplications = () => {
   useEffect(() => { setPage(0); }, [statusFilter, programFilter]);
 
   // Page of applications (server-side filtered + paginated)
-  const { data: pageData, isLoading, isFetching } = useQuery({
+  const { data: pageData, isLoading, isFetching, error: loadError, refetch } = useQuery({
     queryKey: ["admin-applications", { statusFilter, programFilter, search, page }],
     queryFn: async () => {
       let q = supabase
@@ -59,6 +62,10 @@ const AdminApplications = () => {
     },
     placeholderData: keepPreviousData,
   });
+
+  useEffect(() => {
+    if (loadError) sonnerToast.error("Couldn't load applications");
+  }, [loadError]);
 
   const applications = pageData?.rows ?? [];
   const totalCount = pageData?.count ?? 0;
@@ -260,6 +267,12 @@ const AdminApplications = () => {
         </div>
       </div>
 
+      {loadError && (
+        <div className="mt-4">
+          <AdminErrorBanner error={loadError} onRetry={() => refetch()} />
+        </div>
+      )}
+
       <div className="mt-4 overflow-auto rounded-xl border border-border">
         <table className="w-full text-sm">
           <thead className="border-b border-border bg-secondary">
@@ -275,7 +288,7 @@ const AdminApplications = () => {
           </thead>
           <tbody>
             {isLoading ? (
-              <tr><td colSpan={7} className="px-4 py-8 text-center text-muted-foreground">Loading...</td></tr>
+              <TableRowsSkeleton rows={6} columns={7} />
             ) : applications.length === 0 ? (
               <tr><td colSpan={7} className="px-4 py-8 text-center text-muted-foreground">No applications found</td></tr>
             ) : applications.map((a) => (

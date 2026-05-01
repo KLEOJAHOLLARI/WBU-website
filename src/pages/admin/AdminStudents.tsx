@@ -1,10 +1,13 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import AdminLayout from "@/components/AdminLayout";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
 import { useToast } from "@/hooks/use-toast";
+import { toast as sonnerToast } from "sonner";
 import { Send, FileText, CheckCircle, XCircle, UserCheck, UserX, Clock, Mail, BookOpen, Save, Hash, CreditCard, Search, Award, AlertTriangle } from "lucide-react";
 import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle } from "@/components/ui/alert-dialog";
+import { ListRowsSkeleton } from "@/components/admin/AdminSkeleton";
+import AdminErrorBanner from "@/components/admin/AdminErrorBanner";
 
 const AdminStudents = () => {
   const { toast } = useToast();
@@ -27,7 +30,7 @@ const AdminStudents = () => {
   } | null>(null);
   const [applyingScholarship, setApplyingScholarship] = useState(false);
 
-  const { data: profiles = [], isLoading } = useQuery({
+  const { data: profiles = [], isLoading, error: profilesError, refetch: refetchProfiles } = useQuery({
     queryKey: ["admin-students"],
     queryFn: async () => {
       const { data, error } = await supabase.from("profiles").select("*").order("created_at", { ascending: false });
@@ -35,6 +38,10 @@ const AdminStudents = () => {
       return data;
     },
   });
+
+  useEffect(() => {
+    if (profilesError) sonnerToast.error("Couldn't load students");
+  }, [profilesError]);
 
   const { data: allRoles = [] } = useQuery({
     queryKey: ["admin-student-roles"],
@@ -195,12 +202,18 @@ const AdminStudents = () => {
         <button onClick={() => setStatusFilter("rejected")} className={tabCls("rejected")}>Rejected</button>
       </div>
 
+      {profilesError && (
+        <div className="mt-4">
+          <AdminErrorBanner error={profilesError} onRetry={() => refetchProfiles()} />
+        </div>
+      )}
+
       <div className="mt-4 grid gap-6 lg:grid-cols-3">
         {/* Student list */}
         <div className="lg:col-span-1">
           <div className="space-y-2 max-h-[60vh] overflow-auto">
             {isLoading ? (
-              <p className="text-muted-foreground">Loading...</p>
+              <ListRowsSkeleton rows={4} />
             ) : filteredProfiles.length === 0 ? (
               <p className="text-muted-foreground text-sm">{searchQuery ? "No students match your search." : "No students found."}</p>
             ) : (
