@@ -1,5 +1,5 @@
 import AdminLayout from "@/components/AdminLayout";
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
 import { Button } from "@/components/ui/button";
@@ -8,6 +8,8 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import { Tabs, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { toast } from "sonner";
 import { MessageSquareWarning, Trash2, Send } from "lucide-react";
+import { ListRowsSkeleton } from "@/components/admin/AdminSkeleton";
+import AdminErrorBanner from "@/components/admin/AdminErrorBanner";
 
 type Complaint = {
   id: string; user_id: string | null; is_anonymous: boolean;
