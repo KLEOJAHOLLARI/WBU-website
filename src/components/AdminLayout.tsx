@@ -176,13 +176,13 @@ const AdminLayout = ({ children }: { children: ReactNode }) => {
   );
 
   return (
-    <div className="flex min-h-screen bg-background">
-      <aside className="hidden md:flex w-64 flex-col border-r border-border bg-card">
+    <div className="flex h-screen overflow-hidden bg-background">
+      <aside className="hidden md:flex w-64 flex-col border-r border-border bg-card h-screen sticky top-0">
         {sidebarContent}
       </aside>
 
-      <main className="flex-1 overflow-auto">
-        <div className="flex h-14 items-center justify-between border-b border-border bg-card px-4 md:px-6">
+      <main className="flex-1 flex flex-col h-screen overflow-hidden">
+        <div className="flex h-14 shrink-0 items-center justify-between border-b border-border bg-card px-4 md:px-6">
           <Sheet open={mobileOpen} onOpenChange={setMobileOpen}>
             <SheetTrigger asChild>
               <button className="md:hidden rounded-lg p-2 text-muted-foreground hover:bg-muted transition-colors">
