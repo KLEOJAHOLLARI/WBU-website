@@ -202,12 +202,18 @@ const AdminStudents = () => {
         <button onClick={() => setStatusFilter("rejected")} className={tabCls("rejected")}>Rejected</button>
       </div>
 
+      {profilesError && (
+        <div className="mt-4">
+          <AdminErrorBanner error={profilesError} onRetry={() => refetchProfiles()} />
+        </div>
+      )}
+
       <div className="mt-4 grid gap-6 lg:grid-cols-3">
         {/* Student list */}
         <div className="lg:col-span-1">
           <div className="space-y-2 max-h-[60vh] overflow-auto">
             {isLoading ? (
-              <p className="text-muted-foreground">Loading...</p>
+              <ListRowsSkeleton rows={4} />
             ) : filteredProfiles.length === 0 ? (
               <p className="text-muted-foreground text-sm">{searchQuery ? "No students match your search." : "No students found."}</p>
             ) : (
