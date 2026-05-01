@@ -1,9 +1,13 @@
+import { useEffect } from "react";
 import AdminLayout from "@/components/AdminLayout";
 import { useQuery } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
+import { ListRowsSkeleton } from "@/components/admin/AdminSkeleton";
+import AdminErrorBanner from "@/components/admin/AdminErrorBanner";
+import { toast } from "sonner";
 
 const AdminContacts = () => {
-  const { data: submissions = [], isLoading } = useQuery({
+  const { data: submissions = [], isLoading, error, refetch } = useQuery({
     queryKey: ["admin-contacts"],
     queryFn: async () => {
       const { data, error } = await supabase.from("contact_submissions").select("*").order("created_at", { ascending: false });
@@ -12,14 +16,24 @@ const AdminContacts = () => {
     },
   });
 
+  useEffect(() => {
+    if (error) toast.error("Couldn't load messages");
+  }, [error]);
+
   return (
     <AdminLayout>
       <h1 className="font-display text-2xl font-bold text-foreground">Contact Messages</h1>
       <p className="text-sm text-muted-foreground">View messages from the contact form</p>
 
+      {error && (
+        <div className="mt-6">
+          <AdminErrorBanner error={error} onRetry={() => refetch()} />
+        </div>
+      )}
+
       <div className="mt-6 space-y-4">
         {isLoading ? (
-          <p className="text-muted-foreground">Loading...</p>
+          <ListRowsSkeleton rows={5} />
         ) : submissions.length === 0 ? (
           <p className="py-10 text-center text-muted-foreground">No messages yet</p>
         ) : submissions.map((s) => (
