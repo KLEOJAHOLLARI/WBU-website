@@ -267,6 +267,12 @@ const AdminApplications = () => {
         </div>
       </div>
 
+      {loadError && (
+        <div className="mt-4">
+          <AdminErrorBanner error={loadError} onRetry={() => refetch()} />
+        </div>
+      )}
+
       <div className="mt-4 overflow-auto rounded-xl border border-border">
         <table className="w-full text-sm">
           <thead className="border-b border-border bg-secondary">
@@ -282,7 +288,7 @@ const AdminApplications = () => {
           </thead>
           <tbody>
             {isLoading ? (
-              <tr><td colSpan={7} className="px-4 py-8 text-center text-muted-foreground">Loading...</td></tr>
+              <TableRowsSkeleton rows={6} columns={7} />
             ) : applications.length === 0 ? (
               <tr><td colSpan={7} className="px-4 py-8 text-center text-muted-foreground">No applications found</td></tr>
             ) : applications.map((a) => (
