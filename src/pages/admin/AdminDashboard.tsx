@@ -1,11 +1,15 @@
+import { useEffect } from "react";
 import AdminLayout from "@/components/AdminLayout";
 import { useQuery } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
 import { BookOpen, Newspaper, FileText, Mail, Users, GraduationCap, Clock } from "lucide-react";
 import SemesterBadge from "@/components/SemesterBadge";
+import { StatCardsSkeleton } from "@/components/admin/AdminSkeleton";
+import AdminErrorBanner from "@/components/admin/AdminErrorBanner";
+import { toast } from "sonner";
 
 const AdminDashboard = () => {
-  const { data: programCount = 0 } = useQuery({
+  const programs = useQuery({
     queryKey: ["admin-programs-count"],
     queryFn: async () => {
       const { count } = await supabase.from("programs").select("*", { count: "exact", head: true });
