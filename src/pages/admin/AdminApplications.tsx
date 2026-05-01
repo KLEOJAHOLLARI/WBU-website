@@ -40,7 +40,7 @@ const AdminApplications = () => {
   useEffect(() => { setPage(0); }, [statusFilter, programFilter]);
 
   // Page of applications (server-side filtered + paginated)
-  const { data: pageData, isLoading, isFetching } = useQuery({
+  const { data: pageData, isLoading, isFetching, error: loadError, refetch } = useQuery({
     queryKey: ["admin-applications", { statusFilter, programFilter, search, page }],
     queryFn: async () => {
       let q = supabase
@@ -62,6 +62,10 @@ const AdminApplications = () => {
     },
     placeholderData: keepPreviousData,
   });
+
+  useEffect(() => {
+    if (loadError) sonnerToast.error("Couldn't load applications");
+  }, [loadError]);
 
   const applications = pageData?.rows ?? [];
   const totalCount = pageData?.count ?? 0;
