@@ -30,7 +30,7 @@ const AdminStudents = () => {
   } | null>(null);
   const [applyingScholarship, setApplyingScholarship] = useState(false);
 
-  const { data: profiles = [], isLoading } = useQuery({
+  const { data: profiles = [], isLoading, error: profilesError, refetch: refetchProfiles } = useQuery({
     queryKey: ["admin-students"],
     queryFn: async () => {
       const { data, error } = await supabase.from("profiles").select("*").order("created_at", { ascending: false });
@@ -38,6 +38,10 @@ const AdminStudents = () => {
       return data;
     },
   });
+
+  useEffect(() => {
+    if (profilesError) sonnerToast.error("Couldn't load students");
+  }, [profilesError]);
 
   const { data: allRoles = [] } = useQuery({
     queryKey: ["admin-student-roles"],
