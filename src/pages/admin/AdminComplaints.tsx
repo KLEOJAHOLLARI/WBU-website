@@ -39,7 +39,7 @@ const AdminComplaints = () => {
   const [filter, setFilter] = useState<string>("all");
   const [responses, setResponses] = useState<Record<string, string>>({});
 
-  const { data: complaints = [], isLoading } = useQuery({
+  const { data: complaints = [], isLoading, error, refetch } = useQuery({
     queryKey: ["admin-complaints"],
     queryFn: async () => {
       const { data, error } = await supabase
@@ -50,6 +50,10 @@ const AdminComplaints = () => {
       return data as Complaint[];
     },
   });
+
+  useEffect(() => {
+    if (error) toast.error("Couldn't load complaints");
+  }, [error]);
 
   const update = useMutation({
     mutationFn: async ({ id, patch }: { id: string; patch: Partial<Complaint> }) => {
