@@ -149,9 +149,23 @@ const StudentTranscript = () => {
       </TableHeader>
       <TableBody>
         {rows.map((row) => (
-          <TableRow key={row.enrollmentId}>
+          <TableRow key={row.enrollmentId} className={!row.isLatestAttempt ? "opacity-70" : undefined}>
             <TableCell className="font-medium">
-              {row.courseName}
+              <div className="flex items-center gap-2 flex-wrap">
+                <span>{row.courseName}</span>
+                {row.attemptNumber > 1 && (
+                  <Badge
+                    variant="outline"
+                    className={
+                      row.isLatestAttempt
+                        ? "border-orange-500/40 text-orange-600 bg-orange-500/10 text-[10px]"
+                        : "text-[10px] text-muted-foreground"
+                    }
+                  >
+                    Attempt {row.attemptNumber}
+                  </Badge>
+                )}
+              </div>
               <span className="block text-xs text-muted-foreground sm:hidden">
                 {row.courseCode} · Y{row.year}/S{row.semester}
               </span>
