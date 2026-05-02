@@ -59,25 +59,49 @@ export const gradeToLetter = (grade: number): string => percentToLetter(grade);
 export const gradeToGPA = (grade: number): number => percentToGPA(grade);
 export const gradeToAlbanian = (grade: number): number => percentToAlbanian(grade);
 
+/**
+ * Build transcript rows.
+ *
+ * By default, ALL attempts for a course are returned (one row per enrollment),
+ * so retake history is preserved. The latest attempt of each course is marked
+ * `isLatestAttempt: true`. Pass `{ keepAllAttempts: false }` to collapse to
+ * the highest-attempt enrollment per course (legacy behaviour).
+ */
 export function buildTranscriptRows(
   enrollments: TranscriptEnrollment[],
   grades: TranscriptGradeRow[],
-  components: TranscriptComponent[]
+  components: TranscriptComponent[],
+  options: { keepAllAttempts?: boolean } = {}
 ): TranscriptRow[] {
-  // Deduplicate enrollments by course_id — keep the first one encountered.
-  // Prevents duplicate transcript rows when a student has multiple enrollment records
-  // for the same course (legacy data, re-enrollments, etc.).
-  const seenCourseIds = new Set<string>();
-  const unique: TranscriptEnrollment[] = [];
-  for (const e of enrollments) {
-    if (!e.courses) continue;
-    if (seenCourseIds.has(e.course_id)) continue;
-    seenCourseIds.add(e.course_id);
-    unique.push(e);
+  const keepAll = options.keepAllAttempts !== false;
+
+  const cleaned: TranscriptEnrollment[] = enrollments.filter((e) => !!e.courses);
+
+  // Latest attempt per course_id (max attempt_number; default 1)
+  const latestByCourse = new Map<string, number>();
+  for (const e of cleaned) {
+    const a = e.attempt_number ?? 1;
+    const prev = latestByCourse.get(e.course_id) ?? 0;
+    if (a > prev) latestByCourse.set(e.course_id, a);
   }
 
-  return unique
-    .map((enrollment) => {
+  let working: TranscriptEnrollment[];
+  if (keepAll) {
+    working = cleaned;
+  } else {
+    // Keep only the latest attempt per course
+    const byCourse = new Map<string, TranscriptEnrollment>();
+    for (const e of cleaned) {
+      const a = e.attempt_number ?? 1;
+      const cur = byCourse.get(e.course_id);
+      const curA = cur?.attempt_number ?? 1;
+      if (!cur || a > curA) byCourse.set(e.course_id, e);
+    }
+    working = Array.from(byCourse.values());
+  }
+
+  return working
+    .map((enrollment): TranscriptRow => {
       const course = enrollment.courses!;
       const courseComponents = components.filter((c) => c.course_id === course.id);
       const enrollmentGrades = grades.filter((g) => g.enrollment_id === enrollment.id);
@@ -107,12 +131,8 @@ export function buildTranscriptRows(
           }
         }
 
-        // Course is "Completed" only when every component has at least one recorded score.
         isComplete = gradedComponents === courseComponents.length && totalWeight > 0;
-
-        if (isComplete) {
-          weightedTotal = weightedSum / totalWeight;
-        }
+        if (isComplete) weightedTotal = weightedSum / totalWeight;
       }
 
       const status: TranscriptRow["status"] =
@@ -121,6 +141,8 @@ export function buildTranscriptRows(
           : weightedTotal >= 45
           ? "Passed"
           : "Failed";
+
+      const attemptNumber = enrollment.attempt_number ?? 1;
 
       return {
         enrollmentId: enrollment.id,
@@ -134,13 +156,17 @@ export function buildTranscriptRows(
           weightedTotal !== null ? Math.round(weightedTotal * 100) / 100 : null,
         status,
         isComplete,
+        attemptNumber,
+        isRetake: !!enrollment.is_retake || attemptNumber > 1,
+        isLatestAttempt: attemptNumber === (latestByCourse.get(course.id) ?? 1),
       };
     })
     .sort(
       (a, b) =>
         a.year - b.year ||
         a.semester - b.semester ||
-        a.courseName.localeCompare(b.courseName)
+        a.courseName.localeCompare(b.courseName) ||
+        a.attemptNumber - b.attemptNumber
     );
 }
 
