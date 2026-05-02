@@ -154,6 +154,7 @@ const App = () => (
             <Route path="/portal/timetable" element={<StudentTimetable />} />
             <Route path="/portal/courses" element={<StudentCourses />} />
             <Route path="/portal/registration" element={<StudentRegistration />} />
+            <Route path="/portal/retake" element={<StudentRetake />} />
             <Route path="/portal/courses/:id" element={<StudentCourseDetail />} />
             <Route path="/portal/profile" element={<StudentProfile />} />
             <Route path="/portal/transcript" element={<StudentTranscript />} />
