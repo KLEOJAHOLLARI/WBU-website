@@ -1,10 +1,12 @@
 import { useState, useMemo, useEffect } from "react";
+import { Link } from "react-router-dom";
 import StudentLayout from "@/components/StudentLayout";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/hooks/useAuth";
 import { useToast } from "@/hooks/use-toast";
 import { useActiveSemester } from "@/hooks/useActiveSemester";
+import { useFailedCourses } from "@/hooks/useFailedCourses";
 import SemesterBadge from "@/components/SemesterBadge";
 import { Badge } from "@/components/ui/badge";
 import {
