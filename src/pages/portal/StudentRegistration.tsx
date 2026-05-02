@@ -29,6 +29,7 @@ import {
   Lock,
   GraduationCap,
   Inbox,
+  AlertTriangle,
 } from "lucide-react";
 
 type CourseRow = {
