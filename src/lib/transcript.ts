@@ -186,12 +186,16 @@ export interface TranscriptSummary {
 export function computeTranscriptSummary(
   rows: TranscriptRow[]
 ): TranscriptSummary {
-  const completed = rows.filter((r) => r.isComplete && r.grade !== null);
+  // Use only the latest attempt per course for stats so retake history isn't double-counted.
+  // (Rows without explicit attempt info will all have isLatestAttempt=true.)
+  const latest = rows.filter((r) => r.isLatestAttempt !== false);
+
+  const completed = latest.filter((r) => r.isComplete && r.grade !== null);
   const passed = completed.filter((r) => r.status === "Passed");
-  const inProgress = rows.filter((r) => !r.isComplete);
+  const inProgress = latest.filter((r) => !r.isComplete);
 
   const totalECTS = passed.reduce((s, r) => s + r.ects, 0);
-  const totalCredits = rows.reduce((s, r) => s + r.ects, 0);
+  const totalCredits = latest.reduce((s, r) => s + r.ects, 0);
 
   let cgpa = 0;
   let weightedAvg = 0;
@@ -217,7 +221,7 @@ export function computeTranscriptSummary(
     cgpa: Math.round(cgpa * 100) / 100,
     gpaAlbanian: Math.round(gpaAlbanian * 100) / 100,
     weightedAvg: Math.round(weightedAvg * 100) / 100,
-    totalCourses: rows.length,
+    totalCourses: latest.length,
     passedCourses: passed.length,
     completedCourses: completed.length,
     inProgressCourses: inProgress.length,
