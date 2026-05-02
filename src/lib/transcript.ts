@@ -49,6 +49,9 @@ export interface TranscriptRow {
   grade: number | null; // weighted percentage 0-100
   status: "Passed" | "Failed" | "In Progress";
   isComplete: boolean; // true only when every component has a score
+  attemptNumber: number;
+  isRetake: boolean;
+  isLatestAttempt: boolean; // true if this is the latest attempt for the course
 }
 
 // Re-exported from the centralized grading module so callers don't need to switch imports.
