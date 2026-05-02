@@ -47,7 +47,7 @@ const StudentTranscript = () => {
     queryFn: async () => {
       const { data: enrollments, error: enrollErr } = await supabase
         .from("enrollments")
-        .select("id, course_id, courses(id, name, code, semester, year, ects)")
+        .select("id, course_id, attempt_number, is_retake, courses(id, name, code, semester, year, ects)")
         .eq("user_id", user!.id);
       if (enrollErr) throw enrollErr;
       if (!enrollments?.length) return [];
