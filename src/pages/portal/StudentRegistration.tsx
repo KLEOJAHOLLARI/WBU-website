@@ -378,6 +378,23 @@ const StudentRegistration = () => {
 
       <div className="mt-5 space-y-4">
         {renderStatusAlert()}
+        {failedCourses.length > 0 && (
+          <div className="rounded-xl border border-destructive/30 bg-destructive/5 p-4 flex items-start gap-3">
+            <AlertTriangle className="h-5 w-5 text-destructive mt-0.5 shrink-0" />
+            <div className="flex-1">
+              <p className="font-semibold text-destructive">
+                You must retake failed courses before taking new ones
+              </p>
+              <p className="text-sm text-muted-foreground">
+                You have {failedCourses.length} failed course{failedCourses.length > 1 ? "s" : ""}{" "}
+                ({failedCourses.map((c) => c.courseCode || c.courseName).join(", ")}). Please go to{" "}
+                <Link to="/portal/retake" className="underline font-medium">Retake Courses</Link>{" "}
+                to submit a retake request — once your advisor approves, the retake will appear in
+                your course list.
+              </p>
+            </div>
+          </div>
+        )}
         {willChargeLateFee && (
           <div className="rounded-xl border border-destructive/30 bg-destructive/5 p-4 flex items-start gap-3">
             <XCircle className="h-5 w-5 text-destructive mt-0.5 shrink-0" />
