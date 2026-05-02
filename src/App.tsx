@@ -49,6 +49,7 @@ import AdminAdvisors from "./pages/admin/AdminAdvisors";
 import AdminProfile from "./pages/admin/AdminProfile";
 import AdminTranscripts from "./pages/admin/AdminTranscripts";
 import AdminTranscriptSettings from "./pages/admin/AdminTranscriptSettings";
+import AdminRetakeSettings from "./pages/admin/AdminRetakeSettings";
 import AdminAnalytics from "./pages/admin/AdminAnalytics";
 import AdminGraduation from "./pages/admin/AdminGraduation";
 import AdminSemesters from "./pages/admin/AdminSemesters";
