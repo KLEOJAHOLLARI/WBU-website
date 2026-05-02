@@ -38,6 +38,7 @@ import StudentNotifications from "./pages/portal/StudentNotifications";
 import StudentTimetable from "./pages/portal/StudentTimetable";
 import StudentCourses from "./pages/portal/StudentCourses";
 import StudentRegistration from "./pages/portal/StudentRegistration";
+import StudentRetake from "./pages/portal/StudentRetake";
 import StudentCourseDetail from "./pages/portal/StudentCourseDetail";
 import ProfessorDashboard from "./pages/professor/ProfessorDashboard";
 import ProfessorCourses from "./pages/professor/ProfessorCourses";
