@@ -20,6 +20,7 @@ const navGroups = [
       { to: "/portal", label: "Dashboard", icon: LayoutDashboard },
       { to: "/portal/courses", label: "My Courses", icon: BookOpen },
       { to: "/portal/registration", label: "Course Registration", icon: ClipboardEdit },
+      { to: "/portal/retake", label: "Retake Courses", icon: RefreshCw },
       { to: "/portal/applications", label: "Applications", icon: FileText },
     ],
   },
