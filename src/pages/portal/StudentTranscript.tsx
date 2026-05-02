@@ -47,7 +47,7 @@ const StudentTranscript = () => {
     queryFn: async () => {
       const { data: enrollments, error: enrollErr } = await supabase
         .from("enrollments")
-        .select("id, course_id, attempt_number, is_retake, courses(id, name, code, semester, year, ects)")
+        .select("id, course_id, courses(id, name, code, semester, year, ects)")
         .eq("user_id", user!.id);
       if (enrollErr) throw enrollErr;
       if (!enrollments?.length) return [];
@@ -149,23 +149,9 @@ const StudentTranscript = () => {
       </TableHeader>
       <TableBody>
         {rows.map((row) => (
-          <TableRow key={row.enrollmentId} className={!row.isLatestAttempt ? "opacity-70" : undefined}>
+          <TableRow key={row.enrollmentId}>
             <TableCell className="font-medium">
-              <div className="flex items-center gap-2 flex-wrap">
-                <span>{row.courseName}</span>
-                {row.attemptNumber > 1 && (
-                  <Badge
-                    variant="outline"
-                    className={
-                      row.isLatestAttempt
-                        ? "border-orange-500/40 text-orange-600 bg-orange-500/10 text-[10px]"
-                        : "text-[10px] text-muted-foreground"
-                    }
-                  >
-                    Attempt {row.attemptNumber}
-                  </Badge>
-                )}
-              </div>
+              {row.courseName}
               <span className="block text-xs text-muted-foreground sm:hidden">
                 {row.courseCode} · Y{row.year}/S{row.semester}
               </span>

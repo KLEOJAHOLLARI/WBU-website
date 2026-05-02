@@ -38,7 +38,6 @@ import StudentNotifications from "./pages/portal/StudentNotifications";
 import StudentTimetable from "./pages/portal/StudentTimetable";
 import StudentCourses from "./pages/portal/StudentCourses";
 import StudentRegistration from "./pages/portal/StudentRegistration";
-import StudentRetake from "./pages/portal/StudentRetake";
 import StudentCourseDetail from "./pages/portal/StudentCourseDetail";
 import ProfessorDashboard from "./pages/professor/ProfessorDashboard";
 import ProfessorCourses from "./pages/professor/ProfessorCourses";
@@ -49,7 +48,6 @@ import AdminAdvisors from "./pages/admin/AdminAdvisors";
 import AdminProfile from "./pages/admin/AdminProfile";
 import AdminTranscripts from "./pages/admin/AdminTranscripts";
 import AdminTranscriptSettings from "./pages/admin/AdminTranscriptSettings";
-import AdminRetakeSettings from "./pages/admin/AdminRetakeSettings";
 import AdminAnalytics from "./pages/admin/AdminAnalytics";
 import AdminGraduation from "./pages/admin/AdminGraduation";
 import AdminSemesters from "./pages/admin/AdminSemesters";
@@ -129,7 +127,6 @@ const App = () => (
             <Route path="/admin/profile" element={<AdminProfile />} />
             <Route path="/admin/transcripts" element={<AdminTranscripts />} />
             <Route path="/admin/transcripts/settings" element={<AdminTranscriptSettings />} />
-            <Route path="/admin/retake-settings" element={<AdminRetakeSettings />} />
             <Route path="/admin/analytics" element={<AdminAnalytics />} />
             <Route path="/admin/graduation" element={<AdminGraduation />} />
             <Route path="/admin/semesters" element={<AdminSemesters />} />
@@ -156,7 +153,6 @@ const App = () => (
             <Route path="/portal/timetable" element={<StudentTimetable />} />
             <Route path="/portal/courses" element={<StudentCourses />} />
             <Route path="/portal/registration" element={<StudentRegistration />} />
-            <Route path="/portal/retake" element={<StudentRetake />} />
             <Route path="/portal/courses/:id" element={<StudentCourseDetail />} />
             <Route path="/portal/profile" element={<StudentProfile />} />
             <Route path="/portal/transcript" element={<StudentTranscript />} />

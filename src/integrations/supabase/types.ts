@@ -490,81 +490,6 @@ export type Database = {
           },
         ]
       }
-      course_retake_requests: {
-        Row: {
-          advisor_comment: string | null
-          attempt_number: number
-          course_id: string
-          created_at: string
-          fee_amount: number | null
-          fee_charge_id: string | null
-          fee_currency: string | null
-          id: string
-          original_enrollment_id: string | null
-          previous_albanian: number | null
-          previous_grade: number | null
-          reviewed_at: string | null
-          reviewed_by: string | null
-          status: string
-          target_semester_id: string | null
-          updated_at: string
-          user_id: string
-        }
-        Insert: {
-          advisor_comment?: string | null
-          attempt_number?: number
-          course_id: string
-          created_at?: string
-          fee_amount?: number | null
-          fee_charge_id?: string | null
-          fee_currency?: string | null
-          id?: string
-          original_enrollment_id?: string | null
-          previous_albanian?: number | null
-          previous_grade?: number | null
-          reviewed_at?: string | null
-          reviewed_by?: string | null
-          status?: string
-          target_semester_id?: string | null
-          updated_at?: string
-          user_id: string
-        }
-        Update: {
-          advisor_comment?: string | null
-          attempt_number?: number
-          course_id?: string
-          created_at?: string
-          fee_amount?: number | null
-          fee_charge_id?: string | null
-          fee_currency?: string | null
-          id?: string
-          original_enrollment_id?: string | null
-          previous_albanian?: number | null
-          previous_grade?: number | null
-          reviewed_at?: string | null
-          reviewed_by?: string | null
-          status?: string
-          target_semester_id?: string | null
-          updated_at?: string
-          user_id?: string
-        }
-        Relationships: [
-          {
-            foreignKeyName: "course_retake_requests_original_enrollment_id_fkey"
-            columns: ["original_enrollment_id"]
-            isOneToOne: false
-            referencedRelation: "enrollments"
-            referencedColumns: ["id"]
-          },
-          {
-            foreignKeyName: "course_retake_requests_target_semester_id_fkey"
-            columns: ["target_semester_id"]
-            isOneToOne: false
-            referencedRelation: "academic_semesters"
-            referencedColumns: ["id"]
-          },
-        ]
-      }
       course_shared_programs: {
         Row: {
           course_id: string
@@ -710,30 +635,21 @@ export type Database = {
       }
       enrollments: {
         Row: {
-          attempt_number: number
           course_id: string
           created_at: string
           id: string
-          is_retake: boolean
-          original_enrollment_id: string | null
           user_id: string
         }
         Insert: {
-          attempt_number?: number
           course_id: string
           created_at?: string
           id?: string
-          is_retake?: boolean
-          original_enrollment_id?: string | null
           user_id: string
         }
         Update: {
-          attempt_number?: number
           course_id?: string
           created_at?: string
           id?: string
-          is_retake?: boolean
-          original_enrollment_id?: string | null
           user_id?: string
         }
         Relationships: [
@@ -742,13 +658,6 @@ export type Database = {
             columns: ["course_id"]
             isOneToOne: false
             referencedRelation: "courses"
-            referencedColumns: ["id"]
-          },
-          {
-            foreignKeyName: "enrollments_original_enrollment_id_fkey"
-            columns: ["original_enrollment_id"]
-            isOneToOne: false
-            referencedRelation: "enrollments"
             referencedColumns: ["id"]
           },
         ]
@@ -2084,16 +1993,6 @@ export type Database = {
     Functions: {
       generate_exam_code: { Args: never; Returns: string }
       generate_student_id: { Args: never; Returns: string }
-      get_user_failed_courses: {
-        Args: { _user_id: string }
-        Returns: {
-          albanian: number
-          attempt_number: number
-          course_id: string
-          enrollment_id: string
-          weighted_percent: number
-        }[]
-      }
       has_role: {
         Args: {
           _role: Database["public"]["Enums"]["app_role"]
