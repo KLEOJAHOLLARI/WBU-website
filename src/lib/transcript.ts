@@ -12,6 +12,8 @@ import { percentToAlbanian, percentToGPA, percentToLetter } from "./grading";
 export interface TranscriptEnrollment {
   id: string;
   course_id: string;
+  attempt_number?: number | null;
+  is_retake?: boolean | null;
   courses: {
     id: string;
     name: string;
