@@ -7,7 +7,7 @@ import {
   GraduationCap, LayoutDashboard, BookOpen, Newspaper, Mail, FileText, Users,
   LogOut, CalendarDays, UserPlus, Megaphone, UserCircle, UserCheck, Menu, ScrollText, ArrowLeft,
   BarChart3, Calendar, CreditCard, ShieldCheck, Send, IdCard, ScanLine, Activity, FileSignature,
-  Building2, MessageSquareWarning, Bell,
+  Building2, MessageSquareWarning, Bell, RefreshCw,
 } from "lucide-react";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Sheet, SheetContent, SheetTrigger } from "@/components/ui/sheet";
