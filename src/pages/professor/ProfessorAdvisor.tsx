@@ -147,6 +147,79 @@ const ProfessorAdvisor = () => {
       toast({ title: "Error", description: e.message, variant: "destructive" }),
   });
 
+  // ===== Retake requests =====
+  const { data: retakeRequests = [] } = useQuery({
+    queryKey: ["advisor-retake-requests", programSlugs],
+    enabled: programSlugs.length > 0,
+    queryFn: async () => {
+      const { data: courses, error: cErr } = await supabase
+        .from("courses")
+        .select("id, name, code, program, ects")
+        .in("program", programSlugs);
+      if (cErr) throw cErr;
+      if (!courses?.length) return [];
+      const courseIds = courses.map((c) => c.id);
+
+      const { data: rr, error } = await supabase
+        .from("course_retake_requests")
+        .select("*")
+        .in("course_id", courseIds)
+        .order("created_at", { ascending: false });
+      if (error) throw error;
+
+      const userIds = [...new Set((rr || []).map((r: any) => r.user_id))];
+      let profiles: any[] = [];
+      if (userIds.length) {
+        const { data: pData } = await supabase
+          .from("profiles")
+          .select("user_id, full_name, email, program, student_id")
+          .in("user_id", userIds);
+        profiles = pData || [];
+      }
+
+      return (rr || []).map((r: any) => ({
+        ...r,
+        course: courses.find((c) => c.id === r.course_id),
+        student: profiles.find((p) => p.user_id === r.user_id),
+      }));
+    },
+  });
+
+  const [retakeComments, setRetakeComments] = useState<Record<string, string>>({});
+
+  const retakeMutation = useMutation({
+    mutationFn: async ({
+      id,
+      status,
+      comment,
+    }: {
+      id: string;
+      status: "approved" | "rejected";
+      comment?: string;
+    }) => {
+      const { error } = await supabase
+        .from("course_retake_requests")
+        .update({
+          status,
+          advisor_comment: comment || null,
+          reviewed_by: user!.id,
+          reviewed_at: new Date().toISOString(),
+        } as any)
+        .eq("id", id);
+      if (error) throw error;
+    },
+    onSuccess: (_d, vars) => {
+      qc.invalidateQueries({ queryKey: ["advisor-retake-requests"] });
+      toast({
+        title: vars.status === "approved" ? "Retake approved" : "Retake rejected",
+      });
+    },
+    onError: (e: any) =>
+      toast({ title: "Error", description: e.message, variant: "destructive" }),
+  });
+
+  const pendingRetakes = retakeRequests.filter((r: any) => r.status === "pending");
+
   const pendingRequests = requests.filter((r) => r.status === "pending");
   const processedRequests = requests.filter((r) => r.status !== "pending");
 
