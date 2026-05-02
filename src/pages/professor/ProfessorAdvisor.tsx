@@ -17,9 +17,12 @@ import {
   Layers,
   Search,
   X,
+  RefreshCw,
+  MessageSquare,
 } from "lucide-react";
 import { Badge } from "@/components/ui/badge";
 import { Input } from "@/components/ui/input";
+import { Textarea } from "@/components/ui/textarea";
 import {
   Select,
   SelectContent,
