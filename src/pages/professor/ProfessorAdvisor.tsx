@@ -17,9 +17,12 @@ import {
   Layers,
   Search,
   X,
+  RefreshCw,
+  MessageSquare,
 } from "lucide-react";
 import { Badge } from "@/components/ui/badge";
 import { Input } from "@/components/ui/input";
+import { Textarea } from "@/components/ui/textarea";
 import {
   Select,
   SelectContent,
@@ -143,6 +146,79 @@ const ProfessorAdvisor = () => {
     onError: (e: any) =>
       toast({ title: "Error", description: e.message, variant: "destructive" }),
   });
+
+  // ===== Retake requests =====
+  const { data: retakeRequests = [] } = useQuery({
+    queryKey: ["advisor-retake-requests", programSlugs],
+    enabled: programSlugs.length > 0,
+    queryFn: async () => {
+      const { data: courses, error: cErr } = await supabase
+        .from("courses")
+        .select("id, name, code, program, ects")
+        .in("program", programSlugs);
+      if (cErr) throw cErr;
+      if (!courses?.length) return [];
+      const courseIds = courses.map((c) => c.id);
+
+      const { data: rr, error } = await supabase
+        .from("course_retake_requests")
+        .select("*")
+        .in("course_id", courseIds)
+        .order("created_at", { ascending: false });
+      if (error) throw error;
+
+      const userIds = [...new Set((rr || []).map((r: any) => r.user_id))];
+      let profiles: any[] = [];
+      if (userIds.length) {
+        const { data: pData } = await supabase
+          .from("profiles")
+          .select("user_id, full_name, email, program, student_id")
+          .in("user_id", userIds);
+        profiles = pData || [];
+      }
+
+      return (rr || []).map((r: any) => ({
+        ...r,
+        course: courses.find((c) => c.id === r.course_id),
+        student: profiles.find((p) => p.user_id === r.user_id),
+      }));
+    },
+  });
+
+  const [retakeComments, setRetakeComments] = useState<Record<string, string>>({});
+
+  const retakeMutation = useMutation({
+    mutationFn: async ({
+      id,
+      status,
+      comment,
+    }: {
+      id: string;
+      status: "approved" | "rejected";
+      comment?: string;
+    }) => {
+      const { error } = await supabase
+        .from("course_retake_requests")
+        .update({
+          status,
+          advisor_comment: comment || null,
+          reviewed_by: user!.id,
+          reviewed_at: new Date().toISOString(),
+        } as any)
+        .eq("id", id);
+      if (error) throw error;
+    },
+    onSuccess: (_d, vars) => {
+      qc.invalidateQueries({ queryKey: ["advisor-retake-requests"] });
+      toast({
+        title: vars.status === "approved" ? "Retake approved" : "Retake rejected",
+      });
+    },
+    onError: (e: any) =>
+      toast({ title: "Error", description: e.message, variant: "destructive" }),
+  });
+
+  const pendingRetakes = retakeRequests.filter((r: any) => r.status === "pending");
 
   const pendingRequests = requests.filter((r) => r.status === "pending");
   const processedRequests = requests.filter((r) => r.status !== "pending");
@@ -429,6 +505,156 @@ const ProfessorAdvisor = () => {
                       </tbody>
                     </table>
                   </div>
+                </div>
+              );
+            })}
+          </div>
+        )}
+      </div>
+
+      {/* Retake Requests */}
+      <div className="mt-8">
+        <div className="flex items-center gap-2 mb-4">
+          <RefreshCw className="h-5 w-5 text-orange-500" />
+          <h2 className="font-display text-lg font-semibold text-foreground">Retake Requests</h2>
+          {pendingRetakes.length > 0 && (
+            <Badge className="bg-orange-500/15 text-orange-600 border-orange-500/25 hover:bg-orange-500/15">
+              {pendingRetakes.length} pending
+            </Badge>
+          )}
+        </div>
+
+        {retakeRequests.length === 0 ? (
+          <div className="rounded-xl border border-border bg-card p-6 text-center text-sm text-muted-foreground">
+            No retake requests yet.
+          </div>
+        ) : (
+          <div className="space-y-3">
+            {retakeRequests.map((r: any) => {
+              const isPending = r.status === "pending";
+              return (
+                <div
+                  key={r.id}
+                  className="rounded-xl border border-border bg-card p-4"
+                >
+                  <div className="flex flex-wrap items-start justify-between gap-3">
+                    <div className="flex items-start gap-3 flex-1 min-w-0">
+                      <div className="rounded-lg bg-orange-500/10 p-2">
+                        <RefreshCw className="h-4 w-4 text-orange-500" />
+                      </div>
+                      <div className="min-w-0">
+                        <div className="flex items-center gap-2 flex-wrap">
+                          <p className="font-semibold text-foreground">
+                            {r.student?.full_name || "Unknown"}
+                          </p>
+                          <Badge className="bg-orange-500/15 text-orange-600 border-orange-500/25 hover:bg-orange-500/15">
+                            Retake · Attempt #{r.attempt_number}
+                          </Badge>
+                        </div>
+                        <p className="text-xs text-muted-foreground mt-0.5">
+                          {r.student?.student_id ? `${r.student.student_id} · ` : ""}
+                          {r.student?.email} · {r.student?.program}
+                        </p>
+                        <div className="mt-2 flex flex-wrap items-center gap-2 text-sm">
+                          <span className="inline-flex items-center rounded-md bg-primary/10 px-2 py-0.5 text-xs font-semibold text-primary">
+                            {r.course?.code || "—"}
+                          </span>
+                          <span className="font-medium text-foreground">
+                            {r.course?.name || "—"}
+                          </span>
+                          <span className="text-xs text-muted-foreground">
+                            · {r.course?.ects ?? "—"} ECTS
+                          </span>
+                        </div>
+                        <p className="mt-1 text-xs">
+                          <span className="text-muted-foreground">Previous grade:</span>{" "}
+                          <span className="font-semibold text-destructive">
+                            {r.previous_albanian ?? "—"}
+                            {r.previous_grade != null
+                              ? ` (${Math.round(Number(r.previous_grade))}%)`
+                              : ""}
+                          </span>{" "}
+                          <span className="text-muted-foreground">
+                            · Failed
+                          </span>
+                        </p>
+                      </div>
+                    </div>
+                    <div className="flex flex-col items-end gap-1">
+                      {r.status === "pending" && (
+                        <Badge className="bg-amber-500/15 text-amber-600 border-amber-500/25 hover:bg-amber-500/15">
+                          <Clock className="mr-1 h-3 w-3" /> Pending
+                        </Badge>
+                      )}
+                      {r.status === "approved" && (
+                        <Badge className="bg-emerald-500/15 text-emerald-600 border-emerald-500/25 hover:bg-emerald-500/15">
+                          <CheckCircle className="mr-1 h-3 w-3" /> Approved
+                        </Badge>
+                      )}
+                      {r.status === "rejected" && (
+                        <Badge variant="destructive" className="bg-destructive/15 text-destructive border-destructive/25 hover:bg-destructive/15">
+                          <XCircle className="mr-1 h-3 w-3" /> Rejected
+                        </Badge>
+                      )}
+                      {r.status === "cancelled" && (
+                        <Badge variant="secondary">Cancelled</Badge>
+                      )}
+                      <span className="text-[11px] text-muted-foreground">
+                        {new Date(r.created_at).toLocaleDateString()}
+                      </span>
+                    </div>
+                  </div>
+
+                  {isPending ? (
+                    <div className="mt-3 flex flex-col gap-2 sm:flex-row">
+                      <div className="flex-1">
+                        <div className="relative">
+                          <MessageSquare className="absolute left-3 top-3 h-4 w-4 text-muted-foreground" />
+                          <Textarea
+                            placeholder="Optional comment to the student…"
+                            value={retakeComments[r.id] || ""}
+                            onChange={(e) =>
+                              setRetakeComments((p) => ({ ...p, [r.id]: e.target.value }))
+                            }
+                            className="pl-9 min-h-[60px] text-sm"
+                          />
+                        </div>
+                      </div>
+                      <div className="flex flex-row gap-2 sm:flex-col">
+                        <button
+                          onClick={() =>
+                            retakeMutation.mutate({
+                              id: r.id,
+                              status: "approved",
+                              comment: retakeComments[r.id],
+                            })
+                          }
+                          disabled={retakeMutation.isPending}
+                          className="inline-flex items-center justify-center gap-1.5 rounded-lg bg-emerald-600 px-3.5 py-2 text-xs font-semibold text-white transition-all hover:bg-emerald-700 disabled:opacity-60"
+                        >
+                          <CheckCircle className="h-3.5 w-3.5" /> Approve
+                        </button>
+                        <button
+                          onClick={() =>
+                            retakeMutation.mutate({
+                              id: r.id,
+                              status: "rejected",
+                              comment: retakeComments[r.id],
+                            })
+                          }
+                          disabled={retakeMutation.isPending}
+                          className="inline-flex items-center justify-center gap-1.5 rounded-lg border border-destructive/30 px-3.5 py-2 text-xs font-semibold text-destructive transition-all hover:bg-destructive/10 disabled:opacity-60"
+                        >
+                          <XCircle className="h-3.5 w-3.5" /> Reject
+                        </button>
+                      </div>
+                    </div>
+                  ) : r.advisor_comment ? (
+                    <p className="mt-3 rounded-lg bg-muted/40 px-3 py-2 text-xs text-muted-foreground">
+                      <span className="font-medium text-foreground">Comment:</span>{" "}
+                      {r.advisor_comment}
+                    </p>
+                  ) : null}
                 </div>
               );
             })}
