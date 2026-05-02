@@ -48,6 +48,7 @@ const StudentRegistration = () => {
   const { toast } = useToast();
   const qc = useQueryClient();
   const { data: activeSemester } = useActiveSemester();
+  const { data: failedCourses = [] } = useFailedCourses();
 
   const [cart, setCart] = useState<CourseRow[]>([]);
   const [pickerOpen, setPickerOpen] = useState(false);
