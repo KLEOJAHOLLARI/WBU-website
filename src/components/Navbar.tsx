@@ -66,24 +66,14 @@ const Navbar = () => {
           <div className="ml-2 flex items-center gap-2">
             <LanguageSwitcher />
             <Link
-              to="/portal/login"
+              to="/smartwbu"
               className={`rounded-lg px-3 py-2 text-xs font-semibold transition-all duration-200 border ${
                 scrolled || !isHome
                   ? "border-primary/20 text-primary hover:bg-primary hover:text-primary-foreground"
                   : "border-primary-foreground/30 text-primary-foreground hover:bg-primary-foreground/10"
               }`}
             >
-              Student
-            </Link>
-            <Link
-              to="/professor"
-              className={`rounded-lg px-3 py-2 text-xs font-semibold transition-all duration-200 border ${
-                scrolled || !isHome
-                  ? "border-accent/30 text-accent hover:bg-accent hover:text-accent-foreground"
-                  : "border-primary-foreground/30 text-primary-foreground hover:bg-primary-foreground/10"
-              }`}
-            >
-              Professor
+              SmartWBU
             </Link>
             <Link
               to="/admin/login"
@@ -142,8 +132,7 @@ const Navbar = () => {
               <div className="mt-2 flex items-center gap-3 px-3">
                 <LanguageSwitcher />
               </div>
-              <Link to="/portal/login" onClick={() => setOpen(false)} className="mt-2 rounded-lg border border-primary/20 px-4 py-2.5 text-center text-sm font-semibold text-primary">Student Portal</Link>
-              <Link to="/professor" onClick={() => setOpen(false)} className="mt-2 rounded-lg border border-accent/30 px-4 py-2.5 text-center text-sm font-semibold text-accent">Professor Portal</Link>
+              <Link to="/smartwbu" onClick={() => setOpen(false)} className="mt-2 rounded-lg border border-primary/20 px-4 py-2.5 text-center text-sm font-semibold text-primary">SmartWBU</Link>
               <Link to="/admin/login" onClick={() => setOpen(false)} className="mt-2 rounded-lg border border-muted-foreground/30 px-4 py-2.5 text-center text-sm font-semibold text-muted-foreground">Admin Panel</Link>
               <Link to="/admissions" onClick={() => setOpen(false)} className="mt-3 rounded-full bg-accent px-4 py-2.5 text-center text-sm font-semibold text-accent-foreground shadow-lg shadow-accent/25">
                 {t("nav.applyNow")}

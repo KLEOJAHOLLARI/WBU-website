@@ -28,6 +28,7 @@ import AdminCourses from "./pages/admin/AdminCourses";
 import AdminAccounts from "./pages/admin/AdminAccounts";
 import Faculty from "./pages/Faculty";
 import NotFound from "./pages/NotFound";
+import SmartWBU from "./pages/SmartWBU";
 import StudentLogin from "./pages/portal/StudentLogin";
 import StudentRegister from "./pages/portal/StudentRegister";
 import StudentDashboard from "./pages/portal/StudentDashboard";
@@ -146,6 +147,7 @@ const App = () => (
             <Route path="/admin/rooms" element={<AdminRooms />} />
             <Route path="/admin/complaints" element={<AdminComplaints />} />
             <Route path="/admin/push-notifications" element={<AdminPushNotifications />} />
+            <Route path="/smartwbu" element={<SmartWBU />} />
             <Route path="/portal/login" element={<StudentLogin />} />
             <Route path="/portal/register" element={<StudentRegister />} />
             <Route path="/portal" element={<StudentDashboard />} />
