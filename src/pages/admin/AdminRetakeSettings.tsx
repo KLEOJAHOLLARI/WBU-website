@@ -72,7 +72,7 @@ const AdminRetakeSettings = () => {
         )
         .order("created_at", { ascending: false })
         .limit(100);
-      return data as any[];
+      return (data ?? []) as any[];
     },
   });
 
