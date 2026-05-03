@@ -150,36 +150,36 @@ const App = () => (
             <Route path="/smartwbu" element={<SmartWBU />} />
             <Route path="/portal/login" element={<StudentLogin />} />
             <Route path="/portal/register" element={<StudentRegister />} />
-            <Route path="/portal" element={<StudentDashboard />} />
-            <Route path="/portal/applications" element={<StudentApplications />} />
-            <Route path="/portal/documents" element={<StudentDocuments />} />
-            <Route path="/portal/messages" element={<StudentMessages />} />
-            <Route path="/portal/notifications" element={<StudentNotifications />} />
-            <Route path="/portal/timetable" element={<StudentTimetable />} />
-            <Route path="/portal/courses" element={<StudentCourses />} />
-            <Route path="/portal/registration" element={<StudentRegistration />} />
-            <Route path="/portal/retake" element={<StudentRetake />} />
-            <Route path="/portal/courses/:id" element={<StudentCourseDetail />} />
-            <Route path="/portal/profile" element={<StudentProfile />} />
-            <Route path="/portal/transcript" element={<StudentTranscript />} />
-            <Route path="/portal/id-card" element={<StudentDigitalIDCard />} />
-            <Route path="/portal/access-history" element={<StudentAccessHistory />} />
-            <Route path="/portal/change-password" element={<ChangePassword />} />
-            <Route path="/portal/exams" element={<StudentExamSchedule />} />
-            <Route path="/portal/exams/:id" element={<ExamDetail />} />
-            <Route path="/portal/tuition" element={<StudentTuition />} />
-            <Route path="/portal/tuition/estimate" element={<StudentTuitionEstimate />} />
-            <Route path="/portal/tuition/late-fee/:lateFeeId/receipt" element={<LateFeeReceipt />} />
-            <Route path="/portal/quiz/:quizId" element={<StudentQuiz />} />
-            <Route path="/professor" element={<ProfessorDashboard />} />
-            <Route path="/professor/courses" element={<ProfessorCourses />} />
-            <Route path="/professor/courses/:id" element={<ProfessorCourseDetail />} />
-            <Route path="/professor/announcements" element={<ProfessorAnnouncements />} />
-            <Route path="/professor/advisor" element={<ProfessorAdvisor />} />
-            <Route path="/professor/transcripts" element={<ProfessorTranscripts />} />
-            <Route path="/professor/exams" element={<ProfessorExamSchedule />} />
-            <Route path="/professor/profile" element={<ProfessorProfile />} />
-            <Route path="/professor/id-card" element={<ProfessorDigitalIDCard />} />
+            <Route path="/portal" element={<RouteGuard requireRole="student"><StudentDashboard /></RouteGuard>} />
+            <Route path="/portal/applications" element={<RouteGuard requireRole="student"><StudentApplications /></RouteGuard>} />
+            <Route path="/portal/documents" element={<RouteGuard requireRole="student"><StudentDocuments /></RouteGuard>} />
+            <Route path="/portal/messages" element={<RouteGuard requireRole="student"><StudentMessages /></RouteGuard>} />
+            <Route path="/portal/notifications" element={<RouteGuard requireRole="student"><StudentNotifications /></RouteGuard>} />
+            <Route path="/portal/timetable" element={<RouteGuard requireRole="student"><StudentTimetable /></RouteGuard>} />
+            <Route path="/portal/courses" element={<RouteGuard requireRole="student"><StudentCourses /></RouteGuard>} />
+            <Route path="/portal/registration" element={<RouteGuard requireRole="student"><StudentRegistration /></RouteGuard>} />
+            <Route path="/portal/retake" element={<RouteGuard requireRole="student"><StudentRetake /></RouteGuard>} />
+            <Route path="/portal/courses/:id" element={<RouteGuard requireRole="student"><StudentCourseDetail /></RouteGuard>} />
+            <Route path="/portal/profile" element={<RouteGuard requireRole="student"><StudentProfile /></RouteGuard>} />
+            <Route path="/portal/transcript" element={<RouteGuard requireRole="student"><StudentTranscript /></RouteGuard>} />
+            <Route path="/portal/id-card" element={<RouteGuard requireRole="student"><StudentDigitalIDCard /></RouteGuard>} />
+            <Route path="/portal/access-history" element={<RouteGuard requireRole="student"><StudentAccessHistory /></RouteGuard>} />
+            <Route path="/portal/change-password" element={<RouteGuard requireRole="student"><ChangePassword /></RouteGuard>} />
+            <Route path="/portal/exams" element={<RouteGuard requireRole="student"><StudentExamSchedule /></RouteGuard>} />
+            <Route path="/portal/exams/:id" element={<RouteGuard requireRole="student"><ExamDetail /></RouteGuard>} />
+            <Route path="/portal/tuition" element={<RouteGuard requireRole="student"><StudentTuition /></RouteGuard>} />
+            <Route path="/portal/tuition/estimate" element={<RouteGuard requireRole="student"><StudentTuitionEstimate /></RouteGuard>} />
+            <Route path="/portal/tuition/late-fee/:lateFeeId/receipt" element={<RouteGuard requireRole="student"><LateFeeReceipt /></RouteGuard>} />
+            <Route path="/portal/quiz/:quizId" element={<RouteGuard requireRole="student"><StudentQuiz /></RouteGuard>} />
+            <Route path="/professor" element={<RouteGuard requireRole="professor"><ProfessorDashboard /></RouteGuard>} />
+            <Route path="/professor/courses" element={<RouteGuard requireRole="professor"><ProfessorCourses /></RouteGuard>} />
+            <Route path="/professor/courses/:id" element={<RouteGuard requireRole="professor"><ProfessorCourseDetail /></RouteGuard>} />
+            <Route path="/professor/announcements" element={<RouteGuard requireRole="professor"><ProfessorAnnouncements /></RouteGuard>} />
+            <Route path="/professor/advisor" element={<RouteGuard requireRole="professor"><ProfessorAdvisor /></RouteGuard>} />
+            <Route path="/professor/transcripts" element={<RouteGuard requireRole="professor"><ProfessorTranscripts /></RouteGuard>} />
+            <Route path="/professor/exams" element={<RouteGuard requireRole="professor"><ProfessorExamSchedule /></RouteGuard>} />
+            <Route path="/professor/profile" element={<RouteGuard requireRole="professor"><ProfessorProfile /></RouteGuard>} />
+            <Route path="/professor/id-card" element={<RouteGuard requireRole="professor"><ProfessorDigitalIDCard /></RouteGuard>} />
             <Route path="*" element={<NotFound />} />
           </Routes>
           <AIAssistant />
