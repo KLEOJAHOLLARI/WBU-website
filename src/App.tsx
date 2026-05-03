@@ -28,6 +28,7 @@ import AdminCourses from "./pages/admin/AdminCourses";
 import AdminAccounts from "./pages/admin/AdminAccounts";
 import Faculty from "./pages/Faculty";
 import NotFound from "./pages/NotFound";
+import RouteGuard from "./components/RouteGuard";
 import SmartWBU from "./pages/SmartWBU";
 import StudentLogin from "./pages/portal/StudentLogin";
 import StudentRegister from "./pages/portal/StudentRegister";
