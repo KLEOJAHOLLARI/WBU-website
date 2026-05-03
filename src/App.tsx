@@ -146,6 +146,7 @@ const App = () => (
             <Route path="/admin/rooms" element={<AdminRooms />} />
             <Route path="/admin/complaints" element={<AdminComplaints />} />
             <Route path="/admin/push-notifications" element={<AdminPushNotifications />} />
+            <Route path="/smartwbu" element={<SmartWBU />} />
             <Route path="/portal/login" element={<StudentLogin />} />
             <Route path="/portal/register" element={<StudentRegister />} />
             <Route path="/portal" element={<StudentDashboard />} />
