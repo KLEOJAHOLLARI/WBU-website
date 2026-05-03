@@ -1,8 +1,25 @@
-import { Link } from "react-router-dom";
-import { GraduationCap, BookOpen, ArrowRight } from "lucide-react";
+import { Link, Navigate } from "react-router-dom";
+import { GraduationCap, BookOpen, ArrowRight, Loader2 } from "lucide-react";
 import Layout from "@/components/Layout";
+import { useAuth } from "@/hooks/useAuth";
 
 const SmartWBU = () => {
+  const { user, isAdmin, isProfessor, loading } = useAuth();
+
+  if (loading) {
+    return (
+      <div className="flex min-h-screen items-center justify-center">
+        <Loader2 className="h-6 w-6 animate-spin text-muted-foreground" />
+      </div>
+    );
+  }
+
+  if (user) {
+    if (isAdmin) return <Navigate to="/admin" replace />;
+    if (isProfessor) return <Navigate to="/professor" replace />;
+    return <Navigate to="/portal" replace />;
+  }
+
   return (
     <Layout>
       <div className="mx-auto max-w-4xl px-4 py-16">
