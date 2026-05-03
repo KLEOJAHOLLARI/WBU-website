@@ -66,24 +66,14 @@ const Navbar = () => {
           <div className="ml-2 flex items-center gap-2">
             <LanguageSwitcher />
             <Link
-              to="/portal/login"
+              to="/smartwbu"
               className={`rounded-lg px-3 py-2 text-xs font-semibold transition-all duration-200 border ${
                 scrolled || !isHome
                   ? "border-primary/20 text-primary hover:bg-primary hover:text-primary-foreground"
                   : "border-primary-foreground/30 text-primary-foreground hover:bg-primary-foreground/10"
               }`}
             >
-              Student
-            </Link>
-            <Link
-              to="/professor"
-              className={`rounded-lg px-3 py-2 text-xs font-semibold transition-all duration-200 border ${
-                scrolled || !isHome
-                  ? "border-accent/30 text-accent hover:bg-accent hover:text-accent-foreground"
-                  : "border-primary-foreground/30 text-primary-foreground hover:bg-primary-foreground/10"
-              }`}
-            >
-              Professor
+              SmartWBU
             </Link>
             <Link
               to="/admin/login"
