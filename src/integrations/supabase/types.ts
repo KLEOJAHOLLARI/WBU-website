@@ -809,6 +809,36 @@ export type Database = {
           },
         ]
       }
+      feedback_campaigns: {
+        Row: {
+          closes_at: string
+          created_at: string
+          id: string
+          is_active: boolean
+          opens_at: string
+          semester_id: string
+          updated_at: string
+        }
+        Insert: {
+          closes_at: string
+          created_at?: string
+          id?: string
+          is_active?: boolean
+          opens_at?: string
+          semester_id: string
+          updated_at?: string
+        }
+        Update: {
+          closes_at?: string
+          created_at?: string
+          id?: string
+          is_active?: boolean
+          opens_at?: string
+          semester_id?: string
+          updated_at?: string
+        }
+        Relationships: []
+      }
       generated_documents: {
         Row: {
           created_at: string
@@ -1039,6 +1069,39 @@ export type Database = {
           slug?: string
           title?: string
           updated_at?: string
+        }
+        Relationships: []
+      }
+      professor_feedback: {
+        Row: {
+          comment: string | null
+          course_id: string
+          created_at: string
+          id: string
+          professor_id: string
+          rating: number
+          semester_id: string
+          submitter_hash: string
+        }
+        Insert: {
+          comment?: string | null
+          course_id: string
+          created_at?: string
+          id?: string
+          professor_id: string
+          rating: number
+          semester_id: string
+          submitter_hash: string
+        }
+        Update: {
+          comment?: string | null
+          course_id?: string
+          created_at?: string
+          id?: string
+          professor_id?: string
+          rating?: number
+          semester_id?: string
+          submitter_hash?: string
         }
         Relationships: []
       }
@@ -2084,6 +2147,23 @@ export type Database = {
     Functions: {
       generate_exam_code: { Args: never; Returns: string }
       generate_student_id: { Args: never; Returns: string }
+      get_all_professors_performance: {
+        Args: { _semester_id?: string }
+        Returns: {
+          attendance_score: number
+          department: string
+          feedback_count: number
+          feedback_score: number
+          full_name: string
+          grading_score: number
+          performance_score: number
+          professor_id: string
+        }[]
+      }
+      get_professor_performance: {
+        Args: { _professor_id: string; _semester_id?: string }
+        Returns: Json
+      }
       get_user_failed_courses: {
         Args: { _user_id: string }
         Returns: {
@@ -2101,6 +2181,10 @@ export type Database = {
         }
         Returns: boolean
       }
+      has_submitted_feedback: {
+        Args: { _course_id: string; _semester_id: string }
+        Returns: boolean
+      }
       record_card_scan: {
         Args: {
           _card_type?: string
@@ -2108,6 +2192,15 @@ export type Database = {
           _gate_id?: string
           _gate_name?: string
           _verification_token: string
+        }
+        Returns: Json
+      }
+      submit_professor_feedback: {
+        Args: {
+          _comment?: string
+          _course_id: string
+          _rating: number
+          _semester_id: string
         }
         Returns: Json
       }
