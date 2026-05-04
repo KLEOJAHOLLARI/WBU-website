@@ -7,7 +7,7 @@ import {
   GraduationCap, LayoutDashboard, BookOpen, Newspaper, Mail, FileText, Users,
   LogOut, CalendarDays, UserPlus, Megaphone, UserCircle, UserCheck, Menu, ScrollText, ArrowLeft,
   BarChart3, Calendar, CreditCard, ShieldCheck, Send, IdCard, ScanLine, Activity, FileSignature,
-  Building2, MessageSquareWarning, Bell, RefreshCw,
+  Building2, MessageSquareWarning, Bell, RefreshCw, Star,
 } from "lucide-react";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Sheet, SheetContent, SheetTrigger } from "@/components/ui/sheet";
@@ -73,6 +73,7 @@ const navGroups: { label: string; items: { to: string; label: string; icon: any;
     label: "Insights",
     items: [
       { to: "/admin/analytics", label: "Analytics", icon: BarChart3 },
+      { to: "/admin/staff-performance", label: "Staff Performance", icon: Star },
     ],
   },
   {
