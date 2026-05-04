@@ -88,6 +88,9 @@ import AdminCalendar from "./pages/admin/AdminCalendar";
 import AdminRooms from "./pages/admin/AdminRooms";
 import AdminComplaints from "./pages/admin/AdminComplaints";
 import AdminPushNotifications from "./pages/admin/AdminPushNotifications";
+import AdminStaffPerformance from "./pages/admin/AdminStaffPerformance";
+import ProfessorPerformance from "./pages/professor/ProfessorPerformance";
+import StudentFeedback from "./pages/portal/StudentFeedback";
 import AIAssistant from "./components/AIAssistant";
 
 const queryClient = new QueryClient();
@@ -148,6 +151,7 @@ const App = () => (
             <Route path="/admin/rooms" element={<AdminRooms />} />
             <Route path="/admin/complaints" element={<AdminComplaints />} />
             <Route path="/admin/push-notifications" element={<AdminPushNotifications />} />
+            <Route path="/admin/staff-performance" element={<AdminStaffPerformance />} />
             <Route path="/smartwbu" element={<SmartWBU />} />
             <Route path="/portal/login" element={<StudentLogin />} />
             <Route path="/portal/register" element={<StudentRegister />} />
@@ -181,6 +185,8 @@ const App = () => (
             <Route path="/professor/exams" element={<RouteGuard requireRole="professor"><ProfessorExamSchedule /></RouteGuard>} />
             <Route path="/professor/profile" element={<RouteGuard requireRole="professor"><ProfessorProfile /></RouteGuard>} />
             <Route path="/professor/id-card" element={<RouteGuard requireRole="professor"><ProfessorDigitalIDCard /></RouteGuard>} />
+            <Route path="/professor/performance" element={<RouteGuard requireRole="professor"><ProfessorPerformance /></RouteGuard>} />
+            <Route path="/portal/feedback" element={<RouteGuard requireRole="student"><StudentFeedback /></RouteGuard>} />
             <Route path="*" element={<NotFound />} />
           </Routes>
           <AIAssistant />
