@@ -642,6 +642,95 @@ export type Database = {
         }
         Relationships: []
       }
+      deans_list_entries: {
+        Row: {
+          certificate_code: string
+          created_at: string
+          full_name: string
+          gpa_4: number
+          gpa_albanian: number
+          id: string
+          program: string
+          rank: number
+          snapshot_id: string
+          user_id: string
+        }
+        Insert: {
+          certificate_code?: string
+          created_at?: string
+          full_name?: string
+          gpa_4: number
+          gpa_albanian: number
+          id?: string
+          program?: string
+          rank: number
+          snapshot_id: string
+          user_id: string
+        }
+        Update: {
+          certificate_code?: string
+          created_at?: string
+          full_name?: string
+          gpa_4?: number
+          gpa_albanian?: number
+          id?: string
+          program?: string
+          rank?: number
+          snapshot_id?: string
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "deans_list_entries_snapshot_id_fkey"
+            columns: ["snapshot_id"]
+            isOneToOne: false
+            referencedRelation: "deans_list_snapshots"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      deans_list_snapshots: {
+        Row: {
+          created_at: string
+          generated_at: string
+          generated_by: string | null
+          id: string
+          is_published: boolean
+          notes: string | null
+          program: string | null
+          published_at: string | null
+          semester_id: string
+          threshold_gpa: number
+          updated_at: string
+        }
+        Insert: {
+          created_at?: string
+          generated_at?: string
+          generated_by?: string | null
+          id?: string
+          is_published?: boolean
+          notes?: string | null
+          program?: string | null
+          published_at?: string | null
+          semester_id: string
+          threshold_gpa?: number
+          updated_at?: string
+        }
+        Update: {
+          created_at?: string
+          generated_at?: string
+          generated_by?: string | null
+          id?: string
+          is_published?: boolean
+          notes?: string | null
+          program?: string | null
+          published_at?: string | null
+          semester_id?: string
+          threshold_gpa?: number
+          updated_at?: string
+        }
+        Relationships: []
+      }
       document_template_overrides: {
         Row: {
           created_at: string
@@ -2145,6 +2234,15 @@ export type Database = {
       [_ in never]: never
     }
     Functions: {
+      generate_deans_list: {
+        Args: {
+          _min_courses?: number
+          _program?: string
+          _semester_id: string
+          _threshold?: number
+        }
+        Returns: Json
+      }
       generate_exam_code: { Args: never; Returns: string }
       generate_student_id: { Args: never; Returns: string }
       get_all_professors_performance: {
@@ -2158,6 +2256,22 @@ export type Database = {
           grading_score: number
           performance_score: number
           professor_id: string
+        }[]
+      }
+      get_my_honors: {
+        Args: never
+        Returns: {
+          certificate_code: string
+          entry_id: string
+          generated_at: string
+          gpa_4: number
+          gpa_albanian: number
+          is_published: boolean
+          program: string
+          rank: number
+          semester_id: string
+          semester_name: string
+          snapshot_id: string
         }[]
       }
       get_professor_performance: {
