@@ -92,7 +92,6 @@ import AdminStaffPerformance from "./pages/admin/AdminStaffPerformance";
 import ProfessorPerformance from "./pages/professor/ProfessorPerformance";
 import StudentFeedback from "./pages/portal/StudentFeedback";
 import AdminDeansList from "./pages/admin/AdminDeansList";
-import StudentHonors from "./pages/portal/StudentHonors";
 import DeansList from "./pages/DeansList";
 import AIAssistant from "./components/AIAssistant";
 
@@ -157,6 +156,7 @@ const App = () => (
             <Route path="/admin/staff-performance" element={<AdminStaffPerformance />} />
             <Route path="/admin/deans-list" element={<AdminDeansList />} />
             <Route path="/deans-list" element={<DeansList />} />
+            <Route path="/presidents-honor-list" element={<DeansList />} />
             <Route path="/smartwbu" element={<SmartWBU />} />
             <Route path="/portal/login" element={<StudentLogin />} />
             <Route path="/portal/register" element={<StudentRegister />} />
@@ -192,7 +192,7 @@ const App = () => (
             <Route path="/professor/id-card" element={<RouteGuard requireRole="professor"><ProfessorDigitalIDCard /></RouteGuard>} />
             <Route path="/professor/performance" element={<RouteGuard requireRole="professor"><ProfessorPerformance /></RouteGuard>} />
             <Route path="/portal/feedback" element={<RouteGuard requireRole="student"><StudentFeedback /></RouteGuard>} />
-            <Route path="/portal/honors" element={<RouteGuard requireRole="student"><StudentHonors /></RouteGuard>} />
+            
             <Route path="*" element={<NotFound />} />
           </Routes>
           <AIAssistant />
