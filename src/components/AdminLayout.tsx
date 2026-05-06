@@ -74,7 +74,7 @@ const navGroups: { label: string; items: { to: string; label: string; icon: any;
     items: [
       { to: "/admin/analytics", label: "Analytics", icon: BarChart3 },
       { to: "/admin/staff-performance", label: "Staff Performance", icon: Star },
-      { to: "/admin/deans-list", label: "Dean's List", icon: Trophy },
+      { to: "/admin/deans-list", label: "President's Honor List", icon: Trophy },
     ],
   },
   {
