@@ -98,6 +98,8 @@ const ProgramDetail = () => {
           </div>
         </div>
       </section>
+
+      <HonorListSection programSlug={program.slug} programTitle={program.title} />
     </Layout>
   );
 };
