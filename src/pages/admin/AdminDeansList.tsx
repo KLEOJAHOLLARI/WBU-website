@@ -170,9 +170,9 @@ const AdminDeansList = () => {
         <Card>
           <CardHeader><CardTitle className="text-base">Generate / Manage List</CardTitle></CardHeader>
           <CardContent className="space-y-4">
-            <div className="grid sm:grid-cols-3 gap-4">
+            <div className="grid sm:grid-cols-2 lg:grid-cols-4 gap-4">
               <div>
-                <Label>Semester</Label>
+                <Label>Semester / Academic Year</Label>
                 <Select value={semesterId} onValueChange={setSemesterId}>
                   <SelectTrigger><SelectValue placeholder="Select semester" /></SelectTrigger>
                   <SelectContent>
@@ -187,6 +187,17 @@ const AdminDeansList = () => {
                   <SelectContent>
                     <SelectItem value="all">All programs</SelectItem>
                     {programs.map((p) => <SelectItem key={p} value={p}>{p}</SelectItem>)}
+                  </SelectContent>
+                </Select>
+              </div>
+              <div>
+                <Label>List Title</Label>
+                <Select value={listTitle} onValueChange={setListTitle}>
+                  <SelectTrigger><SelectValue /></SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="President's Honor List">President's Honor List</SelectItem>
+                    <SelectItem value="Dean's List">Dean's List</SelectItem>
+                    <SelectItem value="Honors List">Honors List</SelectItem>
                   </SelectContent>
                 </Select>
               </div>
