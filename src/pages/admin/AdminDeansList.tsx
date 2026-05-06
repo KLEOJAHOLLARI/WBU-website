@@ -108,6 +108,10 @@ const AdminDeansList = () => {
     setGenerating(false);
     if (error) return toast.error(error.message);
     const res: any = data;
+    // Persist chosen list title onto the snapshot
+    if (res?.snapshot_id) {
+      await supabase.from("deans_list_snapshots").update({ list_title: listTitle }).eq("id", res.snapshot_id);
+    }
     toast.success(`Generated — ${res?.count ?? 0} student(s) qualified`);
     qc.invalidateQueries({ queryKey: ["deans-snapshot"] });
     qc.invalidateQueries({ queryKey: ["deans-entries"] });
