@@ -696,6 +696,7 @@ export type Database = {
           generated_by: string | null
           id: string
           is_published: boolean
+          list_title: string
           notes: string | null
           program: string | null
           published_at: string | null
@@ -709,6 +710,7 @@ export type Database = {
           generated_by?: string | null
           id?: string
           is_published?: boolean
+          list_title?: string
           notes?: string | null
           program?: string | null
           published_at?: string | null
@@ -722,6 +724,7 @@ export type Database = {
           generated_by?: string | null
           id?: string
           is_published?: boolean
+          list_title?: string
           notes?: string | null
           program?: string | null
           published_at?: string | null

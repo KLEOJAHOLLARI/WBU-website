@@ -5,6 +5,7 @@ import Layout from "@/components/Layout";
 import { useQuery } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
 import { useTranslation } from "react-i18next";
+import HonorListSection from "@/components/HonorListSection";
 
 const ProgramDetail = () => {
   const { id } = useParams();
@@ -97,6 +98,8 @@ const ProgramDetail = () => {
           </div>
         </div>
       </section>
+
+      <HonorListSection programSlug={program.slug} programTitle={program.title} />
     </Layout>
   );
 };

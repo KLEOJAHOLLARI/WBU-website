@@ -24,6 +24,7 @@ const AdminDeansList = () => {
   const [minCourses, setMinCourses] = useState<number>(3);
   const [semesterId, setSemesterId] = useState<string>("");
   const [program, setProgram] = useState<string>("all");
+  const [listTitle, setListTitle] = useState<string>("President's Honor List");
   const [generating, setGenerating] = useState(false);
 
   const { data: settings } = useQuery({
@@ -107,6 +108,10 @@ const AdminDeansList = () => {
     setGenerating(false);
     if (error) return toast.error(error.message);
     const res: any = data;
+    // Persist chosen list title onto the snapshot
+    if (res?.snapshot_id) {
+      await supabase.from("deans_list_snapshots").update({ list_title: listTitle }).eq("id", res.snapshot_id);
+    }
     toast.success(`Generated — ${res?.count ?? 0} student(s) qualified`);
     qc.invalidateQueries({ queryKey: ["deans-snapshot"] });
     qc.invalidateQueries({ queryKey: ["deans-entries"] });
@@ -165,9 +170,9 @@ const AdminDeansList = () => {
         <Card>
           <CardHeader><CardTitle className="text-base">Generate / Manage List</CardTitle></CardHeader>
           <CardContent className="space-y-4">
-            <div className="grid sm:grid-cols-3 gap-4">
+            <div className="grid sm:grid-cols-2 lg:grid-cols-4 gap-4">
               <div>
-                <Label>Semester</Label>
+                <Label>Semester / Academic Year</Label>
                 <Select value={semesterId} onValueChange={setSemesterId}>
                   <SelectTrigger><SelectValue placeholder="Select semester" /></SelectTrigger>
                   <SelectContent>
@@ -182,6 +187,17 @@ const AdminDeansList = () => {
                   <SelectContent>
                     <SelectItem value="all">All programs</SelectItem>
                     {programs.map((p) => <SelectItem key={p} value={p}>{p}</SelectItem>)}
+                  </SelectContent>
+                </Select>
+              </div>
+              <div>
+                <Label>List Title</Label>
+                <Select value={listTitle} onValueChange={setListTitle}>
+                  <SelectTrigger><SelectValue /></SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="President's Honor List">President's Honor List</SelectItem>
+                    <SelectItem value="Dean's List">Dean's List</SelectItem>
+                    <SelectItem value="Honors List">Honors List</SelectItem>
                   </SelectContent>
                 </Select>
               </div>
