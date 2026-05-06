@@ -24,6 +24,7 @@ const AdminDeansList = () => {
   const [minCourses, setMinCourses] = useState<number>(3);
   const [semesterId, setSemesterId] = useState<string>("");
   const [program, setProgram] = useState<string>("all");
+  const [listTitle, setListTitle] = useState<string>("President's Honor List");
   const [generating, setGenerating] = useState(false);
 
   const { data: settings } = useQuery({
