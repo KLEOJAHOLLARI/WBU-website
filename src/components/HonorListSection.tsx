@@ -23,13 +23,12 @@ const HonorListSection = ({ programSlug, programTitle }: Props) => {
   const [semesterId, setSemesterId] = useState<string>("all");
 
   const { data: snapshots = [] } = useQuery({
-    queryKey: ["program-honor-snapshots", programSlug],
+    queryKey: ["program-honor-snapshots"],
     queryFn: async () => {
       const { data } = await supabase
         .from("deans_list_snapshots")
         .select("id, semester_id, program, list_title, generated_at, academic_semesters:semester_id(name, start_date)")
         .eq("is_published", true)
-        .or(`program.eq.${programSlug},program.is.null`)
         .order("generated_at", { ascending: false });
       return data || [];
     },
@@ -44,7 +43,8 @@ const HonorListSection = ({ programSlug, programTitle }: Props) => {
   }, [snapshots]);
 
   const filteredSnapshots = useMemo(() => snapshots
-    .filter((s: any) => semesterId === "all" || s.semester_id === semesterId), [snapshots, semesterId]);
+    .filter((s: any) => semesterId === "all" || s.semester_id === semesterId)
+    .filter((s: any) => !s.program || s.program === programSlug), [snapshots, semesterId, programSlug]);
   const snapshotIds = filteredSnapshots.map((s: any) => s.id);
 
   const sectionTitle = (filteredSnapshots[0] as any)?.list_title || "President's Honor List";
@@ -61,8 +61,6 @@ const HonorListSection = ({ programSlug, programTitle }: Props) => {
       return (data || []).filter((e: any) => e.program === programSlug);
     },
   });
-
-  if (snapshots.length === 0) return null;
 
   const top3 = entries.slice(0, 3);
   const rest = entries.slice(3);
