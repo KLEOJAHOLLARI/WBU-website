@@ -138,7 +138,16 @@ const AdminSemesters = () => {
     }
   };
 
-  const setAsCurrent = async (id: string) => {
+  const toggleFeedback = async (id: string, current: boolean) => {
+    const { error } = await supabase.from("academic_semesters").update({ feedback_enabled: !current }).eq("id", id);
+    if (error) toast.error(error.message);
+    else {
+      qc.invalidateQueries({ queryKey: ["admin-semesters"] });
+      qc.invalidateQueries({ queryKey: ["active-campaign"] });
+      toast.success(!current ? "Professor feedback enabled" : "Professor feedback disabled");
+    }
+  };
+
     const { error } = await supabase.from("academic_semesters").update({ is_current: true, status: "active" }).eq("id", id);
     if (error) toast.error(error.message);
     else {
