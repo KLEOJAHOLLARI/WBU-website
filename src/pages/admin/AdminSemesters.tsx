@@ -148,6 +148,7 @@ const AdminSemesters = () => {
     }
   };
 
+  const setAsCurrent = async (id: string) => {
     const { error } = await supabase.from("academic_semesters").update({ is_current: true, status: "active" }).eq("id", id);
     if (error) toast.error(error.message);
     else {
