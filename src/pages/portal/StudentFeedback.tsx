@@ -18,7 +18,7 @@ const StudentFeedback = () => {
     queryFn: async () => {
       const { data: sem } = await supabase
         .from("academic_semesters")
-        .select("id, name")
+        .select("id, name, feedback_enabled")
         .eq("is_current", true)
         .maybeSingle();
       if (!sem) return null;
