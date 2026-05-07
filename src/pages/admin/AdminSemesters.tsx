@@ -268,15 +268,16 @@ const AdminSemesters = () => {
               <TableHead>Year / Sem</TableHead>
               <TableHead>Period</TableHead>
               <TableHead>Enrollment</TableHead>
+              <TableHead>Prof. Feedback</TableHead>
               <TableHead>Status</TableHead>
               <TableHead className="text-right">Actions</TableHead>
             </TableRow>
           </TableHeader>
           <TableBody>
             {isLoading ? (
-              <TableRow><TableCell colSpan={6} className="text-center py-8 text-muted-foreground">Loading…</TableCell></TableRow>
+              <TableRow><TableCell colSpan={7} className="text-center py-8 text-muted-foreground">Loading…</TableCell></TableRow>
             ) : activeSemesters.length === 0 ? (
-              <TableRow><TableCell colSpan={6} className="text-center py-8 text-muted-foreground">No active semesters</TableCell></TableRow>
+              <TableRow><TableCell colSpan={7} className="text-center py-8 text-muted-foreground">No active semesters</TableCell></TableRow>
             ) : activeSemesters.map((s: any) => (
               <TableRow key={s.id}>
                 <TableCell className="font-medium">{s.name}</TableCell>
