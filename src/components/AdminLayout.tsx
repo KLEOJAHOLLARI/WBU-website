@@ -155,12 +155,19 @@ const AdminLayout = ({ children }: { children: ReactNode }) => {
             </p>
             <div className="space-y-0.5">
               {group.items.map((item) => {
-                const active = location.pathname === item.to;
+                // Active = exact match, OR longest matching prefix among all items
+                const path = location.pathname;
+                const allTos = navGroups.flatMap(g => g.items.map(i => i.to));
+                const bestMatch = allTos
+                  .filter(to => path === to || path.startsWith(to + "/"))
+                  .sort((a, b) => b.length - a.length)[0];
+                const active = bestMatch === item.to;
                 const count = item.badgeKey ? badges[item.badgeKey] : 0;
                 return (
                   <Link
                     key={item.to}
                     to={item.to}
+                    ref={active ? activeRef : undefined}
                     onClick={() => setMobileOpen(false)}
                     className={`group flex items-center gap-3 rounded-lg px-3 py-2 text-[13px] font-medium transition-all ${
                       active
