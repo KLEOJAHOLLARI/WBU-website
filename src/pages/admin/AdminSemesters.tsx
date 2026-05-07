@@ -23,9 +23,10 @@ interface SemesterForm {
   enrollment_deadline: string;
   is_current: boolean;
   status: string;
+  feedback_enabled: boolean;
 }
 
-const empty: SemesterForm = { name: "", year: 1, semester: 1, start_date: "", end_date: "", enrollment_open: false, enrollment_deadline: "", is_current: false, status: "active" };
+const empty: SemesterForm = { name: "", year: 1, semester: 1, start_date: "", end_date: "", enrollment_open: false, enrollment_deadline: "", is_current: false, status: "active", feedback_enabled: false };
 
 const AdminSemesters = () => {
   const qc = useQueryClient();
