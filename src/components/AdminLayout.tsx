@@ -89,6 +89,18 @@ const AdminLayout = ({ children }: { children: ReactNode }) => {
   const { user, isAdmin, loading, signOut, profile } = useAuth();
   const location = useLocation();
   const [mobileOpen, setMobileOpen] = useState(false);
+  const navRef = useRef<HTMLElement>(null);
+
+  // Preserve sidebar scroll position across route changes
+  useEffect(() => {
+    const el = navRef.current;
+    if (!el) return;
+    const saved = sessionStorage.getItem("adminSidebarScroll");
+    if (saved) el.scrollTop = parseInt(saved, 10) || 0;
+    const onScroll = () => sessionStorage.setItem("adminSidebarScroll", String(el.scrollTop));
+    el.addEventListener("scroll", onScroll, { passive: true });
+    return () => el.removeEventListener("scroll", onScroll);
+  }, []);
 
   const { data: pendingApps = 0 } = useQuery({
     queryKey: ["admin-pending-applications"],
