@@ -1,0 +1,1 @@
+ALTER TABLE public.academic_semesters ADD COLUMN IF NOT EXISTS feedback_enabled boolean NOT NULL DEFAULT false;

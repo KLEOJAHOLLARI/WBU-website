@@ -23,9 +23,10 @@ interface SemesterForm {
   enrollment_deadline: string;
   is_current: boolean;
   status: string;
+  feedback_enabled: boolean;
 }
 
-const empty: SemesterForm = { name: "", year: 1, semester: 1, start_date: "", end_date: "", enrollment_open: false, enrollment_deadline: "", is_current: false, status: "active" };
+const empty: SemesterForm = { name: "", year: 1, semester: 1, start_date: "", end_date: "", enrollment_open: false, enrollment_deadline: "", is_current: false, status: "active", feedback_enabled: false };
 
 const AdminSemesters = () => {
   const qc = useQueryClient();
@@ -57,6 +58,7 @@ const AdminSemesters = () => {
         enrollment_deadline: f.enrollment_deadline || null,
         is_current: f.is_current,
         status: f.status,
+        feedback_enabled: f.feedback_enabled,
       };
 
       if (f.id) {
@@ -103,6 +105,7 @@ const AdminSemesters = () => {
       enrollment_deadline: s.enrollment_deadline || "",
       is_current: s.is_current,
       status: s.status ?? "active",
+      feedback_enabled: !!s.feedback_enabled,
     });
     setOpen(true);
   };
@@ -132,6 +135,16 @@ const AdminSemesters = () => {
       qc.invalidateQueries({ queryKey: ["admin-semesters"] });
       qc.invalidateQueries({ queryKey: ["active-semester"] });
       toast.success("Semester archived");
+    }
+  };
+
+  const toggleFeedback = async (id: string, current: boolean) => {
+    const { error } = await supabase.from("academic_semesters").update({ feedback_enabled: !current }).eq("id", id);
+    if (error) toast.error(error.message);
+    else {
+      qc.invalidateQueries({ queryKey: ["admin-semesters"] });
+      qc.invalidateQueries({ queryKey: ["active-campaign"] });
+      toast.success(!current ? "Professor feedback enabled" : "Professor feedback disabled");
     }
   };
 
@@ -215,6 +228,10 @@ const AdminSemesters = () => {
                 <Switch checked={form.is_current} onCheckedChange={(v) => setForm({ ...form, is_current: v })} />
                 <Label>Current Semester (system-wide active)</Label>
               </div>
+              <div className="flex items-center gap-3">
+                <Switch checked={form.feedback_enabled} onCheckedChange={(v) => setForm({ ...form, feedback_enabled: v })} />
+                <Label>Professor Feedback Open</Label>
+              </div>
               <Button type="submit" className="w-full" disabled={saveMutation.isPending}>
                 {saveMutation.isPending ? "Saving…" : editing ? "Update" : "Create"}
               </Button>
@@ -251,15 +268,16 @@ const AdminSemesters = () => {
               <TableHead>Year / Sem</TableHead>
               <TableHead>Period</TableHead>
               <TableHead>Enrollment</TableHead>
+              <TableHead>Prof. Feedback</TableHead>
               <TableHead>Status</TableHead>
               <TableHead className="text-right">Actions</TableHead>
             </TableRow>
           </TableHeader>
           <TableBody>
             {isLoading ? (
-              <TableRow><TableCell colSpan={6} className="text-center py-8 text-muted-foreground">Loading…</TableCell></TableRow>
+              <TableRow><TableCell colSpan={7} className="text-center py-8 text-muted-foreground">Loading…</TableCell></TableRow>
             ) : activeSemesters.length === 0 ? (
-              <TableRow><TableCell colSpan={6} className="text-center py-8 text-muted-foreground">No active semesters</TableCell></TableRow>
+              <TableRow><TableCell colSpan={7} className="text-center py-8 text-muted-foreground">No active semesters</TableCell></TableRow>
             ) : activeSemesters.map((s: any) => (
               <TableRow key={s.id}>
                 <TableCell className="font-medium">{s.name}</TableCell>
@@ -271,6 +289,15 @@ const AdminSemesters = () => {
                       {s.enrollment_open ? "Open" : "Closed"}
                     </Badge>
                   </Button>
+                </TableCell>
+                <TableCell>
+                  <div className="flex items-center gap-2">
+                    <Switch
+                      checked={!!s.feedback_enabled}
+                      onCheckedChange={() => toggleFeedback(s.id, !!s.feedback_enabled)}
+                    />
+                    <span className="text-xs text-muted-foreground">{s.feedback_enabled ? "On" : "Off"}</span>
+                  </div>
                 </TableCell>
                 <TableCell>
                   {s.is_current ? (

@@ -20,6 +20,7 @@ export type Database = {
           end_date: string
           enrollment_deadline: string | null
           enrollment_open: boolean
+          feedback_enabled: boolean
           id: string
           is_current: boolean
           name: string
@@ -34,6 +35,7 @@ export type Database = {
           end_date: string
           enrollment_deadline?: string | null
           enrollment_open?: boolean
+          feedback_enabled?: boolean
           id?: string
           is_current?: boolean
           name: string
@@ -48,6 +50,7 @@ export type Database = {
           end_date?: string
           enrollment_deadline?: string | null
           enrollment_open?: boolean
+          feedback_enabled?: boolean
           id?: string
           is_current?: boolean
           name?: string
