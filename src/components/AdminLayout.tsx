@@ -1,4 +1,4 @@
-import { ReactNode, useState } from "react";
+import { ReactNode, useEffect, useRef, useState } from "react";
 import { Navigate, Link, useLocation } from "react-router-dom";
 import { useAuth } from "@/hooks/useAuth";
 import { useQuery } from "@tanstack/react-query";
@@ -89,6 +89,18 @@ const AdminLayout = ({ children }: { children: ReactNode }) => {
   const { user, isAdmin, loading, signOut, profile } = useAuth();
   const location = useLocation();
   const [mobileOpen, setMobileOpen] = useState(false);
+  const navRef = useRef<HTMLElement>(null);
+
+  // Preserve sidebar scroll position across route changes
+  useEffect(() => {
+    const el = navRef.current;
+    if (!el) return;
+    const saved = sessionStorage.getItem("adminSidebarScroll");
+    if (saved) el.scrollTop = parseInt(saved, 10) || 0;
+    const onScroll = () => sessionStorage.setItem("adminSidebarScroll", String(el.scrollTop));
+    el.addEventListener("scroll", onScroll, { passive: true });
+    return () => el.removeEventListener("scroll", onScroll);
+  }, []);
 
   const { data: pendingApps = 0 } = useQuery({
     queryKey: ["admin-pending-applications"],
@@ -122,7 +134,7 @@ const AdminLayout = ({ children }: { children: ReactNode }) => {
         <span className="font-display text-base font-semibold text-foreground">Admin Panel</span>
       </div>
 
-      <nav className="flex-1 overflow-auto px-3 py-4">
+      <nav ref={navRef} className="flex-1 overflow-auto px-3 py-4">
         {navGroups.map((group, gi) => (
           <div key={group.label} className={gi > 0 ? "mt-6" : ""}>
             <p className="mb-1.5 px-3 text-[11px] font-semibold uppercase tracking-wider text-muted-foreground/70">
