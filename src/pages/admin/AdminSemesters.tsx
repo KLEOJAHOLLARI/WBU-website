@@ -105,6 +105,7 @@ const AdminSemesters = () => {
       enrollment_deadline: s.enrollment_deadline || "",
       is_current: s.is_current,
       status: s.status ?? "active",
+      feedback_enabled: !!s.feedback_enabled,
     });
     setOpen(true);
   };
