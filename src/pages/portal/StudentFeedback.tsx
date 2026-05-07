@@ -71,9 +71,13 @@ const StudentFeedback = () => {
     },
   });
 
-  const isOpen = !!campaign?.campaign?.is_active &&
-    new Date(campaign.campaign.opens_at) <= new Date() &&
-    new Date(campaign.campaign.closes_at) >= new Date();
+  const semesterToggle = (campaign?.semester as any)?.feedback_enabled === true;
+  const campaignWindowOk = !campaign?.campaign || (
+    (campaign.campaign.is_active ?? true) &&
+    (!campaign.campaign.opens_at || new Date(campaign.campaign.opens_at) <= new Date()) &&
+    (!campaign.campaign.closes_at || new Date(campaign.campaign.closes_at) >= new Date())
+  );
+  const isOpen = semesterToggle && campaignWindowOk;
 
   return (
     <StudentLayout>
