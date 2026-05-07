@@ -58,6 +58,7 @@ const AdminSemesters = () => {
         enrollment_deadline: f.enrollment_deadline || null,
         is_current: f.is_current,
         status: f.status,
+        feedback_enabled: f.feedback_enabled,
       };
 
       if (f.id) {
