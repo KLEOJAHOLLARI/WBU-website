@@ -90,6 +90,7 @@ const AdminLayout = ({ children }: { children: ReactNode }) => {
   const location = useLocation();
   const [mobileOpen, setMobileOpen] = useState(false);
   const navRef = useRef<HTMLElement>(null);
+  const activeRef = useRef<HTMLAnchorElement>(null);
 
   // Preserve sidebar scroll position across route changes
   useEffect(() => {
@@ -101,6 +102,18 @@ const AdminLayout = ({ children }: { children: ReactNode }) => {
     el.addEventListener("scroll", onScroll, { passive: true });
     return () => el.removeEventListener("scroll", onScroll);
   }, []);
+
+  // Ensure the active link is visible in the sidebar viewport
+  useEffect(() => {
+    const nav = navRef.current;
+    const link = activeRef.current;
+    if (!nav || !link) return;
+    const navRect = nav.getBoundingClientRect();
+    const linkRect = link.getBoundingClientRect();
+    if (linkRect.top < navRect.top || linkRect.bottom > navRect.bottom) {
+      link.scrollIntoView({ block: "nearest" });
+    }
+  }, [location.pathname]);
 
   const { data: pendingApps = 0 } = useQuery({
     queryKey: ["admin-pending-applications"],
