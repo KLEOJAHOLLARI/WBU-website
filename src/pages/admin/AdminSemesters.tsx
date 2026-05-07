@@ -291,6 +291,15 @@ const AdminSemesters = () => {
                   </Button>
                 </TableCell>
                 <TableCell>
+                  <div className="flex items-center gap-2">
+                    <Switch
+                      checked={!!s.feedback_enabled}
+                      onCheckedChange={() => toggleFeedback(s.id, !!s.feedback_enabled)}
+                    />
+                    <span className="text-xs text-muted-foreground">{s.feedback_enabled ? "On" : "Off"}</span>
+                  </div>
+                </TableCell>
+                <TableCell>
                   {s.is_current ? (
                     <Badge className="bg-green-100 text-green-700">Current</Badge>
                   ) : (
