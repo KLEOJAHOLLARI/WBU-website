@@ -228,6 +228,10 @@ const AdminSemesters = () => {
                 <Switch checked={form.is_current} onCheckedChange={(v) => setForm({ ...form, is_current: v })} />
                 <Label>Current Semester (system-wide active)</Label>
               </div>
+              <div className="flex items-center gap-3">
+                <Switch checked={form.feedback_enabled} onCheckedChange={(v) => setForm({ ...form, feedback_enabled: v })} />
+                <Label>Professor Feedback Open</Label>
+              </div>
               <Button type="submit" className="w-full" disabled={saveMutation.isPending}>
                 {saveMutation.isPending ? "Saving…" : editing ? "Update" : "Create"}
               </Button>
