@@ -175,7 +175,12 @@ const FeedbackCard = ({
   return (
     <Card>
       <CardHeader>
-        <CardTitle className="text-base">{course.code} · {course.name}</CardTitle>
+        <CardTitle className="text-base flex items-center justify-between gap-2">
+          <span>{course.code} · {course.name}</span>
+          <span className="inline-flex items-center gap-1 text-amber-600 text-xs font-medium px-2 py-0.5 rounded-full bg-amber-500/10 border border-amber-500/20">
+            Not submitted
+          </span>
+        </CardTitle>
         <p className="text-sm text-muted-foreground">Professor: {course.professor_name}</p>
       </CardHeader>
       <CardContent className="space-y-4">
