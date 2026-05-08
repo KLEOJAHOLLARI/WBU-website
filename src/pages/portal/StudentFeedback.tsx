@@ -98,23 +98,23 @@ const StudentFeedback = () => {
           </p>
         </div>
 
-        {!campaign?.semester ? (
+        {!semester ? (
           <Card><CardContent className="py-12 text-center text-muted-foreground">No active semester.</CardContent></Card>
         ) : !isOpen ? (
           <Card><CardContent className="py-12 text-center text-muted-foreground">
-            The feedback window for {campaign.semester.name} is currently closed.
+            The feedback window for {semester.name} is currently closed.
           </CardContent></Card>
         ) : isLoading ? (
           <div className="flex justify-center py-12"><Loader2 className="h-6 w-6 animate-spin" /></div>
         ) : courses.length === 0 ? (
-          <Card><CardContent className="py-12 text-center text-muted-foreground">No enrolled courses to review.</CardContent></Card>
+          <Card><CardContent className="py-12 text-center text-muted-foreground">No courses available to review this semester.</CardContent></Card>
         ) : (
           <div className="space-y-4">
             {courses.map((c: any) => (
               <FeedbackCard
                 key={c.id}
                 course={c}
-                semesterId={campaign.semester.id}
+                semesterId={semester.id}
                 onSubmitted={() => qc.invalidateQueries({ queryKey: ["my-feedback-courses"] })}
               />
             ))}
