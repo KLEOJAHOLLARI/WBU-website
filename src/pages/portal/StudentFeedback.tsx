@@ -13,52 +13,66 @@ const StudentFeedback = () => {
   const { user } = useAuth();
   const qc = useQueryClient();
 
-  const { data: campaign } = useQuery({
-    queryKey: ["active-campaign"],
+  const { data: semester } = useQuery({
+    queryKey: ["active-feedback-semester"],
     queryFn: async () => {
-      const { data: sem } = await supabase
+      const { data } = await supabase
         .from("academic_semesters")
-        .select("id, name, feedback_enabled")
+        .select("id, name, semester, feedback_enabled")
         .eq("is_current", true)
         .maybeSingle();
-      if (!sem) return null;
-      const { data: c } = await supabase
-        .from("feedback_campaigns")
-        .select("*")
-        .eq("semester_id", sem.id)
+      return data;
+    },
+  });
+
+  const { data: profile } = useQuery({
+    queryKey: ["student-feedback-profile", user?.id],
+    enabled: !!user,
+    queryFn: async () => {
+      const { data } = await supabase
+        .from("profiles")
+        .select("program")
+        .eq("user_id", user!.id)
         .maybeSingle();
-      return { semester: sem, campaign: c };
+      return data;
     },
   });
 
   const { data: courses = [], isLoading } = useQuery({
-    queryKey: ["my-feedback-courses", user?.id, campaign?.semester?.id],
-    enabled: !!user && !!campaign?.semester?.id,
+    queryKey: ["my-feedback-courses", user?.id, semester?.id, profile?.program],
+    enabled: !!user && !!semester?.id && !!profile?.program,
     queryFn: async () => {
-      const { data: enrollments } = await supabase
-        .from("enrollments")
-        .select("course_id, courses(id, name, code, professor_id)")
-        .eq("user_id", user!.id);
-      const list = (enrollments || [])
-        .map((e: any) => e.courses)
-        .filter((c: any) => c && c.professor_id);
+      // All courses for this program in the current semester number
+      const { data: progCourses } = await supabase
+        .from("courses")
+        .select("id, name, code, professor_id, semester")
+        .eq("program", profile!.program!)
+        .eq("semester", semester!.semester);
 
-      // Dedupe by course id
+      // Shared courses for this program
+      const { data: shared } = await supabase
+        .from("course_shared_programs")
+        .select("course_id, courses(id, name, code, professor_id, semester)")
+        .eq("program_slug", profile!.program!);
+      const sharedCourses = (shared || [])
+        .map((s: any) => s.courses)
+        .filter((c: any) => c && c.semester === semester!.semester);
+
+      const all = [...(progCourses || []), ...sharedCourses].filter((c: any) => c && c.professor_id);
+
       const seen = new Set<string>();
-      const unique = list.filter((c: any) => {
+      const unique = all.filter((c: any) => {
         if (seen.has(c.id)) return false;
         seen.add(c.id);
         return true;
       });
 
-      // Check submission status
       const withStatus = await Promise.all(
         unique.map(async (c: any) => {
           const { data: submitted } = await supabase.rpc("has_submitted_feedback", {
             _course_id: c.id,
-            _semester_id: campaign!.semester.id,
+            _semester_id: semester!.id,
           });
-          // Look up professor name
           const { data: prof } = await supabase
             .from("profiles")
             .select("full_name")
@@ -71,13 +85,7 @@ const StudentFeedback = () => {
     },
   });
 
-  const semesterToggle = (campaign?.semester as any)?.feedback_enabled === true;
-  const campaignWindowOk = !campaign?.campaign || (
-    (campaign.campaign.is_active ?? true) &&
-    (!campaign.campaign.opens_at || new Date(campaign.campaign.opens_at) <= new Date()) &&
-    (!campaign.campaign.closes_at || new Date(campaign.campaign.closes_at) >= new Date())
-  );
-  const isOpen = semesterToggle && campaignWindowOk;
+  const isOpen = (semester as any)?.feedback_enabled === true;
 
   return (
     <StudentLayout>
