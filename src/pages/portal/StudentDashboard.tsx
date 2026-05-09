@@ -10,6 +10,7 @@ import { Link } from "react-router-dom";
 import SemesterBadge from "@/components/SemesterBadge";
 import ScholarshipCard from "@/components/ScholarshipCard";
 import { percentToAlbanian, percentToGPA } from "@/lib/grading";
+import { useActiveSemester } from "@/hooks/useActiveSemester";
 
 const StudentDashboard = () => {
   const { user } = useAuth();
