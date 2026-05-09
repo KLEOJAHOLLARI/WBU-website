@@ -612,6 +612,7 @@ const ProfessorCourseDetail = () => {
                           <td className="px-4 py-3 text-muted-foreground">{idx + 1}</td>
                           <td className="px-4 py-3 font-medium text-foreground">
                             <div className="flex items-center gap-2">
+                              <StudentAvatar enr={enr} />
                               <span className="truncate max-w-[200px]">{getStudentName(enr)}</span>
                               {isLowAtt && <AlertTriangle className="h-3.5 w-3.5 flex-shrink-0 text-amber-500" />}
                             </div>
