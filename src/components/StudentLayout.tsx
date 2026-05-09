@@ -9,17 +9,20 @@ import {
 } from "lucide-react";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Sheet, SheetContent, SheetTrigger } from "@/components/ui/sheet";
+import { useActiveSemester } from "@/hooks/useActiveSemester";
 
 import NotificationBell from "@/components/NotificationBell";
 import GlobalSearch from "@/components/GlobalSearch";
 
-const navGroups = [
+const buildNavGroups = (registrationOpen: boolean) => [
   {
     label: "Main",
     items: [
       { to: "/portal", label: "Dashboard", icon: LayoutDashboard },
       { to: "/portal/courses", label: "My Courses", icon: BookOpen },
-      { to: "/portal/registration", label: "Course Registration", icon: ClipboardEdit },
+      ...(registrationOpen
+        ? [{ to: "/portal/registration", label: "Course Registration", icon: ClipboardEdit }]
+        : []),
       { to: "/portal/retake", label: "Retake Courses", icon: RefreshCw },
       { to: "/portal/applications", label: "Applications", icon: FileText },
     ],
