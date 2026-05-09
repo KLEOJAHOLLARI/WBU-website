@@ -883,6 +883,7 @@ const ProfessorCourseDetail = () => {
                             <td className={`sticky left-0 z-10 px-4 py-2.5 font-medium text-foreground ${isLow ? "bg-red-500/5" : idx % 2 === 0 ? "bg-card" : "bg-secondary/30"}`}>
                               <div className="flex items-center gap-2">
                                 {isLow && <AlertTriangle className="h-3.5 w-3.5 text-destructive flex-shrink-0" />}
+                                <StudentAvatar enr={enr} size="h-6 w-6" />
                                 <span className="truncate max-w-[160px]">{getStudentName(enr)}</span>
                               </div>
                             </td>
