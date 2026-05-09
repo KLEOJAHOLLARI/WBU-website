@@ -15,6 +15,7 @@ import ProfessorBulkMessage from "@/components/professor/ProfessorBulkMessage";
 import AttendanceSheetDialog from "@/components/professor/AttendanceSheetDialog";
 import { Badge } from "@/components/ui/badge";
 import { Progress } from "@/components/ui/progress";
+import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { computeAttendanceForEnrollment } from "@/lib/attendance";
 import { useAttendanceThreshold } from "@/hooks/useAttendanceThreshold";
 
@@ -139,7 +140,7 @@ const ProfessorCourseDetail = () => {
       const userIds = [...new Set(enrData.map((e) => e.user_id))];
       const { data: profilesData, error: profError } = await supabase
         .from("profiles")
-        .select("user_id, full_name, email")
+        .select("user_id, full_name, email, avatar_url")
         .in("user_id", userIds);
       if (profError) throw profError;
 
@@ -147,7 +148,7 @@ const ProfessorCourseDetail = () => {
       const profileMap = new Map((profilesData || []).map((p) => [p.user_id, p]));
       return enrData.map((e) => ({
         ...e,
-        profiles: profileMap.get(e.user_id) || { full_name: "Unknown", email: "" },
+        profiles: profileMap.get(e.user_id) || { full_name: "Unknown", email: "", avatar_url: null },
       }));
     },
     enabled: !!courseId,
@@ -288,6 +289,19 @@ const ProfessorCourseDetail = () => {
   const totalWeight = components.reduce((s, c) => s + Number(c.weight) * c.count, 0);
 
   const getStudentName = (enr: any) => enr.profiles?.full_name || enr.profiles?.email || "Unknown";
+
+  const StudentAvatar = ({ enr, size = "h-7 w-7" }: { enr: any; size?: string }) => {
+    const name = getStudentName(enr);
+    const initials = name.split(" ").map((n: string) => n[0]).join("").slice(0, 2).toUpperCase() || "S";
+    return (
+      <Avatar className={`${size} flex-shrink-0`}>
+        {enr.profiles?.avatar_url && <AvatarImage src={enr.profiles.avatar_url} alt={name} />}
+        <AvatarFallback className="bg-primary/10 text-primary text-[10px] font-semibold">
+          {initials}
+        </AvatarFallback>
+      </Avatar>
+    );
+  };
 
   const threshold = useAttendanceThreshold();
 
@@ -598,6 +612,7 @@ const ProfessorCourseDetail = () => {
                           <td className="px-4 py-3 text-muted-foreground">{idx + 1}</td>
                           <td className="px-4 py-3 font-medium text-foreground">
                             <div className="flex items-center gap-2">
+                              <StudentAvatar enr={enr} />
                               <span className="truncate max-w-[200px]">{getStudentName(enr)}</span>
                               {isLowAtt && <AlertTriangle className="h-3.5 w-3.5 flex-shrink-0 text-amber-500" />}
                             </div>
@@ -868,6 +883,7 @@ const ProfessorCourseDetail = () => {
                             <td className={`sticky left-0 z-10 px-4 py-2.5 font-medium text-foreground ${isLow ? "bg-red-500/5" : idx % 2 === 0 ? "bg-card" : "bg-secondary/30"}`}>
                               <div className="flex items-center gap-2">
                                 {isLow && <AlertTriangle className="h-3.5 w-3.5 text-destructive flex-shrink-0" />}
+                                <StudentAvatar enr={enr} size="h-6 w-6" />
                                 <span className="truncate max-w-[160px]">{getStudentName(enr)}</span>
                               </div>
                             </td>
@@ -1021,6 +1037,7 @@ const ProfessorCourseDetail = () => {
                           <tr key={enr.id} className={`border-b border-border last:border-0 ${idx % 2 === 0 ? "bg-card" : "bg-secondary/30"}`}>
                             <td className={`sticky left-0 z-10 px-4 py-2 font-medium text-foreground ${idx % 2 === 0 ? "bg-card" : "bg-secondary/30"}`}>
                               <div className="flex items-center gap-2">
+                                <StudentAvatar enr={enr} size="h-6 w-6" />
                                 <span className="truncate max-w-[150px]">{getStudentName(enr)}</span>
                                 {isLowAtt && (
                                   <span className="flex-shrink-0 rounded bg-destructive/15 px-1.5 py-0.5 text-[10px] font-medium text-destructive" title="Below 75% attendance">
