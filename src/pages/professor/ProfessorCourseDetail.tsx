@@ -1037,6 +1037,7 @@ const ProfessorCourseDetail = () => {
                           <tr key={enr.id} className={`border-b border-border last:border-0 ${idx % 2 === 0 ? "bg-card" : "bg-secondary/30"}`}>
                             <td className={`sticky left-0 z-10 px-4 py-2 font-medium text-foreground ${idx % 2 === 0 ? "bg-card" : "bg-secondary/30"}`}>
                               <div className="flex items-center gap-2">
+                                <StudentAvatar enr={enr} size="h-6 w-6" />
                                 <span className="truncate max-w-[150px]">{getStudentName(enr)}</span>
                                 {isLowAtt && (
                                   <span className="flex-shrink-0 rounded bg-destructive/15 px-1.5 py-0.5 text-[10px] font-medium text-destructive" title="Below 75% attendance">
