@@ -14,6 +14,31 @@ import { useActiveSemester } from "@/hooks/useActiveSemester";
 
 const StudentDashboard = () => {
   const { user } = useAuth();
+  const { data: activeSemester } = useActiveSemester();
+
+  const { data: lateEnrollFee } = useQuery({
+    queryKey: ["dashboard-late-enroll-fee"],
+    queryFn: async () => {
+      const { data } = await supabase
+        .from("system_settings")
+        .select("value")
+        .eq("key", "late_enrollment_fee")
+        .maybeSingle();
+      const v = (data?.value as any) || {};
+      return {
+        enabled: !!v.enabled,
+        amount: Number(v.amount ?? 0),
+        currency: String(v.currency ?? "EUR"),
+      };
+    },
+  });
+
+  const registrationOpen = !!activeSemester?.enrollment_open;
+  const enrollmentDeadline = activeSemester?.enrollment_deadline
+    ? new Date(`${activeSemester.enrollment_deadline}T23:59:59`)
+    : null;
+  const isLate = !!(enrollmentDeadline && enrollmentDeadline.getTime() < Date.now());
+  const showLateFeeNotice = registrationOpen && isLate && !!lateEnrollFee?.enabled && (lateEnrollFee?.amount ?? 0) > 0;
 
   const { data: profile } = useQuery({
     queryKey: ["student-profile", user?.id],
