@@ -345,6 +345,45 @@ const StudentDashboard = () => {
       <p className="mt-1 text-muted-foreground">Your student portal overview</p>
       <div className="mt-2"><SemesterBadge /></div>
 
+      {/* Registration / Late fee notices */}
+      {(registrationOpen || showLateFeeNotice) && (
+        <div className="mt-5 space-y-3">
+          {registrationOpen && (
+            <Link
+              to="/portal/registration"
+              className="block rounded-xl border border-primary/30 bg-primary/5 p-4 hover:bg-primary/10 transition-colors"
+            >
+              <div className="flex items-start gap-3">
+                <CheckCircle2 className="h-5 w-5 text-primary mt-0.5 shrink-0" />
+                <div className="flex-1">
+                  <p className="font-semibold text-foreground">Course Registration is open</p>
+                  <p className="text-sm text-muted-foreground">
+                    Build and submit your course list for{" "}
+                    <span className="font-medium text-foreground">{activeSemester?.name}</span>
+                    {enrollmentDeadline ? <> before <span className="font-medium text-foreground">{enrollmentDeadline.toLocaleDateString()}</span></> : null}.
+                  </p>
+                </div>
+              </div>
+            </Link>
+          )}
+          {showLateFeeNotice && (
+            <div className="rounded-xl border border-destructive/30 bg-destructive/5 p-4 flex items-start gap-3">
+              <AlertTriangle className="h-5 w-5 text-destructive mt-0.5 shrink-0" />
+              <div className="flex-1">
+                <p className="font-semibold text-destructive">Late enrollment fee will apply</p>
+                <p className="text-sm text-muted-foreground">
+                  The enrollment deadline has passed. Submitting a registration now adds a late fee of{" "}
+                  <span className="font-semibold text-foreground">
+                    {lateEnrollFee!.amount} {lateEnrollFee!.currency}
+                  </span>{" "}
+                  to your tuition account.
+                </p>
+              </div>
+            </div>
+          )}
+        </div>
+      )}
+
       <div className="mt-8 grid gap-4 grid-cols-2 sm:grid-cols-3 lg:grid-cols-6">
         {cards.map((c) => (
           <div key={c.label} className="rounded-xl border border-border bg-card p-6">
