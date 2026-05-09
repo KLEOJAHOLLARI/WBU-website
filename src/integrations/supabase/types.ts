@@ -770,6 +770,27 @@ export type Database = {
         }
         Relationships: []
       }
+      enrollment_reminder_log: {
+        Row: {
+          id: string
+          reminder_kind: string
+          semester_id: string
+          sent_at: string
+        }
+        Insert: {
+          id?: string
+          reminder_kind: string
+          semester_id: string
+          sent_at?: string
+        }
+        Update: {
+          id?: string
+          reminder_kind?: string
+          semester_id?: string
+          sent_at?: string
+        }
+        Relationships: []
+      }
       enrollment_requests: {
         Row: {
           course_id: string
@@ -2315,6 +2336,7 @@ export type Database = {
         }
         Returns: Json
       }
+      send_enrollment_deadline_reminders: { Args: never; Returns: Json }
       submit_professor_feedback: {
         Args: {
           _comment?: string
@@ -2324,6 +2346,7 @@ export type Database = {
         }
         Returns: Json
       }
+      system_admin_uid: { Args: never; Returns: string }
     }
     Enums: {
       app_role: "admin" | "user" | "professor"
