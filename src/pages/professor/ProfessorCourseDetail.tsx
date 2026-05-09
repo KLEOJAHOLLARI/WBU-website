@@ -140,7 +140,7 @@ const ProfessorCourseDetail = () => {
       const userIds = [...new Set(enrData.map((e) => e.user_id))];
       const { data: profilesData, error: profError } = await supabase
         .from("profiles")
-        .select("user_id, full_name, email")
+        .select("user_id, full_name, email, avatar_url")
         .in("user_id", userIds);
       if (profError) throw profError;
 
