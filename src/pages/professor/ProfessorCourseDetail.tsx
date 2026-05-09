@@ -15,6 +15,7 @@ import ProfessorBulkMessage from "@/components/professor/ProfessorBulkMessage";
 import AttendanceSheetDialog from "@/components/professor/AttendanceSheetDialog";
 import { Badge } from "@/components/ui/badge";
 import { Progress } from "@/components/ui/progress";
+import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { computeAttendanceForEnrollment } from "@/lib/attendance";
 import { useAttendanceThreshold } from "@/hooks/useAttendanceThreshold";
 
