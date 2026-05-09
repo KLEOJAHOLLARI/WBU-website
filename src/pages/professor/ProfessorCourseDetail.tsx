@@ -290,6 +290,19 @@ const ProfessorCourseDetail = () => {
 
   const getStudentName = (enr: any) => enr.profiles?.full_name || enr.profiles?.email || "Unknown";
 
+  const StudentAvatar = ({ enr, size = "h-7 w-7" }: { enr: any; size?: string }) => {
+    const name = getStudentName(enr);
+    const initials = name.split(" ").map((n: string) => n[0]).join("").slice(0, 2).toUpperCase() || "S";
+    return (
+      <Avatar className={`${size} flex-shrink-0`}>
+        {enr.profiles?.avatar_url && <AvatarImage src={enr.profiles.avatar_url} alt={name} />}
+        <AvatarFallback className="bg-primary/10 text-primary text-[10px] font-semibold">
+          {initials}
+        </AvatarFallback>
+      </Avatar>
+    );
+  };
+
   const threshold = useAttendanceThreshold();
 
   const getAttStats = useCallback(
