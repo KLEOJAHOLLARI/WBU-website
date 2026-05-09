@@ -55,6 +55,8 @@ const StudentLayout = ({ children }: { children: ReactNode }) => {
   const { user, isAdmin, isProfessor, loading, signOut, profile } = useAuth();
   const location = useLocation();
   const [mobileOpen, setMobileOpen] = useState(false);
+  const { data: activeSemester } = useActiveSemester();
+  const navGroups = buildNavGroups(!!activeSemester?.enrollment_open);
 
   const { data: unreadCount = 0 } = useQuery({
     queryKey: ["student-unread-messages", user?.id],
