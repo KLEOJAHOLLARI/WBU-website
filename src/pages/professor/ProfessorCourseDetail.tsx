@@ -148,7 +148,7 @@ const ProfessorCourseDetail = () => {
       const profileMap = new Map((profilesData || []).map((p) => [p.user_id, p]));
       return enrData.map((e) => ({
         ...e,
-        profiles: profileMap.get(e.user_id) || { full_name: "Unknown", email: "" },
+        profiles: profileMap.get(e.user_id) || { full_name: "Unknown", email: "", avatar_url: null },
       }));
     },
     enabled: !!courseId,
