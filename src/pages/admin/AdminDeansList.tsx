@@ -330,7 +330,7 @@ const AdminDeansList = () => {
         <Card>
           <CardHeader className="flex flex-row items-center justify-between gap-2">
             <CardTitle className="text-base flex items-center gap-2"><Award className="h-4 w-4" /> Ranked Students</CardTitle>
-            <Button size="sm" variant="outline" onClick={openAddDialog} disabled={!snapshot?.id}>
+            <Button size="sm" variant="outline" onClick={openAddDialog}>
               <UserPlus className="h-4 w-4 mr-1" /> Add student manually
             </Button>
           </CardHeader>
