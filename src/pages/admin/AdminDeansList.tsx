@@ -14,7 +14,10 @@ import {
 import {
   Table, TableBody, TableCell, TableHead, TableHeader, TableRow,
 } from "@/components/ui/table";
-import { Loader2, Award, Trophy, Sparkles, Download, RefreshCw } from "lucide-react";
+import {
+  Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger, DialogFooter,
+} from "@/components/ui/dialog";
+import { Loader2, Award, Trophy, Sparkles, Download, RefreshCw, UserPlus, Trash2 } from "lucide-react";
 import { toast } from "sonner";
 import { downloadDeansListCertificate } from "@/lib/deansListCertificate";
 
