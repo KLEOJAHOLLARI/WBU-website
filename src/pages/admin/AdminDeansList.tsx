@@ -146,6 +146,7 @@ const AdminDeansList = () => {
   // ---- Manual add ----
   const [addOpen, setAddOpen] = useState(false);
   const [studentSearch, setStudentSearch] = useState("");
+  const [filterProgram, setFilterProgram] = useState<string>("all");
   const [pickedStudent, setPickedStudent] = useState<any>(null);
   const [manualRank, setManualRank] = useState<number | "">("");
   const [manualGpa10, setManualGpa10] = useState<number | "">("");
@@ -153,25 +154,53 @@ const AdminDeansList = () => {
   const [manualProgram, setManualProgram] = useState<string>("");
   const [adding, setAdding] = useState(false);
 
-  const { data: studentResults = [] } = useQuery({
-    queryKey: ["honor-student-search", studentSearch],
-    enabled: addOpen && studentSearch.trim().length >= 2,
+  const { data: allStudents = [], isLoading: loadingStudents } = useQuery({
+    queryKey: ["honor-all-students"],
+    enabled: addOpen,
     queryFn: async () => {
-      const term = `%${studentSearch.trim()}%`;
       const { data } = await supabase
         .from("profiles")
         .select("user_id, full_name, email, student_id, program")
-        .or(`full_name.ilike.${term},email.ilike.${term},student_id.ilike.${term}`)
-        .limit(10);
+        .order("full_name", { ascending: true })
+        .limit(2000);
       return data || [];
     },
   });
 
+  const studentPrograms = useMemo(() => {
+    const set = new Set<string>();
+    allStudents.forEach((s: any) => s.program && set.add(s.program));
+    return Array.from(set).sort();
+  }, [allStudents]);
+
+  const filteredStudents = useMemo(() => {
+    const term = studentSearch.trim().toLowerCase();
+    return allStudents.filter((s: any) => {
+      if (filterProgram !== "all" && s.program !== filterProgram) return false;
+      if (!term) return true;
+      return (
+        (s.full_name || "").toLowerCase().includes(term) ||
+        (s.email || "").toLowerCase().includes(term) ||
+        (s.student_id || "").toLowerCase().includes(term)
+      );
+    });
+  }, [allStudents, studentSearch, filterProgram]);
+
+  const groupedStudents = useMemo(() => {
+    const map = new Map<string, any[]>();
+    filteredStudents.forEach((s: any) => {
+      const key = s.program || "Unassigned";
+      if (!map.has(key)) map.set(key, []);
+      map.get(key)!.push(s);
+    });
+    return Array.from(map.entries()).sort((a, b) => a[0].localeCompare(b[0]));
+  }, [filteredStudents]);
+
   const openAddDialog = () => {
-    if (!snapshot?.id) return toast.error("Generate a snapshot first");
     const nextRank = (entries.reduce((m: number, e: any) => Math.max(m, e.rank || 0), 0) || 0) + 1;
     setPickedStudent(null);
     setStudentSearch("");
+    setFilterProgram(program === "all" ? "all" : program);
     setManualRank(nextRank);
     setManualGpa10("");
     setManualGpa4("");
@@ -180,7 +209,7 @@ const AdminDeansList = () => {
   };
 
   const submitManual = async () => {
-    if (!snapshot?.id) return;
+    if (!snapshot?.id) return toast.error("Generate a snapshot first (click Generate / Update)");
     if (!pickedStudent) return toast.error("Pick a student");
     if (!manualRank || !manualGpa10 || !manualGpa4) return toast.error("Fill rank and GPAs");
     setAdding(true);
@@ -301,7 +330,7 @@ const AdminDeansList = () => {
         <Card>
           <CardHeader className="flex flex-row items-center justify-between gap-2">
             <CardTitle className="text-base flex items-center gap-2"><Award className="h-4 w-4" /> Ranked Students</CardTitle>
-            <Button size="sm" variant="outline" onClick={openAddDialog} disabled={!snapshot?.id}>
+            <Button size="sm" variant="outline" onClick={openAddDialog}>
               <UserPlus className="h-4 w-4 mr-1" /> Add student manually
             </Button>
           </CardHeader>
@@ -349,32 +378,72 @@ const AdminDeansList = () => {
         </Card>
 
         <Dialog open={addOpen} onOpenChange={setAddOpen}>
-          <DialogContent className="max-w-lg">
+          <DialogContent className="max-w-2xl">
             <DialogHeader>
               <DialogTitle>Add student to honor list</DialogTitle>
             </DialogHeader>
             <div className="space-y-4">
-              <div>
-                <Label>Search student (name, email, or ID)</Label>
-                <Input value={studentSearch} onChange={(e) => setStudentSearch(e.target.value)} placeholder="Type at least 2 characters…" />
-                {studentSearch.trim().length >= 2 && (
-                  <div className="mt-2 max-h-48 overflow-y-auto rounded-md border divide-y">
-                    {studentResults.length === 0 ? (
-                      <div className="p-3 text-sm text-muted-foreground">No matches</div>
-                    ) : studentResults.map((s: any) => (
-                      <button
-                        key={s.user_id}
-                        type="button"
-                        onClick={() => { setPickedStudent(s); setStudentSearch(s.full_name || s.email); if (!manualProgram && s.program) setManualProgram(s.program); }}
-                        className={`w-full text-left p-2 text-sm hover:bg-muted ${pickedStudent?.user_id === s.user_id ? "bg-muted" : ""}`}
-                      >
-                        <div className="font-medium">{s.full_name || "(no name)"}</div>
-                        <div className="text-xs text-muted-foreground">{s.email} {s.student_id ? `• ${s.student_id}` : ""} {s.program ? `• ${s.program}` : ""}</div>
-                      </button>
-                    ))}
-                  </div>
+              {!snapshot?.id && (
+                <div className="rounded-md border border-amber-300 bg-amber-50 text-amber-900 px-3 py-2 text-sm">
+                  No snapshot exists for this semester/program yet. Click <strong>Generate / Update</strong> first, then come back to add students manually.
+                </div>
+              )}
+
+              <div className="grid sm:grid-cols-2 gap-3">
+                <div>
+                  <Label>Search</Label>
+                  <Input
+                    value={studentSearch}
+                    onChange={(e) => setStudentSearch(e.target.value)}
+                    placeholder="Name, email, or student ID…"
+                  />
+                </div>
+                <div>
+                  <Label>Filter by program / department</Label>
+                  <Select value={filterProgram} onValueChange={setFilterProgram}>
+                    <SelectTrigger><SelectValue /></SelectTrigger>
+                    <SelectContent>
+                      <SelectItem value="all">All programs</SelectItem>
+                      {studentPrograms.map((p) => <SelectItem key={p} value={p}>{p}</SelectItem>)}
+                    </SelectContent>
+                  </Select>
+                </div>
+              </div>
+
+              <div className="max-h-72 overflow-y-auto rounded-md border">
+                {loadingStudents ? (
+                  <div className="flex justify-center py-8"><Loader2 className="h-5 w-5 animate-spin" /></div>
+                ) : groupedStudents.length === 0 ? (
+                  <div className="p-4 text-sm text-muted-foreground text-center">No students match.</div>
+                ) : (
+                  groupedStudents.map(([prog, list]) => (
+                    <div key={prog}>
+                      <div className="sticky top-0 bg-muted/80 backdrop-blur px-3 py-1.5 text-xs font-semibold uppercase tracking-wide text-muted-foreground border-b">
+                        {prog} <span className="text-muted-foreground/70 normal-case">({list.length})</span>
+                      </div>
+                      {list.map((s: any) => (
+                        <button
+                          key={s.user_id}
+                          type="button"
+                          onClick={() => { setPickedStudent(s); if (s.program) setManualProgram(s.program); }}
+                          className={`w-full text-left px-3 py-2 text-sm border-b hover:bg-muted ${pickedStudent?.user_id === s.user_id ? "bg-primary/10" : ""}`}
+                        >
+                          <div className="font-medium">{s.full_name || "(no name)"}</div>
+                          <div className="text-xs text-muted-foreground">{s.email}{s.student_id ? ` • ${s.student_id}` : ""}</div>
+                        </button>
+                      ))}
+                    </div>
+                  ))
                 )}
               </div>
+
+              {pickedStudent && (
+                <div className="rounded-md bg-primary/5 border border-primary/20 px-3 py-2 text-sm">
+                  Selected: <strong>{pickedStudent.full_name || pickedStudent.email}</strong>
+                  {pickedStudent.program ? <span className="text-muted-foreground"> — {pickedStudent.program}</span> : null}
+                </div>
+              )}
+
               <div className="grid grid-cols-3 gap-3">
                 <div>
                   <Label>Rank</Label>
@@ -390,13 +459,13 @@ const AdminDeansList = () => {
                 </div>
               </div>
               <div>
-                <Label>Program</Label>
+                <Label>Program (override)</Label>
                 <Input value={manualProgram} onChange={(e) => setManualProgram(e.target.value)} placeholder="e.g. computer-science" />
               </div>
             </div>
             <DialogFooter>
               <Button variant="outline" onClick={() => setAddOpen(false)}>Cancel</Button>
-              <Button onClick={submitManual} disabled={adding}>
+              <Button onClick={submitManual} disabled={adding || !snapshot?.id}>
                 {adding ? <Loader2 className="h-4 w-4 animate-spin mr-2" /> : <UserPlus className="h-4 w-4 mr-2" />}
                 Add to list
               </Button>
