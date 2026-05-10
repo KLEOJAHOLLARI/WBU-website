@@ -146,6 +146,7 @@ const AdminDeansList = () => {
   // ---- Manual add ----
   const [addOpen, setAddOpen] = useState(false);
   const [studentSearch, setStudentSearch] = useState("");
+  const [filterProgram, setFilterProgram] = useState<string>("all");
   const [pickedStudent, setPickedStudent] = useState<any>(null);
   const [manualRank, setManualRank] = useState<number | "">("");
   const [manualGpa10, setManualGpa10] = useState<number | "">("");
@@ -153,25 +154,53 @@ const AdminDeansList = () => {
   const [manualProgram, setManualProgram] = useState<string>("");
   const [adding, setAdding] = useState(false);
 
-  const { data: studentResults = [] } = useQuery({
-    queryKey: ["honor-student-search", studentSearch],
-    enabled: addOpen && studentSearch.trim().length >= 2,
+  const { data: allStudents = [], isLoading: loadingStudents } = useQuery({
+    queryKey: ["honor-all-students"],
+    enabled: addOpen,
     queryFn: async () => {
-      const term = `%${studentSearch.trim()}%`;
       const { data } = await supabase
         .from("profiles")
         .select("user_id, full_name, email, student_id, program")
-        .or(`full_name.ilike.${term},email.ilike.${term},student_id.ilike.${term}`)
-        .limit(10);
+        .order("full_name", { ascending: true })
+        .limit(2000);
       return data || [];
     },
   });
 
+  const studentPrograms = useMemo(() => {
+    const set = new Set<string>();
+    allStudents.forEach((s: any) => s.program && set.add(s.program));
+    return Array.from(set).sort();
+  }, [allStudents]);
+
+  const filteredStudents = useMemo(() => {
+    const term = studentSearch.trim().toLowerCase();
+    return allStudents.filter((s: any) => {
+      if (filterProgram !== "all" && s.program !== filterProgram) return false;
+      if (!term) return true;
+      return (
+        (s.full_name || "").toLowerCase().includes(term) ||
+        (s.email || "").toLowerCase().includes(term) ||
+        (s.student_id || "").toLowerCase().includes(term)
+      );
+    });
+  }, [allStudents, studentSearch, filterProgram]);
+
+  const groupedStudents = useMemo(() => {
+    const map = new Map<string, any[]>();
+    filteredStudents.forEach((s: any) => {
+      const key = s.program || "Unassigned";
+      if (!map.has(key)) map.set(key, []);
+      map.get(key)!.push(s);
+    });
+    return Array.from(map.entries()).sort((a, b) => a[0].localeCompare(b[0]));
+  }, [filteredStudents]);
+
   const openAddDialog = () => {
-    if (!snapshot?.id) return toast.error("Generate a snapshot first");
     const nextRank = (entries.reduce((m: number, e: any) => Math.max(m, e.rank || 0), 0) || 0) + 1;
     setPickedStudent(null);
     setStudentSearch("");
+    setFilterProgram(program === "all" ? "all" : program);
     setManualRank(nextRank);
     setManualGpa10("");
     setManualGpa4("");
@@ -180,7 +209,7 @@ const AdminDeansList = () => {
   };
 
   const submitManual = async () => {
-    if (!snapshot?.id) return;
+    if (!snapshot?.id) return toast.error("Generate a snapshot first (click Generate / Update)");
     if (!pickedStudent) return toast.error("Pick a student");
     if (!manualRank || !manualGpa10 || !manualGpa4) return toast.error("Fill rank and GPAs");
     setAdding(true);
