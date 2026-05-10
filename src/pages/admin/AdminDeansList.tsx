@@ -14,7 +14,10 @@ import {
 import {
   Table, TableBody, TableCell, TableHead, TableHeader, TableRow,
 } from "@/components/ui/table";
-import { Loader2, Award, Trophy, Sparkles, Download, RefreshCw } from "lucide-react";
+import {
+  Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger, DialogFooter,
+} from "@/components/ui/dialog";
+import { Loader2, Award, Trophy, Sparkles, Download, RefreshCw, UserPlus, Trash2 } from "lucide-react";
 import { toast } from "sonner";
 import { downloadDeansListCertificate } from "@/lib/deansListCertificate";
 
@@ -140,6 +143,71 @@ const AdminDeansList = () => {
     });
   };
 
+  // ---- Manual add ----
+  const [addOpen, setAddOpen] = useState(false);
+  const [studentSearch, setStudentSearch] = useState("");
+  const [pickedStudent, setPickedStudent] = useState<any>(null);
+  const [manualRank, setManualRank] = useState<number | "">("");
+  const [manualGpa10, setManualGpa10] = useState<number | "">("");
+  const [manualGpa4, setManualGpa4] = useState<number | "">("");
+  const [manualProgram, setManualProgram] = useState<string>("");
+  const [adding, setAdding] = useState(false);
+
+  const { data: studentResults = [] } = useQuery({
+    queryKey: ["honor-student-search", studentSearch],
+    enabled: addOpen && studentSearch.trim().length >= 2,
+    queryFn: async () => {
+      const term = `%${studentSearch.trim()}%`;
+      const { data } = await supabase
+        .from("profiles")
+        .select("user_id, full_name, email, student_id, program")
+        .or(`full_name.ilike.${term},email.ilike.${term},student_id.ilike.${term}`)
+        .limit(10);
+      return data || [];
+    },
+  });
+
+  const openAddDialog = () => {
+    if (!snapshot?.id) return toast.error("Generate a snapshot first");
+    const nextRank = (entries.reduce((m: number, e: any) => Math.max(m, e.rank || 0), 0) || 0) + 1;
+    setPickedStudent(null);
+    setStudentSearch("");
+    setManualRank(nextRank);
+    setManualGpa10("");
+    setManualGpa4("");
+    setManualProgram(program === "all" ? "" : program);
+    setAddOpen(true);
+  };
+
+  const submitManual = async () => {
+    if (!snapshot?.id) return;
+    if (!pickedStudent) return toast.error("Pick a student");
+    if (!manualRank || !manualGpa10 || !manualGpa4) return toast.error("Fill rank and GPAs");
+    setAdding(true);
+    const { error } = await supabase.from("deans_list_entries").insert({
+      snapshot_id: snapshot.id,
+      user_id: pickedStudent.user_id,
+      full_name: pickedStudent.full_name || pickedStudent.email || "",
+      program: manualProgram || pickedStudent.program || "",
+      rank: Number(manualRank),
+      gpa_albanian: Number(manualGpa10),
+      gpa_4: Number(manualGpa4),
+    });
+    setAdding(false);
+    if (error) return toast.error(error.message);
+    toast.success("Student added to honor list");
+    setAddOpen(false);
+    qc.invalidateQueries({ queryKey: ["deans-entries", snapshot.id] });
+  };
+
+  const removeEntry = async (id: string) => {
+    if (!confirm("Remove this student from the list?")) return;
+    const { error } = await supabase.from("deans_list_entries").delete().eq("id", id);
+    if (error) return toast.error(error.message);
+    toast.success("Removed");
+    qc.invalidateQueries({ queryKey: ["deans-entries", snapshot?.id] });
+  };
+
   return (
     <AdminLayout>
       <div className="space-y-6">
@@ -231,14 +299,19 @@ const AdminDeansList = () => {
         </Card>
 
         <Card>
-          <CardHeader><CardTitle className="text-base flex items-center gap-2"><Award className="h-4 w-4" /> Ranked Students</CardTitle></CardHeader>
+          <CardHeader className="flex flex-row items-center justify-between gap-2">
+            <CardTitle className="text-base flex items-center gap-2"><Award className="h-4 w-4" /> Ranked Students</CardTitle>
+            <Button size="sm" variant="outline" onClick={openAddDialog} disabled={!snapshot?.id}>
+              <UserPlus className="h-4 w-4 mr-1" /> Add student manually
+            </Button>
+          </CardHeader>
           <CardContent>
             {loadingSnap || loadingEntries ? (
               <div className="flex justify-center py-10"><Loader2 className="h-5 w-5 animate-spin" /></div>
             ) : !snapshot ? (
               <p className="text-muted-foreground text-sm">No snapshot yet for this selection. Click "Generate / Update".</p>
             ) : entries.length === 0 ? (
-              <p className="text-muted-foreground text-sm">No students met the threshold.</p>
+              <p className="text-muted-foreground text-sm">No students met the threshold. You can add one manually.</p>
             ) : (
               <Table>
                 <TableHeader>
@@ -248,7 +321,7 @@ const AdminDeansList = () => {
                     <TableHead>Program</TableHead>
                     <TableHead className="text-right">GPA (10)</TableHead>
                     <TableHead className="text-right">GPA (4.0)</TableHead>
-                    <TableHead className="text-right">Certificate</TableHead>
+                    <TableHead className="text-right">Actions</TableHead>
                   </TableRow>
                 </TableHeader>
                 <TableBody>
@@ -263,6 +336,9 @@ const AdminDeansList = () => {
                         <Button size="sm" variant="ghost" onClick={() => exportCert(e)}>
                           <Download className="h-3.5 w-3.5 mr-1" /> PDF
                         </Button>
+                        <Button size="sm" variant="ghost" onClick={() => removeEntry(e.id)} className="text-destructive hover:text-destructive">
+                          <Trash2 className="h-3.5 w-3.5" />
+                        </Button>
                       </TableCell>
                     </TableRow>
                   ))}
@@ -271,6 +347,62 @@ const AdminDeansList = () => {
             )}
           </CardContent>
         </Card>
+
+        <Dialog open={addOpen} onOpenChange={setAddOpen}>
+          <DialogContent className="max-w-lg">
+            <DialogHeader>
+              <DialogTitle>Add student to honor list</DialogTitle>
+            </DialogHeader>
+            <div className="space-y-4">
+              <div>
+                <Label>Search student (name, email, or ID)</Label>
+                <Input value={studentSearch} onChange={(e) => setStudentSearch(e.target.value)} placeholder="Type at least 2 characters…" />
+                {studentSearch.trim().length >= 2 && (
+                  <div className="mt-2 max-h-48 overflow-y-auto rounded-md border divide-y">
+                    {studentResults.length === 0 ? (
+                      <div className="p-3 text-sm text-muted-foreground">No matches</div>
+                    ) : studentResults.map((s: any) => (
+                      <button
+                        key={s.user_id}
+                        type="button"
+                        onClick={() => { setPickedStudent(s); setStudentSearch(s.full_name || s.email); if (!manualProgram && s.program) setManualProgram(s.program); }}
+                        className={`w-full text-left p-2 text-sm hover:bg-muted ${pickedStudent?.user_id === s.user_id ? "bg-muted" : ""}`}
+                      >
+                        <div className="font-medium">{s.full_name || "(no name)"}</div>
+                        <div className="text-xs text-muted-foreground">{s.email} {s.student_id ? `• ${s.student_id}` : ""} {s.program ? `• ${s.program}` : ""}</div>
+                      </button>
+                    ))}
+                  </div>
+                )}
+              </div>
+              <div className="grid grid-cols-3 gap-3">
+                <div>
+                  <Label>Rank</Label>
+                  <Input type="number" min={1} value={manualRank} onChange={(e) => setManualRank(e.target.value === "" ? "" : Number(e.target.value))} />
+                </div>
+                <div>
+                  <Label>GPA (10)</Label>
+                  <Input type="number" step="0.01" min={0} max={10} value={manualGpa10} onChange={(e) => setManualGpa10(e.target.value === "" ? "" : Number(e.target.value))} />
+                </div>
+                <div>
+                  <Label>GPA (4.0)</Label>
+                  <Input type="number" step="0.01" min={0} max={4} value={manualGpa4} onChange={(e) => setManualGpa4(e.target.value === "" ? "" : Number(e.target.value))} />
+                </div>
+              </div>
+              <div>
+                <Label>Program</Label>
+                <Input value={manualProgram} onChange={(e) => setManualProgram(e.target.value)} placeholder="e.g. computer-science" />
+              </div>
+            </div>
+            <DialogFooter>
+              <Button variant="outline" onClick={() => setAddOpen(false)}>Cancel</Button>
+              <Button onClick={submitManual} disabled={adding}>
+                {adding ? <Loader2 className="h-4 w-4 animate-spin mr-2" /> : <UserPlus className="h-4 w-4 mr-2" />}
+                Add to list
+              </Button>
+            </DialogFooter>
+          </DialogContent>
+        </Dialog>
       </div>
     </AdminLayout>
   );
