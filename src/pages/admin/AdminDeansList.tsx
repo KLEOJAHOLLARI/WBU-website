@@ -378,32 +378,72 @@ const AdminDeansList = () => {
         </Card>
 
         <Dialog open={addOpen} onOpenChange={setAddOpen}>
-          <DialogContent className="max-w-lg">
+          <DialogContent className="max-w-2xl">
             <DialogHeader>
               <DialogTitle>Add student to honor list</DialogTitle>
             </DialogHeader>
             <div className="space-y-4">
-              <div>
-                <Label>Search student (name, email, or ID)</Label>
-                <Input value={studentSearch} onChange={(e) => setStudentSearch(e.target.value)} placeholder="Type at least 2 characters…" />
-                {studentSearch.trim().length >= 2 && (
-                  <div className="mt-2 max-h-48 overflow-y-auto rounded-md border divide-y">
-                    {studentResults.length === 0 ? (
-                      <div className="p-3 text-sm text-muted-foreground">No matches</div>
-                    ) : studentResults.map((s: any) => (
-                      <button
-                        key={s.user_id}
-                        type="button"
-                        onClick={() => { setPickedStudent(s); setStudentSearch(s.full_name || s.email); if (!manualProgram && s.program) setManualProgram(s.program); }}
-                        className={`w-full text-left p-2 text-sm hover:bg-muted ${pickedStudent?.user_id === s.user_id ? "bg-muted" : ""}`}
-                      >
-                        <div className="font-medium">{s.full_name || "(no name)"}</div>
-                        <div className="text-xs text-muted-foreground">{s.email} {s.student_id ? `• ${s.student_id}` : ""} {s.program ? `• ${s.program}` : ""}</div>
-                      </button>
-                    ))}
-                  </div>
+              {!snapshot?.id && (
+                <div className="rounded-md border border-amber-300 bg-amber-50 text-amber-900 px-3 py-2 text-sm">
+                  No snapshot exists for this semester/program yet. Click <strong>Generate / Update</strong> first, then come back to add students manually.
+                </div>
+              )}
+
+              <div className="grid sm:grid-cols-2 gap-3">
+                <div>
+                  <Label>Search</Label>
+                  <Input
+                    value={studentSearch}
+                    onChange={(e) => setStudentSearch(e.target.value)}
+                    placeholder="Name, email, or student ID…"
+                  />
+                </div>
+                <div>
+                  <Label>Filter by program / department</Label>
+                  <Select value={filterProgram} onValueChange={setFilterProgram}>
+                    <SelectTrigger><SelectValue /></SelectTrigger>
+                    <SelectContent>
+                      <SelectItem value="all">All programs</SelectItem>
+                      {studentPrograms.map((p) => <SelectItem key={p} value={p}>{p}</SelectItem>)}
+                    </SelectContent>
+                  </Select>
+                </div>
+              </div>
+
+              <div className="max-h-72 overflow-y-auto rounded-md border">
+                {loadingStudents ? (
+                  <div className="flex justify-center py-8"><Loader2 className="h-5 w-5 animate-spin" /></div>
+                ) : groupedStudents.length === 0 ? (
+                  <div className="p-4 text-sm text-muted-foreground text-center">No students match.</div>
+                ) : (
+                  groupedStudents.map(([prog, list]) => (
+                    <div key={prog}>
+                      <div className="sticky top-0 bg-muted/80 backdrop-blur px-3 py-1.5 text-xs font-semibold uppercase tracking-wide text-muted-foreground border-b">
+                        {prog} <span className="text-muted-foreground/70 normal-case">({list.length})</span>
+                      </div>
+                      {list.map((s: any) => (
+                        <button
+                          key={s.user_id}
+                          type="button"
+                          onClick={() => { setPickedStudent(s); if (s.program) setManualProgram(s.program); }}
+                          className={`w-full text-left px-3 py-2 text-sm border-b hover:bg-muted ${pickedStudent?.user_id === s.user_id ? "bg-primary/10" : ""}`}
+                        >
+                          <div className="font-medium">{s.full_name || "(no name)"}</div>
+                          <div className="text-xs text-muted-foreground">{s.email}{s.student_id ? ` • ${s.student_id}` : ""}</div>
+                        </button>
+                      ))}
+                    </div>
+                  ))
                 )}
               </div>
+
+              {pickedStudent && (
+                <div className="rounded-md bg-primary/5 border border-primary/20 px-3 py-2 text-sm">
+                  Selected: <strong>{pickedStudent.full_name || pickedStudent.email}</strong>
+                  {pickedStudent.program ? <span className="text-muted-foreground"> — {pickedStudent.program}</span> : null}
+                </div>
+              )}
+
               <div className="grid grid-cols-3 gap-3">
                 <div>
                   <Label>Rank</Label>
@@ -419,13 +459,13 @@ const AdminDeansList = () => {
                 </div>
               </div>
               <div>
-                <Label>Program</Label>
+                <Label>Program (override)</Label>
                 <Input value={manualProgram} onChange={(e) => setManualProgram(e.target.value)} placeholder="e.g. computer-science" />
               </div>
             </div>
             <DialogFooter>
               <Button variant="outline" onClick={() => setAddOpen(false)}>Cancel</Button>
-              <Button onClick={submitManual} disabled={adding}>
+              <Button onClick={submitManual} disabled={adding || !snapshot?.id}>
                 {adding ? <Loader2 className="h-4 w-4 animate-spin mr-2" /> : <UserPlus className="h-4 w-4 mr-2" />}
                 Add to list
               </Button>
