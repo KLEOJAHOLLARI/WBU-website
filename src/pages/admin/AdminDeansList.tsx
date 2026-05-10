@@ -143,6 +143,71 @@ const AdminDeansList = () => {
     });
   };
 
+  // ---- Manual add ----
+  const [addOpen, setAddOpen] = useState(false);
+  const [studentSearch, setStudentSearch] = useState("");
+  const [pickedStudent, setPickedStudent] = useState<any>(null);
+  const [manualRank, setManualRank] = useState<number | "">("");
+  const [manualGpa10, setManualGpa10] = useState<number | "">("");
+  const [manualGpa4, setManualGpa4] = useState<number | "">("");
+  const [manualProgram, setManualProgram] = useState<string>("");
+  const [adding, setAdding] = useState(false);
+
+  const { data: studentResults = [] } = useQuery({
+    queryKey: ["honor-student-search", studentSearch],
+    enabled: addOpen && studentSearch.trim().length >= 2,
+    queryFn: async () => {
+      const term = `%${studentSearch.trim()}%`;
+      const { data } = await supabase
+        .from("profiles")
+        .select("user_id, full_name, email, student_id, program")
+        .or(`full_name.ilike.${term},email.ilike.${term},student_id.ilike.${term}`)
+        .limit(10);
+      return data || [];
+    },
+  });
+
+  const openAddDialog = () => {
+    if (!snapshot?.id) return toast.error("Generate a snapshot first");
+    const nextRank = (entries.reduce((m: number, e: any) => Math.max(m, e.rank || 0), 0) || 0) + 1;
+    setPickedStudent(null);
+    setStudentSearch("");
+    setManualRank(nextRank);
+    setManualGpa10("");
+    setManualGpa4("");
+    setManualProgram(program === "all" ? "" : program);
+    setAddOpen(true);
+  };
+
+  const submitManual = async () => {
+    if (!snapshot?.id) return;
+    if (!pickedStudent) return toast.error("Pick a student");
+    if (!manualRank || !manualGpa10 || !manualGpa4) return toast.error("Fill rank and GPAs");
+    setAdding(true);
+    const { error } = await supabase.from("deans_list_entries").insert({
+      snapshot_id: snapshot.id,
+      user_id: pickedStudent.user_id,
+      full_name: pickedStudent.full_name || pickedStudent.email || "",
+      program: manualProgram || pickedStudent.program || "",
+      rank: Number(manualRank),
+      gpa_albanian: Number(manualGpa10),
+      gpa_4: Number(manualGpa4),
+    });
+    setAdding(false);
+    if (error) return toast.error(error.message);
+    toast.success("Student added to honor list");
+    setAddOpen(false);
+    qc.invalidateQueries({ queryKey: ["deans-entries", snapshot.id] });
+  };
+
+  const removeEntry = async (id: string) => {
+    if (!confirm("Remove this student from the list?")) return;
+    const { error } = await supabase.from("deans_list_entries").delete().eq("id", id);
+    if (error) return toast.error(error.message);
+    toast.success("Removed");
+    qc.invalidateQueries({ queryKey: ["deans-entries", snapshot?.id] });
+  };
+
   return (
     <AdminLayout>
       <div className="space-y-6">
