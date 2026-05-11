@@ -125,6 +125,23 @@ const AdminDeansList = () => {
     qc.invalidateQueries({ queryKey: ["deans-entries"] });
   };
 
+  const runPreview = async () => {
+    if (!semesterId) return toast.error("Pick a semester");
+    setPreviewing(true);
+    const { data, error } = await supabase.rpc("preview_deans_list", {
+      _semester_id: semesterId,
+      _program: program === "all" ? null : program,
+      _threshold: threshold,
+      _min_courses: minCourses,
+    });
+    setPreviewing(false);
+    if (error) return toast.error(error.message);
+    const res: any = data;
+    setPreviewRows(res?.rows || []);
+    setPreviewMeta({ threshold: Number(res?.threshold ?? threshold), min_courses: Number(res?.min_courses ?? minCourses) });
+    toast.success(`Preview ready — ${res?.count ?? 0} student(s) would qualify`);
+  };
+
   const togglePublish = async (next: boolean) => {
     if (!snapshot?.id) return;
     const { error } = await supabase
