@@ -325,6 +325,23 @@ const AdminDeansList = () => {
                   {previewing ? <Loader2 className="h-4 w-4 animate-spin mr-2" /> : <Eye className="h-4 w-4 mr-2" />}
                   Preview
                 </Button>
+                <Button
+                  variant="outline"
+                  disabled={!semesterId}
+                  onClick={() => {
+                    const qs = new URLSearchParams({
+                      semester: semesterId,
+                      program,
+                      threshold: String(threshold),
+                      min_courses: String(minCourses),
+                      title: listTitle,
+                    }).toString();
+                    window.open(`/presidents-honor-list/preview?${qs}`, "_blank");
+                  }}
+                >
+                  <Eye className="h-4 w-4 mr-2" />
+                  Open public preview
+                </Button>
                 <Button onClick={generate} disabled={generating || !semesterId}>
                   {generating ? <Loader2 className="h-4 w-4 animate-spin mr-2" /> : <Sparkles className="h-4 w-4 mr-2" />}
                   Generate / Update
