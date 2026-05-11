@@ -93,6 +93,7 @@ import ProfessorPerformance from "./pages/professor/ProfessorPerformance";
 import StudentFeedback from "./pages/portal/StudentFeedback";
 import AdminDeansList from "./pages/admin/AdminDeansList";
 import DeansList from "./pages/DeansList";
+import DeansListPreview from "./pages/DeansListPreview";
 import AIAssistant from "./components/AIAssistant";
 
 const queryClient = new QueryClient();
@@ -156,7 +157,9 @@ const App = () => (
             <Route path="/admin/staff-performance" element={<AdminStaffPerformance />} />
             <Route path="/admin/deans-list" element={<AdminDeansList />} />
             <Route path="/deans-list" element={<DeansList />} />
+            <Route path="/deans-list/preview" element={<DeansListPreview />} />
             <Route path="/presidents-honor-list" element={<DeansList />} />
+            <Route path="/presidents-honor-list/preview" element={<DeansListPreview />} />
             <Route path="/smartwbu" element={<SmartWBU />} />
             <Route path="/portal/login" element={<StudentLogin />} />
             <Route path="/portal/register" element={<StudentRegister />} />
