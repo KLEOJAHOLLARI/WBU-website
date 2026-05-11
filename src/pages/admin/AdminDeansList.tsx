@@ -29,6 +29,9 @@ const AdminDeansList = () => {
   const [program, setProgram] = useState<string>("all");
   const [listTitle, setListTitle] = useState<string>("President's Honor List");
   const [generating, setGenerating] = useState(false);
+  const [previewing, setPreviewing] = useState(false);
+  const [previewRows, setPreviewRows] = useState<any[] | null>(null);
+  const [previewMeta, setPreviewMeta] = useState<{ threshold: number; min_courses: number } | null>(null);
 
   const { data: settings } = useQuery({
     queryKey: ["deans-list-settings"],
