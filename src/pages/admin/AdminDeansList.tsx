@@ -320,7 +320,11 @@ const AdminDeansList = () => {
                   </SelectContent>
                 </Select>
               </div>
-              <div className="flex items-end gap-2">
+              <div className="flex items-end gap-2 flex-wrap">
+                <Button onClick={runPreview} disabled={previewing || !semesterId} variant="outline">
+                  {previewing ? <Loader2 className="h-4 w-4 animate-spin mr-2" /> : <Eye className="h-4 w-4 mr-2" />}
+                  Preview
+                </Button>
                 <Button onClick={generate} disabled={generating || !semesterId}>
                   {generating ? <Loader2 className="h-4 w-4 animate-spin mr-2" /> : <Sparkles className="h-4 w-4 mr-2" />}
                   Generate / Update
