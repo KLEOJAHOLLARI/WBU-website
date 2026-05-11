@@ -17,7 +17,7 @@ import {
 import {
   Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger, DialogFooter,
 } from "@/components/ui/dialog";
-import { Loader2, Award, Trophy, Sparkles, Download, RefreshCw, UserPlus, Trash2 } from "lucide-react";
+import { Loader2, Award, Trophy, Sparkles, Download, RefreshCw, UserPlus, Trash2, Eye, Medal } from "lucide-react";
 import { toast } from "sonner";
 import { downloadDeansListCertificate } from "@/lib/deansListCertificate";
 
@@ -29,6 +29,9 @@ const AdminDeansList = () => {
   const [program, setProgram] = useState<string>("all");
   const [listTitle, setListTitle] = useState<string>("President's Honor List");
   const [generating, setGenerating] = useState(false);
+  const [previewing, setPreviewing] = useState(false);
+  const [previewRows, setPreviewRows] = useState<any[] | null>(null);
+  const [previewMeta, setPreviewMeta] = useState<{ threshold: number; min_courses: number } | null>(null);
 
   const { data: settings } = useQuery({
     queryKey: ["deans-list-settings"],
@@ -120,6 +123,23 @@ const AdminDeansList = () => {
     toast.success(`Generated & published — ${res?.count ?? 0} student(s) qualified`);
     qc.invalidateQueries({ queryKey: ["deans-snapshot"] });
     qc.invalidateQueries({ queryKey: ["deans-entries"] });
+  };
+
+  const runPreview = async () => {
+    if (!semesterId) return toast.error("Pick a semester");
+    setPreviewing(true);
+    const { data, error } = await (supabase.rpc as any)("preview_deans_list", {
+      _semester_id: semesterId,
+      _program: program === "all" ? null : program,
+      _threshold: threshold,
+      _min_courses: minCourses,
+    });
+    setPreviewing(false);
+    if (error) return toast.error(error.message);
+    const res: any = data;
+    setPreviewRows(res?.rows || []);
+    setPreviewMeta({ threshold: Number(res?.threshold ?? threshold), min_courses: Number(res?.min_courses ?? minCourses) });
+    toast.success(`Preview ready — ${res?.count ?? 0} student(s) would qualify`);
   };
 
   const togglePublish = async (next: boolean) => {
@@ -300,7 +320,11 @@ const AdminDeansList = () => {
                   </SelectContent>
                 </Select>
               </div>
-              <div className="flex items-end gap-2">
+              <div className="flex items-end gap-2 flex-wrap">
+                <Button onClick={runPreview} disabled={previewing || !semesterId} variant="outline">
+                  {previewing ? <Loader2 className="h-4 w-4 animate-spin mr-2" /> : <Eye className="h-4 w-4 mr-2" />}
+                  Preview
+                </Button>
                 <Button onClick={generate} disabled={generating || !semesterId}>
                   {generating ? <Loader2 className="h-4 w-4 animate-spin mr-2" /> : <Sparkles className="h-4 w-4 mr-2" />}
                   Generate / Update
@@ -328,6 +352,120 @@ const AdminDeansList = () => {
             )}
           </CardContent>
         </Card>
+
+        {/* Public Preview — exact look on the program / public page */}
+        {(previewRows !== null || (snapshot && entries.length > 0)) && (() => {
+          const usingPreview = previewRows !== null;
+          const rows: any[] = usingPreview ? (previewRows || []) : (entries as any[]);
+          const top3 = rows.slice(0, 3);
+          const rest = rows.slice(3);
+          const accent = (r: number) => {
+            if (r === 1) return { ring: "ring-amber-400", bg: "from-amber-300/30 to-amber-500/20", text: "text-amber-600", icon: <Trophy className="h-7 w-7" /> };
+            if (r === 2) return { ring: "ring-slate-300", bg: "from-slate-200/50 to-slate-400/20", text: "text-slate-500", icon: <Medal className="h-7 w-7" /> };
+            if (r === 3) return { ring: "ring-orange-400", bg: "from-orange-300/30 to-orange-500/20", text: "text-orange-600", icon: <Medal className="h-7 w-7" /> };
+            return { ring: "ring-border", bg: "from-muted/30 to-muted/10", text: "text-foreground", icon: <Award className="h-6 w-6 text-muted-foreground" /> };
+          };
+          return (
+            <Card className="border-dashed border-2 border-primary/40">
+              <CardHeader className="flex flex-row items-center justify-between gap-2 flex-wrap">
+                <div>
+                  <CardTitle className="text-base flex items-center gap-2">
+                    <Eye className="h-4 w-4 text-primary" />
+                    Public Preview — how the list will appear on the {program === "all" ? "Dean's List page" : "program page"}
+                  </CardTitle>
+                  <p className="text-xs text-muted-foreground mt-1">
+                    {usingPreview
+                      ? `Unsaved preview · threshold ≥ ${previewMeta?.threshold?.toFixed(2)} · min courses ${previewMeta?.min_courses} · ${rows.length} student(s)`
+                      : `Live snapshot · ${snapshot?.is_published ? "published" : "draft (not visible to students yet)"} · ${rows.length} student(s)`}
+                  </p>
+                </div>
+                <div className="flex items-center gap-2">
+                  <Badge variant={usingPreview ? "outline" : (snapshot?.is_published ? "default" : "secondary")}>
+                    {usingPreview ? "Preview" : (snapshot?.is_published ? "Published" : "Draft")}
+                  </Badge>
+                  {usingPreview && (
+                    <Button size="sm" variant="ghost" onClick={() => { setPreviewRows(null); setPreviewMeta(null); }}>Close preview</Button>
+                  )}
+                </div>
+              </CardHeader>
+              <CardContent>
+                <div className="rounded-lg bg-gradient-to-b from-background to-muted/20 p-6">
+                  <div className="text-center mb-8">
+                    <div className="inline-flex items-center justify-center h-14 w-14 rounded-full bg-amber-100 text-amber-600 mb-3">
+                      <Trophy className="h-7 w-7" />
+                    </div>
+                    <h2 className="font-display text-2xl font-bold">🏆 {listTitle}</h2>
+                    <p className="text-sm text-muted-foreground mt-1">
+                      {semesterName}{program !== "all" ? ` · ${program}` : ""}
+                    </p>
+                    <div className="mt-3 h-1 w-16 rounded-full bg-amber-500 mx-auto" />
+                  </div>
+
+                  {rows.length === 0 ? (
+                    <p className="text-center text-muted-foreground py-8">No students would qualify with the current settings.</p>
+                  ) : (
+                    <>
+                      {top3.length > 0 && (
+                        <div className="grid gap-4 md:grid-cols-3 mb-6">
+                          {top3.map((e: any) => {
+                            const a = accent(e.rank);
+                            return (
+                              <Card key={e.rank + "-" + (e.user_id || e.id)} className={`relative overflow-hidden ring-2 ${a.ring}`}>
+                                <div className={`absolute inset-0 bg-gradient-to-br ${a.bg} opacity-60 pointer-events-none`} />
+                                <CardContent className="relative pt-6 pb-5 text-center">
+                                  <div className={`inline-flex items-center justify-center h-12 w-12 rounded-full bg-card shadow-sm mb-2 ${a.text}`}>
+                                    {a.icon}
+                                  </div>
+                                  <div className={`text-4xl font-bold ${a.text}`}>#{e.rank}</div>
+                                  <div className="mt-2 text-base font-semibold">{e.full_name}</div>
+                                  {e.program && <div className="text-xs text-muted-foreground">{e.program}</div>}
+                                  <div className="mt-2">
+                                    <Badge variant="outline" className="font-mono text-xs">GPA {Number(e.gpa_albanian).toFixed(2)} / 10</Badge>
+                                  </div>
+                                </CardContent>
+                              </Card>
+                            );
+                          })}
+                        </div>
+                      )}
+
+                      {rest.length > 0 && (
+                        <Card>
+                          <CardContent className="p-0">
+                            <div className="overflow-x-auto">
+                              <table className="w-full text-sm">
+                                <thead className="bg-muted/50 text-muted-foreground">
+                                  <tr>
+                                    <th className="text-left px-4 py-3 w-16">Rank</th>
+                                    <th className="text-left px-4 py-3">Student</th>
+                                    <th className="text-left px-4 py-3">Program</th>
+                                    <th className="text-right px-4 py-3">GPA (10)</th>
+                                    <th className="text-right px-4 py-3">GPA (4.0)</th>
+                                  </tr>
+                                </thead>
+                                <tbody>
+                                  {rest.map((e: any) => (
+                                    <tr key={e.rank + "-" + (e.user_id || e.id)} className="border-t border-border">
+                                      <td className="px-4 py-3 font-semibold">#{e.rank}</td>
+                                      <td className="px-4 py-3">{e.full_name}</td>
+                                      <td className="px-4 py-3 text-muted-foreground">{e.program}</td>
+                                      <td className="px-4 py-3 text-right font-mono">{Number(e.gpa_albanian).toFixed(2)}</td>
+                                      <td className="px-4 py-3 text-right font-mono">{Number(e.gpa_4).toFixed(2)}</td>
+                                    </tr>
+                                  ))}
+                                </tbody>
+                              </table>
+                            </div>
+                          </CardContent>
+                        </Card>
+                      )}
+                    </>
+                  )}
+                </div>
+              </CardContent>
+            </Card>
+          );
+        })()}
 
         <Card>
           <CardHeader className="flex flex-row items-center justify-between gap-2">

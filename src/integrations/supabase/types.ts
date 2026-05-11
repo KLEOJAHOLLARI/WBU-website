@@ -2326,6 +2326,15 @@ export type Database = {
         Args: { _course_id: string; _semester_id: string }
         Returns: boolean
       }
+      preview_deans_list: {
+        Args: {
+          _min_courses?: number
+          _program?: string
+          _semester_id: string
+          _threshold?: number
+        }
+        Returns: Json
+      }
       record_card_scan: {
         Args: {
           _card_type?: string
