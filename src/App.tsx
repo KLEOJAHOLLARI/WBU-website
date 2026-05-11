@@ -93,6 +93,7 @@ import ProfessorPerformance from "./pages/professor/ProfessorPerformance";
 import StudentFeedback from "./pages/portal/StudentFeedback";
 import AdminDeansList from "./pages/admin/AdminDeansList";
 import DeansList from "./pages/DeansList";
+import DeansListPreview from "./pages/DeansListPreview";
 import AIAssistant from "./components/AIAssistant";
 
 const queryClient = new QueryClient();
