@@ -128,7 +128,7 @@ const AdminDeansList = () => {
   const runPreview = async () => {
     if (!semesterId) return toast.error("Pick a semester");
     setPreviewing(true);
-    const { data, error } = await supabase.rpc("preview_deans_list", {
+    const { data, error } = await (supabase.rpc as any)("preview_deans_list", {
       _semester_id: semesterId,
       _program: program === "all" ? null : program,
       _threshold: threshold,
