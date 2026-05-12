@@ -259,6 +259,47 @@ const AdminDeansList = () => {
     qc.invalidateQueries({ queryKey: ["deans-entries", snapshot?.id] });
   };
 
+  // ---- Edit entry ----
+  const [editOpen, setEditOpen] = useState(false);
+  const [editEntry, setEditEntry] = useState<any>(null);
+  const [editFullName, setEditFullName] = useState("");
+  const [editProgram, setEditProgram] = useState("");
+  const [editRank, setEditRank] = useState<number | "">("");
+  const [editGpa10, setEditGpa10] = useState<number | "">("");
+  const [editGpa4, setEditGpa4] = useState<number | "">("");
+  const [savingEdit, setSavingEdit] = useState(false);
+
+  const openEdit = (e: any) => {
+    setEditEntry(e);
+    setEditFullName(e.full_name || "");
+    setEditProgram(e.program || "");
+    setEditRank(e.rank ?? "");
+    setEditGpa10(Number(e.gpa_albanian));
+    setEditGpa4(Number(e.gpa_4));
+    setEditOpen(true);
+  };
+
+  const saveEdit = async () => {
+    if (!editEntry?.id) return;
+    if (!editRank || editGpa10 === "" || editGpa4 === "") return toast.error("Fill rank and GPAs");
+    setSavingEdit(true);
+    const { error } = await supabase
+      .from("deans_list_entries")
+      .update({
+        full_name: editFullName,
+        program: editProgram,
+        rank: Number(editRank),
+        gpa_albanian: Number(editGpa10),
+        gpa_4: Number(editGpa4),
+      })
+      .eq("id", editEntry.id);
+    setSavingEdit(false);
+    if (error) return toast.error(error.message);
+    toast.success("Student updated");
+    setEditOpen(false);
+    qc.invalidateQueries({ queryKey: ["deans-entries", snapshot?.id] });
+  };
+
   return (
     <AdminLayout>
       <div className="space-y-6">
