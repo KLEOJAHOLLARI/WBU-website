@@ -560,15 +560,17 @@ const AdminDeansList = () => {
                       <TableCell className="text-right">{Number(e.gpa_albanian).toFixed(2)}</TableCell>
                       <TableCell className="text-right">{Number(e.gpa_4).toFixed(2)}</TableCell>
                       <TableCell className="text-right">
-                        <Button size="sm" variant="ghost" onClick={() => exportCert(e)}>
-                          <Download className="h-3.5 w-3.5 mr-1" /> PDF
-                        </Button>
-                        <Button size="sm" variant="ghost" onClick={() => openEdit(e)}>
-                          <Pencil className="h-3.5 w-3.5" />
-                        </Button>
-                        <Button size="sm" variant="ghost" onClick={() => removeEntry(e.id)} className="text-destructive hover:text-destructive">
-                          <Trash2 className="h-3.5 w-3.5" />
-                        </Button>
+                        <div className="flex items-center justify-end gap-1 flex-nowrap">
+                          <Button size="icon" variant="ghost" title="Download PDF" onClick={() => exportCert(e)}>
+                            <Download className="h-4 w-4" />
+                          </Button>
+                          <Button size="icon" variant="ghost" title="Edit student" onClick={() => openEdit(e)}>
+                            <Pencil className="h-4 w-4" />
+                          </Button>
+                          <Button size="icon" variant="ghost" title="Remove" onClick={() => removeEntry(e.id)} className="text-destructive hover:text-destructive">
+                            <Trash2 className="h-4 w-4" />
+                          </Button>
+                        </div>
                       </TableCell>
                     </TableRow>
                   ))}
