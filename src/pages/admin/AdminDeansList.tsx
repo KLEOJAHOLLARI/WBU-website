@@ -17,7 +17,7 @@ import {
 import {
   Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger, DialogFooter,
 } from "@/components/ui/dialog";
-import { Loader2, Award, Trophy, Sparkles, Download, RefreshCw, UserPlus, Trash2, Eye, Medal } from "lucide-react";
+import { Loader2, Award, Trophy, Sparkles, Download, RefreshCw, UserPlus, Trash2, Eye, Medal, Pencil } from "lucide-react";
 import { toast } from "sonner";
 import { downloadDeansListCertificate } from "@/lib/deansListCertificate";
 
