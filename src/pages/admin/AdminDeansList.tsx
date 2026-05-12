@@ -563,6 +563,9 @@ const AdminDeansList = () => {
                         <Button size="sm" variant="ghost" onClick={() => exportCert(e)}>
                           <Download className="h-3.5 w-3.5 mr-1" /> PDF
                         </Button>
+                        <Button size="sm" variant="ghost" onClick={() => openEdit(e)}>
+                          <Pencil className="h-3.5 w-3.5" />
+                        </Button>
                         <Button size="sm" variant="ghost" onClick={() => removeEntry(e.id)} className="text-destructive hover:text-destructive">
                           <Trash2 className="h-3.5 w-3.5" />
                         </Button>
