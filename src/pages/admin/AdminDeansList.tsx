@@ -17,7 +17,7 @@ import {
 import {
   Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger, DialogFooter,
 } from "@/components/ui/dialog";
-import { Loader2, Award, Trophy, Sparkles, Download, RefreshCw, UserPlus, Trash2, Eye, Medal } from "lucide-react";
+import { Loader2, Award, Trophy, Sparkles, Download, RefreshCw, UserPlus, Trash2, Eye, Medal, Pencil } from "lucide-react";
 import { toast } from "sonner";
 import { downloadDeansListCertificate } from "@/lib/deansListCertificate";
 
@@ -256,6 +256,47 @@ const AdminDeansList = () => {
     const { error } = await supabase.from("deans_list_entries").delete().eq("id", id);
     if (error) return toast.error(error.message);
     toast.success("Removed");
+    qc.invalidateQueries({ queryKey: ["deans-entries", snapshot?.id] });
+  };
+
+  // ---- Edit entry ----
+  const [editOpen, setEditOpen] = useState(false);
+  const [editEntry, setEditEntry] = useState<any>(null);
+  const [editFullName, setEditFullName] = useState("");
+  const [editProgram, setEditProgram] = useState("");
+  const [editRank, setEditRank] = useState<number | "">("");
+  const [editGpa10, setEditGpa10] = useState<number | "">("");
+  const [editGpa4, setEditGpa4] = useState<number | "">("");
+  const [savingEdit, setSavingEdit] = useState(false);
+
+  const openEdit = (e: any) => {
+    setEditEntry(e);
+    setEditFullName(e.full_name || "");
+    setEditProgram(e.program || "");
+    setEditRank(e.rank ?? "");
+    setEditGpa10(Number(e.gpa_albanian));
+    setEditGpa4(Number(e.gpa_4));
+    setEditOpen(true);
+  };
+
+  const saveEdit = async () => {
+    if (!editEntry?.id) return;
+    if (!editRank || editGpa10 === "" || editGpa4 === "") return toast.error("Fill rank and GPAs");
+    setSavingEdit(true);
+    const { error } = await supabase
+      .from("deans_list_entries")
+      .update({
+        full_name: editFullName,
+        program: editProgram,
+        rank: Number(editRank),
+        gpa_albanian: Number(editGpa10),
+        gpa_4: Number(editGpa4),
+      })
+      .eq("id", editEntry.id);
+    setSavingEdit(false);
+    if (error) return toast.error(error.message);
+    toast.success("Student updated");
+    setEditOpen(false);
     qc.invalidateQueries({ queryKey: ["deans-entries", snapshot?.id] });
   };
 
@@ -522,6 +563,9 @@ const AdminDeansList = () => {
                         <Button size="sm" variant="ghost" onClick={() => exportCert(e)}>
                           <Download className="h-3.5 w-3.5 mr-1" /> PDF
                         </Button>
+                        <Button size="sm" variant="ghost" onClick={() => openEdit(e)}>
+                          <Pencil className="h-3.5 w-3.5" />
+                        </Button>
                         <Button size="sm" variant="ghost" onClick={() => removeEntry(e.id)} className="text-destructive hover:text-destructive">
                           <Trash2 className="h-3.5 w-3.5" />
                         </Button>
@@ -625,6 +669,45 @@ const AdminDeansList = () => {
               <Button onClick={submitManual} disabled={adding || !snapshot?.id}>
                 {adding ? <Loader2 className="h-4 w-4 animate-spin mr-2" /> : <UserPlus className="h-4 w-4 mr-2" />}
                 Add to list
+              </Button>
+            </DialogFooter>
+          </DialogContent>
+        </Dialog>
+
+        <Dialog open={editOpen} onOpenChange={setEditOpen}>
+          <DialogContent className="max-w-md">
+            <DialogHeader>
+              <DialogTitle>Edit honor list entry</DialogTitle>
+            </DialogHeader>
+            <div className="space-y-3">
+              <div>
+                <Label>Full name</Label>
+                <Input value={editFullName} onChange={(e) => setEditFullName(e.target.value)} />
+              </div>
+              <div>
+                <Label>Program</Label>
+                <Input value={editProgram} onChange={(e) => setEditProgram(e.target.value)} placeholder="e.g. computer-science-ai" />
+              </div>
+              <div className="grid grid-cols-3 gap-3">
+                <div>
+                  <Label>Rank</Label>
+                  <Input type="number" min={1} value={editRank} onChange={(e) => setEditRank(e.target.value === "" ? "" : Number(e.target.value))} />
+                </div>
+                <div>
+                  <Label>GPA (10)</Label>
+                  <Input type="number" step="0.01" min={0} max={10} value={editGpa10} onChange={(e) => setEditGpa10(e.target.value === "" ? "" : Number(e.target.value))} />
+                </div>
+                <div>
+                  <Label>GPA (4.0)</Label>
+                  <Input type="number" step="0.01" min={0} max={4} value={editGpa4} onChange={(e) => setEditGpa4(e.target.value === "" ? "" : Number(e.target.value))} />
+                </div>
+              </div>
+            </div>
+            <DialogFooter>
+              <Button variant="outline" onClick={() => setEditOpen(false)}>Cancel</Button>
+              <Button onClick={saveEdit} disabled={savingEdit}>
+                {savingEdit ? <Loader2 className="h-4 w-4 animate-spin mr-2" /> : <Pencil className="h-4 w-4 mr-2" />}
+                Save changes
               </Button>
             </DialogFooter>
           </DialogContent>
