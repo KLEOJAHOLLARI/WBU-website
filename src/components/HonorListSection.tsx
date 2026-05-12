@@ -27,20 +27,27 @@ const HonorListSection = ({ programSlug, programTitle }: Props) => {
     queryFn: async () => {
       const { data } = await supabase
         .from("deans_list_snapshots")
-        .select("id, semester_id, program, list_title, generated_at, academic_semesters:semester_id(name, start_date)")
+        .select("id, semester_id, program, list_title, generated_at")
         .eq("is_published", true)
         .order("generated_at", { ascending: false });
       return data || [];
     },
   });
 
+  const { data: semesterRows = [] } = useQuery({
+    queryKey: ["program-honor-semester-names"],
+    queryFn: async () => {
+      const { data } = await supabase
+        .from("academic_semesters")
+        .select("id, name");
+      return data || [];
+    },
+  });
+
   const semesters = useMemo(() => {
-    const map = new Map<string, string>();
-    snapshots.forEach((s: any) => {
-      if (s.academic_semesters?.name) map.set(s.semester_id, s.academic_semesters.name);
-    });
-    return Array.from(map, ([id, name]) => ({ id, name }));
-  }, [snapshots]);
+    const ids = new Set(snapshots.map((s: any) => s.semester_id));
+    return semesterRows.filter((s: any) => ids.has(s.id)).map((s: any) => ({ id: s.id, name: s.name }));
+  }, [snapshots, semesterRows]);
 
   const filteredSnapshots = useMemo(() => snapshots
     .filter((s: any) => semesterId === "all" || s.semester_id === semesterId)
