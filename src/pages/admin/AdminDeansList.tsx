@@ -673,6 +673,45 @@ const AdminDeansList = () => {
             </DialogFooter>
           </DialogContent>
         </Dialog>
+
+        <Dialog open={editOpen} onOpenChange={setEditOpen}>
+          <DialogContent className="max-w-md">
+            <DialogHeader>
+              <DialogTitle>Edit honor list entry</DialogTitle>
+            </DialogHeader>
+            <div className="space-y-3">
+              <div>
+                <Label>Full name</Label>
+                <Input value={editFullName} onChange={(e) => setEditFullName(e.target.value)} />
+              </div>
+              <div>
+                <Label>Program</Label>
+                <Input value={editProgram} onChange={(e) => setEditProgram(e.target.value)} placeholder="e.g. computer-science-ai" />
+              </div>
+              <div className="grid grid-cols-3 gap-3">
+                <div>
+                  <Label>Rank</Label>
+                  <Input type="number" min={1} value={editRank} onChange={(e) => setEditRank(e.target.value === "" ? "" : Number(e.target.value))} />
+                </div>
+                <div>
+                  <Label>GPA (10)</Label>
+                  <Input type="number" step="0.01" min={0} max={10} value={editGpa10} onChange={(e) => setEditGpa10(e.target.value === "" ? "" : Number(e.target.value))} />
+                </div>
+                <div>
+                  <Label>GPA (4.0)</Label>
+                  <Input type="number" step="0.01" min={0} max={4} value={editGpa4} onChange={(e) => setEditGpa4(e.target.value === "" ? "" : Number(e.target.value))} />
+                </div>
+              </div>
+            </div>
+            <DialogFooter>
+              <Button variant="outline" onClick={() => setEditOpen(false)}>Cancel</Button>
+              <Button onClick={saveEdit} disabled={savingEdit}>
+                {savingEdit ? <Loader2 className="h-4 w-4 animate-spin mr-2" /> : <Pencil className="h-4 w-4 mr-2" />}
+                Save changes
+              </Button>
+            </DialogFooter>
+          </DialogContent>
+        </Dialog>
       </div>
     </AdminLayout>
   );
