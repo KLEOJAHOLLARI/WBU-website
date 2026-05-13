@@ -71,7 +71,7 @@ const AdminDeansList = () => {
       if (!semesterId) return null;
       let q = supabase.from("deans_list_snapshots").select("*").eq("semester_id", semesterId);
       if (program === "all") q = q.is("program", null); else q = q.eq("program", program);
-      const { data } = await q.maybeSingle();
+      const { data } = await q.order("generated_at", { ascending: false }).limit(1).maybeSingle();
       return data;
     },
     enabled: !!semesterId,
@@ -137,7 +137,7 @@ const AdminDeansList = () => {
     setPreviewing(false);
     if (error) return toast.error(error.message);
     const res: any = data;
-    setPreviewRows(res?.rows || []);
+    setPreviewRows(Array.isArray(res) ? res : (res?.rows || []));
     setPreviewMeta({ threshold: Number(res?.threshold ?? threshold), min_courses: Number(res?.min_courses ?? minCourses) });
     toast.success(`Preview ready — ${res?.count ?? 0} student(s) would qualify`);
   };
