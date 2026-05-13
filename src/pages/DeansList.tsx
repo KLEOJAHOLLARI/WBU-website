@@ -27,9 +27,17 @@ const DeansList = () => {
     queryFn: async () => {
       const { data } = await supabase
         .from("deans_list_snapshots")
-        .select("id, semester_id, program, generated_at, threshold_gpa, academic_semesters:semester_id(name, start_date)")
+        .select("id, semester_id, program, generated_at, threshold_gpa, list_title")
         .eq("is_published", true)
         .order("generated_at", { ascending: false });
+      return data || [];
+    },
+  });
+
+  const { data: semesterRows = [] } = useQuery({
+    queryKey: ["public-deans-semesters"],
+    queryFn: async () => {
+      const { data } = await supabase.from("academic_semesters").select("id, name");
       return data || [];
     },
   });
@@ -37,10 +45,11 @@ const DeansList = () => {
   const semesters = useMemo(() => {
     const map = new Map<string, string>();
     snapshots.forEach((s: any) => {
-      if (s.academic_semesters?.name) map.set(s.semester_id, s.academic_semesters.name);
+      const row = semesterRows.find((sem: any) => sem.id === s.semester_id);
+      if (row?.name) map.set(s.semester_id, row.name);
     });
     return Array.from(map, ([id, name]) => ({ id, name }));
-  }, [snapshots]);
+  }, [snapshots, semesterRows]);
 
   const programs = useMemo(() => {
     const set = new Set<string>();
@@ -48,10 +57,19 @@ const DeansList = () => {
     return Array.from(set).sort();
   }, [snapshots]);
 
-  const filteredSnapshotIds = useMemo(() => snapshots
-    .filter((s: any) => (semesterId === "all" || s.semester_id === semesterId))
-    .filter((s: any) => (program === "all" ? true : s.program === program))
-    .map((s: any) => s.id), [snapshots, semesterId, program]);
+  const visibleSnapshots = useMemo(() => {
+    const latestByProgram = new Map<string, any>();
+    snapshots
+      .filter((s: any) => (semesterId === "all" || s.semester_id === semesterId))
+      .filter((s: any) => (program === "all" ? true : s.program === program || s.program === null))
+      .forEach((s: any) => {
+        const key = s.program || "all";
+        if (!latestByProgram.has(key)) latestByProgram.set(key, s);
+      });
+    return Array.from(latestByProgram.values());
+  }, [snapshots, semesterId, program]);
+
+  const filteredSnapshotIds = useMemo(() => visibleSnapshots.map((s: any) => s.id), [visibleSnapshots]);
 
   const { data: entries = [], isLoading } = useQuery({
     queryKey: ["public-deans-entries", filteredSnapshotIds.join(",")],
@@ -66,8 +84,19 @@ const DeansList = () => {
     },
   });
 
-  const top3 = entries.slice(0, 3);
-  const rest = entries.slice(3);
+  const uniqueEntries = useMemo(() => {
+    const seen = new Set<string>();
+    return entries.filter((entry: any) => {
+      if (program !== "all" && entry.program !== program) return false;
+      const key = entry.user_id || entry.full_name;
+      if (!key || seen.has(key)) return false;
+      seen.add(key);
+      return true;
+    });
+  }, [entries, program]);
+
+  const top3 = uniqueEntries.slice(0, 3);
+  const rest = uniqueEntries.slice(3);
 
   return (
     <Layout>
@@ -107,7 +136,7 @@ const DeansList = () => {
           </CardContent></Card>
         ) : isLoading ? (
           <p className="text-center text-muted-foreground py-12">Loading…</p>
-        ) : entries.length === 0 ? (
+        ) : uniqueEntries.length === 0 ? (
           <Card><CardContent className="py-16 text-center text-muted-foreground">
             No published honorees match your filters.
           </CardContent></Card>
