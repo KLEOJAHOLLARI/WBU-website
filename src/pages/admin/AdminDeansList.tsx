@@ -414,7 +414,13 @@ const AdminDeansList = () => {
         {/* Public Preview — exact look on the program / public page */}
         {(previewRows !== null || (snapshot && entries.length > 0)) && (() => {
           const usingPreview = previewRows !== null;
-          const rows: any[] = usingPreview ? (previewRows || []) : (entries as any[]);
+          const seen = new Set<string>();
+          const rows: any[] = (usingPreview ? (previewRows || []) : (entries as any[])).filter((row: any) => {
+            const key = row.user_id || row.student_id || row.full_name;
+            if (!key || seen.has(key)) return false;
+            seen.add(key);
+            return true;
+          });
           const top3 = rows.slice(0, 3);
           const rest = rows.slice(3);
           const accent = (r: number) => {
@@ -548,7 +554,7 @@ const AdminDeansList = () => {
                     <TableHead>Program</TableHead>
                     <TableHead className="text-right">GPA (10)</TableHead>
                     <TableHead className="text-right">GPA (4.0)</TableHead>
-                    <TableHead className="text-right">Actions</TableHead>
+                    <TableHead className="w-36 text-right">Actions</TableHead>
                   </TableRow>
                 </TableHeader>
                 <TableBody>
@@ -559,15 +565,15 @@ const AdminDeansList = () => {
                       <TableCell>{e.program}</TableCell>
                       <TableCell className="text-right">{Number(e.gpa_albanian).toFixed(2)}</TableCell>
                       <TableCell className="text-right">{Number(e.gpa_4).toFixed(2)}</TableCell>
-                      <TableCell className="text-right">
+                      <TableCell className="w-36 text-right">
                         <div className="flex items-center justify-end gap-1 flex-nowrap">
-                          <Button size="icon" variant="ghost" title="Download PDF" onClick={() => exportCert(e)}>
+                          <Button size="icon" variant="outline" title="Download PDF" onClick={() => exportCert(e)} className="h-8 w-8 shrink-0">
                             <Download className="h-4 w-4" />
                           </Button>
-                          <Button size="icon" variant="ghost" title="Edit student" onClick={() => openEdit(e)}>
+                          <Button size="icon" variant="outline" title="Edit student" aria-label="Edit student" onClick={() => openEdit(e)} className="h-8 w-8 shrink-0 text-primary">
                             <Pencil className="h-4 w-4" />
                           </Button>
-                          <Button size="icon" variant="ghost" title="Remove" onClick={() => removeEntry(e.id)} className="text-destructive hover:text-destructive">
+                          <Button size="icon" variant="outline" title="Remove" onClick={() => removeEntry(e.id)} className="h-8 w-8 shrink-0 text-destructive hover:text-destructive">
                             <Trash2 className="h-4 w-4" />
                           </Button>
                         </div>
