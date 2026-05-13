@@ -49,9 +49,14 @@ const HonorListSection = ({ programSlug, programTitle }: Props) => {
     return semesterRows.filter((s: any) => ids.has(s.id)).map((s: any) => ({ id: s.id, name: s.name }));
   }, [snapshots, semesterRows]);
 
-  const filteredSnapshots = useMemo(() => snapshots
-    .filter((s: any) => semesterId === "all" || s.semester_id === semesterId)
-    .filter((s: any) => !s.program || s.program === programSlug), [snapshots, semesterId, programSlug]);
+  const filteredSnapshots = useMemo(() => {
+    const byScope = snapshots
+      .filter((s: any) => semesterId === "all" || s.semester_id === semesterId)
+      .filter((s: any) => !s.program || s.program === programSlug);
+    const programSnapshot = byScope.find((s: any) => s.program === programSlug);
+    const allProgramSnapshot = byScope.find((s: any) => !s.program);
+    return [programSnapshot || allProgramSnapshot].filter(Boolean);
+  }, [snapshots, semesterId, programSlug]);
   const snapshotIds = filteredSnapshots.map((s: any) => s.id);
 
   const sectionTitle = (filteredSnapshots[0] as any)?.list_title || "President's Honor List";
@@ -69,8 +74,18 @@ const HonorListSection = ({ programSlug, programTitle }: Props) => {
     },
   });
 
-  const top3 = entries.slice(0, 3);
-  const rest = entries.slice(3);
+  const uniqueEntries = useMemo(() => {
+    const seen = new Set<string>();
+    return entries.filter((entry: any) => {
+      const key = entry.user_id || entry.full_name;
+      if (!key || seen.has(key)) return false;
+      seen.add(key);
+      return true;
+    });
+  }, [entries]);
+
+  const top3 = uniqueEntries.slice(0, 3);
+  const rest = uniqueEntries.slice(3);
 
   return (
     <section className="section-padding bg-gradient-to-b from-background to-muted/20">
@@ -102,7 +117,7 @@ const HonorListSection = ({ programSlug, programTitle }: Props) => {
 
         {isLoading ? (
           <p className="text-center text-muted-foreground py-12">Loading…</p>
-        ) : entries.length === 0 ? (
+        ) : uniqueEntries.length === 0 ? (
           <Card><CardContent className="py-12 text-center text-muted-foreground">
             No honorees published for this program yet.
           </CardContent></Card>
