@@ -58,14 +58,18 @@ const DeansList = () => {
   }, [snapshots]);
 
   const visibleSnapshots = useMemo(() => {
+    const scoped = snapshots.filter((s: any) => (semesterId === "all" || s.semester_id === semesterId));
+    if (program !== "all") {
+      const programSnapshot = scoped.find((s: any) => s.program === program);
+      const allProgramsSnapshot = scoped.find((s: any) => !s.program);
+      return [programSnapshot || allProgramsSnapshot].filter(Boolean);
+    }
+    const allProgramsSnapshot = scoped.find((s: any) => !s.program);
+    if (allProgramsSnapshot) return [allProgramsSnapshot];
     const latestByProgram = new Map<string, any>();
-    snapshots
-      .filter((s: any) => (semesterId === "all" || s.semester_id === semesterId))
-      .filter((s: any) => (program === "all" ? true : s.program === program || s.program === null))
-      .forEach((s: any) => {
-        const key = s.program || "all";
-        if (!latestByProgram.has(key)) latestByProgram.set(key, s);
-      });
+    scoped.forEach((s: any) => {
+      if (s.program && !latestByProgram.has(s.program)) latestByProgram.set(s.program, s);
+    });
     return Array.from(latestByProgram.values());
   }, [snapshots, semesterId, program]);
 
