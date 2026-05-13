@@ -44,12 +44,22 @@ const DeansListPreview = () => {
         _min_courses: minCourses,
       });
       if (error) throw error;
-      return data || [];
+      return Array.isArray(data) ? data : (data?.rows || []);
     },
   });
 
-  const top3 = useMemo(() => rows.slice(0, 3), [rows]);
-  const rest = useMemo(() => rows.slice(3), [rows]);
+  const uniqueRows = useMemo(() => {
+    const seen = new Set<string>();
+    return rows.filter((row: any) => {
+      const key = row.user_id || row.student_id || row.full_name;
+      if (!key || seen.has(key)) return false;
+      seen.add(key);
+      return true;
+    });
+  }, [rows]);
+
+  const top3 = useMemo(() => uniqueRows.slice(0, 3), [uniqueRows]);
+  const rest = useMemo(() => uniqueRows.slice(3), [uniqueRows]);
 
   return (
     <Layout>
@@ -70,7 +80,7 @@ const DeansListPreview = () => {
           <p className="text-center text-muted-foreground py-12">Loading…</p>
         ) : error ? (
           <Card><CardContent className="py-16 text-center text-destructive">Failed to load preview.</CardContent></Card>
-        ) : rows.length === 0 ? (
+        ) : uniqueRows.length === 0 ? (
           <Card><CardContent className="py-16 text-center text-muted-foreground">
             No students match the current criteria.
           </CardContent></Card>
