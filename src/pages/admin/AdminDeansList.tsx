@@ -269,35 +269,56 @@ const AdminDeansList = () => {
   const [editGpa4, setEditGpa4] = useState<number | "">("");
   const [savingEdit, setSavingEdit] = useState(false);
 
-  const openEdit = (e: any) => {
-    setEditEntry(e);
-    setEditFullName(e.full_name || "");
-    setEditProgram(e.program || "");
-    setEditRank(e.rank ?? "");
-    setEditGpa10(Number(e.gpa_albanian));
-    setEditGpa4(Number(e.gpa_4));
+  const fillEditForm = (entry: any) => {
+    setEditEntry({ ...entry });
+    setEditFullName(entry.full_name || "");
+    setEditProgram(entry.program || "");
+    setEditRank(entry.rank ?? "");
+    setEditGpa10(entry.gpa_albanian === null || entry.gpa_albanian === undefined ? "" : Number(entry.gpa_albanian));
+    setEditGpa4(entry.gpa_4 === null || entry.gpa_4 === undefined ? "" : Number(entry.gpa_4));
+  };
+
+  const openEdit = async (entry: any) => {
+    fillEditForm(entry);
     setEditOpen(true);
+
+    const { data, error } = await supabase
+      .from("deans_list_entries")
+      .select("*")
+      .eq("id", entry.id)
+      .maybeSingle();
+
+    if (error) return toast.error(error.message);
+    if (data) fillEditForm(data);
   };
 
   const saveEdit = async () => {
     if (!editEntry?.id) return;
     if (!editRank || editGpa10 === "" || editGpa4 === "") return toast.error("Fill rank and GPAs");
     setSavingEdit(true);
-    const { error } = await supabase
+    const { data, error } = await supabase
       .from("deans_list_entries")
       .update({
-        full_name: editFullName,
-        program: editProgram,
+        full_name: editFullName.trim(),
+        program: editProgram.trim(),
         rank: Number(editRank),
         gpa_albanian: Number(editGpa10),
         gpa_4: Number(editGpa4),
       })
-      .eq("id", editEntry.id);
+      .eq("id", editEntry.id)
+      .select("*")
+      .maybeSingle();
     setSavingEdit(false);
     if (error) return toast.error(error.message);
+    if (!data) return toast.error("No row was updated. Please refresh and try again.");
     toast.success("Student updated");
+    qc.setQueryData(["deans-entries", data.snapshot_id], (old: any[] = []) =>
+      old.map((row: any) => (row.id === data.id ? data : row)).sort((a: any, b: any) => Number(a.rank || 0) - Number(b.rank || 0))
+    );
+    setPreviewRows(null);
+    setPreviewMeta(null);
     setEditOpen(false);
-    qc.invalidateQueries({ queryKey: ["deans-entries", snapshot?.id] });
+    qc.invalidateQueries({ queryKey: ["deans-entries", data.snapshot_id] });
   };
 
   return (
