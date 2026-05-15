@@ -319,6 +319,9 @@ const AdminDeansList = () => {
     setPreviewMeta(null);
     setEditOpen(false);
     qc.invalidateQueries({ queryKey: ["deans-entries", data.snapshot_id] });
+    qc.invalidateQueries({ queryKey: ["public-deans-entries"] });
+    qc.invalidateQueries({ queryKey: ["program-honor-entries"] });
+    qc.invalidateQueries({ queryKey: ["deans-preview-entries"] });
   };
 
   return (
