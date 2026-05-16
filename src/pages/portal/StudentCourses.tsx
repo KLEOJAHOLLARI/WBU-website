@@ -421,7 +421,6 @@ const StudentCourses = () => {
     );
   };
 
-  const { data: activeSemester } = useActiveSemester();
 
   // Use active semester if available, otherwise fall back to profile
   const studentYear = activeSemester?.year ?? profile?.current_year ?? 1;
