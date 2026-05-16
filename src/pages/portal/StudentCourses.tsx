@@ -307,7 +307,16 @@ const StudentCourses = () => {
     return badgePalette[hash % badgePalette.length];
   };
 
-  const renderEnrolledRow = (enr: any, index: number) => {
+  const isCourseDone = (course: any) => {
+    if (!course) return false;
+    const sy = activeSemester?.year ?? profile?.current_year ?? 1;
+    const ss = activeSemester?.semester ?? profile?.current_semester ?? 1;
+    if (course.year < sy) return true;
+    if (course.year === sy && course.semester < ss) return true;
+    return false;
+  };
+
+  const renderEnrolledRow = (enr: any, index: number, done = false) => {
     const course = enr.courses;
     const attPct = getAttendancePct(enr.id, enr.course_id);
     const professor = getProfessor(course?.professor_id ?? null);
