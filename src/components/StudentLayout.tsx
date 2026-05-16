@@ -21,9 +21,11 @@ const buildNavGroups = (registrationOpen: boolean) => [
       { to: "/portal", label: "Dashboard", icon: LayoutDashboard },
       { to: "/portal/courses", label: "My Courses", icon: BookOpen },
       ...(registrationOpen
-        ? [{ to: "/portal/registration", label: "Course Registration", icon: ClipboardEdit }]
+        ? [
+            { to: "/portal/registration", label: "Course Registration", icon: ClipboardEdit },
+            { to: "/portal/retake", label: "Retake Courses", icon: RefreshCw },
+          ]
         : []),
-      { to: "/portal/retake", label: "Retake Courses", icon: RefreshCw },
       { to: "/portal/applications", label: "Applications", icon: FileText },
     ],
   },
@@ -36,7 +38,9 @@ const buildNavGroups = (registrationOpen: boolean) => [
       { to: "/portal/tuition", label: "Tuition", icon: CreditCard },
       { to: "/portal/tuition/estimate", label: "Tuition Estimate", icon: Calculator },
       { to: "/portal/documents", label: "Documents", icon: Upload },
-      { to: "/portal/feedback", label: "Professor Feedback", icon: Star },
+      ...(registrationOpen
+        ? [{ to: "/portal/feedback", label: "Professor Feedback", icon: Star }]
+        : []),
     ],
   },
   {
