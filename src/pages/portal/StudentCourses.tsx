@@ -348,6 +348,11 @@ const StudentCourses = () => {
           <div className="min-w-0 flex-1 px-4 py-4 sm:px-5">
             <h3 className="truncate font-display text-base font-semibold text-foreground transition-colors group-hover:text-primary">
               {course?.name || "Course"}
+              {done && (
+                <Badge className="ml-2 bg-emerald-500/15 text-emerald-700 border-emerald-500/25 hover:bg-emerald-500/15 align-middle">
+                  <CheckCircle className="mr-1 h-3 w-3" /> Done
+                </Badge>
+              )}
             </h3>
             <div className="mt-1 flex items-center gap-1.5 text-xs text-muted-foreground">
               <User className="h-3.5 w-3.5" />
