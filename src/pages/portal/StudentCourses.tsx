@@ -332,7 +332,7 @@ const StudentCourses = () => {
       <div
         key={enr.id}
         onClick={() => navigate(`/portal/courses/${enr.course_id}`)}
-        className="group cursor-pointer overflow-hidden rounded-xl border border-border bg-card shadow-sm transition-all hover:border-primary/40 hover:shadow-md"
+        className={`group cursor-pointer overflow-hidden rounded-xl border border-border bg-card shadow-sm transition-all hover:border-primary/40 hover:shadow-md ${done ? "opacity-70" : ""}`}
       >
         <div className="flex flex-col sm:flex-row sm:items-stretch">
           {/* Left colored code badge */}
