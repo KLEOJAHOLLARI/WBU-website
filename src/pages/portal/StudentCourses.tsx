@@ -573,7 +573,22 @@ const StudentCourses = () => {
               )}
             </div>
           ) : (
-            enrollments.map((enr, i) => renderEnrolledRow(enr, i))
+            (() => {
+              const remaining = enrollments.filter((e: any) => !isCourseDone(e.courses));
+              const done = enrollments.filter((e: any) => isCourseDone(e.courses));
+              return (
+                <>
+                  {remaining.length > 0 && (
+                    <p className="text-xs uppercase tracking-wider font-semibold text-muted-foreground/70">In progress ({remaining.length})</p>
+                  )}
+                  {remaining.map((enr, i) => renderEnrolledRow(enr, i, false))}
+                  {done.length > 0 && (
+                    <p className="mt-4 text-xs uppercase tracking-wider font-semibold text-muted-foreground/70">Completed ({done.length})</p>
+                  )}
+                  {done.map((enr, i) => renderEnrolledRow(enr, i + remaining.length, true))}
+                </>
+              );
+            })()
           )}
         </div>
       </div>
