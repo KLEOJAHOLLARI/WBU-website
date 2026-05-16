@@ -26,7 +26,6 @@ const buildNavGroups = (registrationOpen: boolean) => [
             { to: "/portal/retake", label: "Retake Courses", icon: RefreshCw },
           ]
         : []),
-      { to: "/portal/applications", label: "Applications", icon: FileText },
     ],
   },
   {
