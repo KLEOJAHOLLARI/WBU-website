@@ -329,6 +329,24 @@ const StudentTranscript = () => {
                 </CardContent>
               </Card>
             )}
+
+            {/* GPA Summary (Albanian) */}
+            {!isLoading && (
+              <Card>
+                <CardContent className="flex flex-wrap items-center justify-between gap-4 p-5">
+                  <div>
+                    <p className="text-xs uppercase tracking-wider text-muted-foreground">Cumulative GPA (Albanian)</p>
+                    <p className="font-display text-3xl font-bold text-foreground">
+                      {summary.gpaAlbanian.toFixed(2)} <span className="text-base font-medium text-muted-foreground">/ 10</span>
+                    </p>
+                  </div>
+                  <div className="text-right">
+                    <p className="text-xs text-muted-foreground">Equivalent CGPA (4.0)</p>
+                    <p className="text-lg font-semibold text-foreground">{summary.cgpa.toFixed(2)}</p>
+                  </div>
+                </CardContent>
+              </Card>
+            )}
           </>
         )}
       </div>
