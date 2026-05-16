@@ -21,6 +21,7 @@ const StudentCourses = () => {
   const [collapsedFaculties, setCollapsedFaculties] = useState<Record<string, boolean>>({});
   const [modal, setModal] = useState<{ kind: "syllabus" | "grades" | "attendance"; enrollment: any } | null>(null);
   const closeModal = () => setModal(null);
+  const { data: activeSemester } = useActiveSemester();
 
   const { data: profile } = useQuery({
     queryKey: ["student-profile-program", user?.id],
@@ -307,7 +308,16 @@ const StudentCourses = () => {
     return badgePalette[hash % badgePalette.length];
   };
 
-  const renderEnrolledRow = (enr: any, index: number) => {
+  const isCourseDone = (course: any) => {
+    if (!course) return false;
+    const sy = activeSemester?.year ?? profile?.current_year ?? 1;
+    const ss = activeSemester?.semester ?? profile?.current_semester ?? 1;
+    if (course.year < sy) return true;
+    if (course.year === sy && course.semester < ss) return true;
+    return false;
+  };
+
+  const renderEnrolledRow = (enr: any, index: number, done = false) => {
     const course = enr.courses;
     const attPct = getAttendancePct(enr.id, enr.course_id);
     const professor = getProfessor(course?.professor_id ?? null);
@@ -323,7 +333,7 @@ const StudentCourses = () => {
       <div
         key={enr.id}
         onClick={() => navigate(`/portal/courses/${enr.course_id}`)}
-        className="group cursor-pointer overflow-hidden rounded-xl border border-border bg-card shadow-sm transition-all hover:border-primary/40 hover:shadow-md"
+        className={`group cursor-pointer overflow-hidden rounded-xl border border-border bg-card shadow-sm transition-all hover:border-primary/40 hover:shadow-md ${done ? "opacity-70" : ""}`}
       >
         <div className="flex flex-col sm:flex-row sm:items-stretch">
           {/* Left colored code badge */}
@@ -339,6 +349,11 @@ const StudentCourses = () => {
           <div className="min-w-0 flex-1 px-4 py-4 sm:px-5">
             <h3 className="truncate font-display text-base font-semibold text-foreground transition-colors group-hover:text-primary">
               {course?.name || "Course"}
+              {done && (
+                <Badge className="ml-2 bg-emerald-500/15 text-emerald-700 border-emerald-500/25 hover:bg-emerald-500/15 align-middle">
+                  <CheckCircle className="mr-1 h-3 w-3" /> Done
+                </Badge>
+              )}
             </h3>
             <div className="mt-1 flex items-center gap-1.5 text-xs text-muted-foreground">
               <User className="h-3.5 w-3.5" />
@@ -406,7 +421,6 @@ const StudentCourses = () => {
     );
   };
 
-  const { data: activeSemester } = useActiveSemester();
 
   // Use active semester if available, otherwise fall back to profile
   const studentYear = activeSemester?.year ?? profile?.current_year ?? 1;
@@ -559,7 +573,22 @@ const StudentCourses = () => {
               )}
             </div>
           ) : (
-            enrollments.map((enr, i) => renderEnrolledRow(enr, i))
+            (() => {
+              const remaining = enrollments.filter((e: any) => !isCourseDone(e.courses));
+              const done = enrollments.filter((e: any) => isCourseDone(e.courses));
+              return (
+                <>
+                  {remaining.length > 0 && (
+                    <p className="text-xs uppercase tracking-wider font-semibold text-muted-foreground/70">In progress ({remaining.length})</p>
+                  )}
+                  {remaining.map((enr, i) => renderEnrolledRow(enr, i, false))}
+                  {done.length > 0 && (
+                    <p className="mt-4 text-xs uppercase tracking-wider font-semibold text-muted-foreground/70">Completed ({done.length})</p>
+                  )}
+                  {done.map((enr, i) => renderEnrolledRow(enr, i + remaining.length, true))}
+                </>
+              );
+            })()
           )}
         </div>
       </div>
