@@ -32,13 +32,13 @@ const statusStyles: Record<string, string> = {
 const gradeColor = (pct: number) => {
   if (pct >= 90) return "text-emerald-600";
   if (pct >= 70) return "text-emerald-600";
-  if (pct >= 50) return "text-amber-600";
+  if (pct >= 45) return "text-amber-600";
   return "text-destructive";
 };
 
 const gradeBg = (pct: number) => {
   if (pct >= 70) return "bg-emerald-500/15 text-emerald-700";
-  if (pct >= 50) return "bg-amber-500/15 text-amber-700";
+  if (pct >= 45) return "bg-amber-500/15 text-amber-700";
   if (pct > 0) return "bg-destructive/15 text-destructive";
   return "bg-secondary text-muted-foreground";
 };
@@ -340,8 +340,8 @@ const ProfessorCourseDetail = () => {
   const classAvg = enrollments.length > 0
     ? Math.round(enrollments.reduce((s, e) => s + getStudentTotal(e.id), 0) / enrollments.length)
     : 0;
-  const passingCount = enrollments.filter((e) => getStudentTotal(e.id) >= 50).length;
-  const failingCount = enrollments.filter((e) => { const t = getStudentTotal(e.id); return t > 0 && t < 50; }).length;
+  const passingCount = enrollments.filter((e) => getStudentTotal(e.id) >= 45).length;
+  const failingCount = enrollments.filter((e) => { const t = getStudentTotal(e.id); return t > 0 && t < 45; }).length;
   const lowAttCount = enrollments.filter((e) => { const p = getAttPct(e.id); return p !== null && p < threshold; }).length;
 
   /* ─── tab styling ─── */
@@ -606,7 +606,7 @@ const ProfessorCourseDetail = () => {
                       const attPct = getAttPct(enr.id);
                       const total = getStudentTotal(enr.id);
                       const isLowAtt = attPct !== null && attPct < threshold;
-                      const isFailing = total > 0 && total < 50;
+                      const isFailing = total > 0 && total < 45;
                       return (
                         <tr key={enr.id} className={`border-b border-border last:border-0 ${idx % 2 === 0 ? "bg-card" : "bg-secondary/30"}`}>
                           <td className="px-4 py-3 text-muted-foreground">{idx + 1}</td>
@@ -633,7 +633,7 @@ const ProfessorCourseDetail = () => {
                           <td className="px-4 py-3 text-center">
                             {isLowAtt || isFailing ? (
                               <Badge variant="destructive" className="text-[10px]">At Risk</Badge>
-                            ) : total >= 50 ? (
+                            ) : total >= 45 ? (
                               <Badge className="bg-emerald-500/15 text-emerald-700 border-emerald-500/25 hover:bg-emerald-500/15 text-[10px]">Passing</Badge>
                             ) : (
                               <Badge variant="secondary" className="text-[10px]">Pending</Badge>
@@ -1107,11 +1107,11 @@ const ProfessorCourseDetail = () => {
                   </div>
                   <div className="rounded-xl border border-border bg-card p-4 text-center">
                     <p className="text-2xl font-bold text-emerald-600">{passingCount}</p>
-                    <p className="text-xs text-muted-foreground">Passing (≥50%)</p>
+                    <p className="text-xs text-muted-foreground">Passing (≥45%)</p>
                   </div>
                   <div className="rounded-xl border border-border bg-card p-4 text-center">
                     <p className="text-2xl font-bold text-destructive">{failingCount}</p>
-                    <p className="text-xs text-muted-foreground">Failing (&lt;50%)</p>
+                    <p className="text-xs text-muted-foreground">Failing (&lt;45%)</p>
                   </div>
                   <div className="rounded-xl border border-border bg-card p-4 text-center">
                     <p className={`text-2xl font-bold ${lowAttCount > 0 ? "text-destructive" : "text-emerald-600"}`}>{lowAttCount}</p>

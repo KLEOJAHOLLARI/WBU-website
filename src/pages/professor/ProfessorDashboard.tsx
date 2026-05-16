@@ -15,7 +15,7 @@ import SemesterBadge from "@/components/SemesterBadge";
 
 const gradeColor = (pct: number) => {
   if (pct >= 70) return "text-emerald-600";
-  if (pct >= 50) return "text-amber-600";
+  if (pct >= 45) return "text-amber-600";
   return "text-destructive";
 };
 
