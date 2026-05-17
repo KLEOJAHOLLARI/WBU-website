@@ -1066,15 +1066,13 @@ const ProfessorCourseDetail = () => {
                                       defaultValue={grade?.score?.toString() ?? ""}
                                       isSaving={savingCell === cellKey}
                                       onSave={(val) => {
-                                        if (val !== "") {
-                                          saveGrade.mutate({
-                                            enrollmentId: enr.id,
-                                            componentId: c.id,
-                                            instance: i + 1,
-                                            score: Number(val),
-                                            maxScore: 100,
-                                          });
-                                        }
+                                        saveGrade.mutate({
+                                          enrollmentId: enr.id,
+                                          componentId: c.id,
+                                          instance: i + 1,
+                                          score: val === "" ? null : Number(val),
+                                          maxScore: 100,
+                                        });
                                       }}
                                     />
                                   </td>
