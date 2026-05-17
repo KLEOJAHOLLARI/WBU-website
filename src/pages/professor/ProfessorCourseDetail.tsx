@@ -266,6 +266,14 @@ const ProfessorCourseDetail = () => {
       const existing = grades.find(
         (g) => g.enrollment_id === enrollmentId && g.grade_component_id === componentId && g.instance_number === instance
       );
+      // If score is cleared (null/undefined), remove the grade entirely so it
+      // doesn't get counted as 0 in the student's total.
+      if (score === null || score === undefined) {
+        if (existing) {
+          await supabase.from("grades").delete().eq("id", existing.id);
+        }
+        return;
+      }
       if (existing) {
         await supabase.from("grades").update({ score, max_score: maxScore }).eq("id", existing.id);
       } else {
