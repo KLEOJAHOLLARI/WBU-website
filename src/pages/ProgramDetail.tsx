@@ -1,6 +1,6 @@
 import { useParams, Link } from "react-router-dom";
 import { motion } from "framer-motion";
-import { ArrowLeft, Clock, BookOpen, Briefcase, ArrowRight } from "lucide-react";
+import { ArrowLeft, Clock, BookOpen, Briefcase, ArrowRight, GraduationCap, Layers } from "lucide-react";
 import Layout from "@/components/Layout";
 import { useQuery } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
