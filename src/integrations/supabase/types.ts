@@ -1439,6 +1439,7 @@ export type Database = {
           careers: string[]
           courses: string[]
           created_at: string
+          curriculum: Json
           degree: string
           description: string
           duration: string
@@ -1453,6 +1454,7 @@ export type Database = {
           careers?: string[]
           courses?: string[]
           created_at?: string
+          curriculum?: Json
           degree: string
           description: string
           duration: string
@@ -1467,6 +1469,7 @@ export type Database = {
           careers?: string[]
           courses?: string[]
           created_at?: string
+          curriculum?: Json
           degree?: string
           description?: string
           duration?: string
