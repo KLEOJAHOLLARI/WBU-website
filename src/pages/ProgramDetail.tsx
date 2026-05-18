@@ -145,7 +145,7 @@ const ProgramDetail = () => {
                                           <p className="text-sm font-medium text-foreground leading-snug">{c.name}</p>
                                           <div className="mt-1 flex flex-wrap items-center gap-1.5">
                                             <span className={`rounded-full border px-2 py-0.5 text-[10px] font-semibold uppercase tracking-wide ${typeStyles[c.type] || typeStyles.core}`}>
-                                              {t(`programs.courseType.${c.type}`, c.type)}
+                                              {t(`programs.courseType.${c.type}`, { defaultValue: c.type })}
                                             </span>
                                             <span className="text-[11px] font-medium text-muted-foreground">{c.ects} ECTS</span>
                                           </div>
