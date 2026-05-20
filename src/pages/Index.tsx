@@ -51,17 +51,40 @@ const Index = () => {
     },
   });
 
+  const { data: heroMedia } = useQuery({
+    queryKey: ["hero-media-public"],
+    queryFn: async () => {
+      const { data } = await supabase.from("system_settings").select("value").eq("key", "hero_media").maybeSingle();
+      return (data?.value as { type: "image" | "video"; url: string }) || null;
+    },
+  });
+
+  const heroUrl = heroMedia?.url || "https://images.unsplash.com/photo-1562774053-701939374585?w=1920&q=80";
+  const heroIsVideo = heroMedia?.type === "video" && !!heroMedia.url;
+
   return (
     <Layout>
       {/* Hero — full-bleed with background image + dark overlay */}
       <section className="relative min-h-[100vh] flex items-center overflow-hidden">
-        {/* Background image */}
-        <img
-          src="https://images.unsplash.com/photo-1562774053-701939374585?w=1920&q=80"
-          alt=""
-          aria-hidden="true"
-          className="absolute inset-0 h-full w-full object-cover"
-        />
+        {/* Background image or video */}
+        {heroIsVideo ? (
+          <video
+            src={heroUrl}
+            autoPlay
+            muted
+            loop
+            playsInline
+            aria-hidden="true"
+            className="absolute inset-0 h-full w-full object-cover"
+          />
+        ) : (
+          <img
+            src={heroUrl}
+            alt=""
+            aria-hidden="true"
+            className="absolute inset-0 h-full w-full object-cover"
+          />
+        )}
 
         {/* Dark gradient overlay for readability */}
         <div className="absolute inset-0 bg-gradient-to-br from-black/75 via-black/60 to-primary/70" />
