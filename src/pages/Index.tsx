@@ -65,6 +65,7 @@ const Index = () => {
 
   return (
     <Layout>
+      <HomepageAnnouncementModal />
       {/* Hero — full-bleed with background image + dark overlay */}
       <section className="relative min-h-[100vh] flex items-center overflow-hidden">
         {/* Background image or video */}
