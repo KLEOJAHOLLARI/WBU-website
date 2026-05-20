@@ -25,7 +25,7 @@ const AdminHeroMedia = () => {
 
   useEffect(() => {
     if (data) {
-      setType(data.type || "image");
+      setType((data.type as "image" | "video") || "image");
       setUrl(data.url || "");
     }
   }, [data]);

@@ -74,6 +74,7 @@ import AdminExamSchedule from "./pages/admin/AdminExamSchedule";
 import ProfessorExamSchedule from "./pages/professor/ProfessorExamSchedule";
 import ExamDetail from "./pages/portal/ExamDetail";
 import AdminPromoBanners from "./pages/admin/AdminPromoBanners";
+import AdminHeroMedia from "./pages/admin/AdminHeroMedia";
 import Scholarships from "./pages/Scholarships";
 import AdminScholarshipDocs from "./pages/admin/AdminScholarshipDocs";
 import AdminCommunication from "./pages/admin/AdminCommunication";
@@ -146,6 +147,7 @@ const App = () => (
             <Route path="/admin/tuition" element={<AdminTuition />} />
             <Route path="/admin/exams" element={<AdminExamSchedule />} />
             <Route path="/admin/promo-banners" element={<AdminPromoBanners />} />
+            <Route path="/admin/hero-media" element={<AdminHeroMedia />} />
             <Route path="/admin/scholarship-docs" element={<AdminScholarshipDocs />} />
             <Route path="/admin/id-cards" element={<AdminDigitalIDCards />} />
             <Route path="/admin/access-logs" element={<AdminAccessLogs />} />

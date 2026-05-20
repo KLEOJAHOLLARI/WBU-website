@@ -76,16 +76,6 @@ const Navbar = () => {
               SmartWBU
             </Link>
             <Link
-              to="/admin/login"
-              className={`rounded-lg px-3 py-2 text-xs font-semibold transition-all duration-200 border ${
-                scrolled || !isHome
-                  ? "border-muted-foreground/30 text-muted-foreground hover:bg-secondary"
-                  : "border-primary-foreground/30 text-primary-foreground/70 hover:bg-primary-foreground/10"
-              }`}
-            >
-              Admin
-            </Link>
-            <Link
               to="/admissions"
               className="ml-1 inline-flex items-center gap-1.5 rounded-full bg-accent px-5 py-2 text-sm font-semibold text-accent-foreground shadow-lg shadow-accent/25 transition-all duration-200 hover:shadow-xl hover:shadow-accent/30 hover:scale-105"
             >
@@ -133,7 +123,7 @@ const Navbar = () => {
                 <LanguageSwitcher />
               </div>
               <Link to="/smartwbu" onClick={() => setOpen(false)} className="mt-2 rounded-lg border border-primary/20 px-4 py-2.5 text-center text-sm font-semibold text-primary">SmartWBU</Link>
-              <Link to="/admin/login" onClick={() => setOpen(false)} className="mt-2 rounded-lg border border-muted-foreground/30 px-4 py-2.5 text-center text-sm font-semibold text-muted-foreground">Admin Panel</Link>
+              
               <Link to="/admissions" onClick={() => setOpen(false)} className="mt-3 rounded-full bg-accent px-4 py-2.5 text-center text-sm font-semibold text-accent-foreground shadow-lg shadow-accent/25">
                 {t("nav.applyNow")}
               </Link>
