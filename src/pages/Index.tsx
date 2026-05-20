@@ -67,24 +67,27 @@ const Index = () => {
       {/* Hero — full-bleed with background image + dark overlay */}
       <section className="relative min-h-[100vh] flex items-center overflow-hidden">
         {/* Background image or video */}
-        {heroIsVideo ? (
-          <video
-            src={heroUrl}
-            autoPlay
-            muted
-            loop
-            playsInline
-            aria-hidden="true"
-            className="absolute inset-0 h-full w-full object-cover"
-          />
-        ) : (
-          <img
-            src={heroUrl}
-            alt=""
-            aria-hidden="true"
-            className="absolute inset-0 h-full w-full object-cover"
-          />
-        )}
+        <div className="absolute inset-0 w-full h-full overflow-hidden">
+          {heroIsVideo ? (
+            <video
+              src={heroUrl}
+              autoPlay
+              muted
+              loop
+              playsInline
+              preload="auto"
+              aria-hidden="true"
+              className="absolute inset-0 h-full w-full object-cover object-center min-h-full min-w-full"
+            />
+          ) : (
+            <img
+              src={heroUrl}
+              alt=""
+              aria-hidden="true"
+              className="absolute inset-0 h-full w-full object-cover object-center"
+            />
+          )}
+        </div>
 
         {/* Dark gradient overlay for readability */}
         <div className="absolute inset-0 bg-gradient-to-br from-black/75 via-black/60 to-primary/70" />
