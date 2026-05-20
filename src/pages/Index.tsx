@@ -4,6 +4,7 @@ import { BookOpen, Users, Globe, Award, ArrowRight, Calendar, Sparkles } from "l
 import Layout from "@/components/Layout";
 import SectionHeading from "@/components/SectionHeading";
 import StudentsCorner from "@/components/StudentsCorner";
+import HomepageAnnouncementModal from "@/components/HomepageAnnouncementModal";
 import PromoBanners from "@/components/PromoBanners";
 import StatsCounter from "@/components/StatsCounter";
 import { useQuery } from "@tanstack/react-query";

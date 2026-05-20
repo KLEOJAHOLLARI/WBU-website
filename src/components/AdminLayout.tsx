@@ -65,6 +65,7 @@ const navGroups: { label: string; items: { to: string; label: string; icon: any;
       { to: "/admin/news", label: "News", icon: Newspaper },
       { to: "/admin/promo-banners", label: "Promo Banners", icon: Megaphone },
       { to: "/admin/hero-media", label: "Hero Media", icon: Newspaper },
+      { to: "/admin/homepage-modal", label: "Homepage Modal", icon: Megaphone },
       { to: "/admin/contacts", label: "Messages", icon: Mail },
       { to: "/admin/complaints", label: "Complaints", icon: MessageSquareWarning },
       { to: "/admin/push-notifications", label: "Push Notifications", icon: Bell },
