@@ -1,0 +1,1 @@
+CREATE POLICY "Public can view courses" ON public.courses FOR SELECT TO anon, authenticated USING (true);
