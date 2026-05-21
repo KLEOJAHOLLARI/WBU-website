@@ -21,6 +21,23 @@ const ProgramDetail = () => {
     enabled: !!id,
   });
 
+  const { data: adminCourses = [] } = useQuery({
+    queryKey: ["program-courses", program?.slug],
+    queryFn: async () => {
+      const { data, error } = await supabase
+        .from("courses")
+        .select("id, code, name, year, semester, ects")
+        .eq("program", program!.slug)
+        .order("year")
+        .order("semester")
+        .order("code");
+      if (error) throw error;
+      return data || [];
+    },
+    enabled: !!program?.slug,
+  });
+
+
   if (isLoading) return <Layout><div className="container py-20 text-center text-muted-foreground">{t("programs.loading")}</div></Layout>;
 
   if (!program) {
