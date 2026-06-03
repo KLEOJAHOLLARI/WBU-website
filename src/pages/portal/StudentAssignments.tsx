@@ -14,7 +14,8 @@ type Assignment = {
   due_at: string;
   max_points: number;
   attachment_path: string | null;
-  courses?: { code: string; name: string } | null;
+  course_code?: string;
+  course_name?: string;
 };
 type Submission = {
   id: string;
@@ -40,16 +41,24 @@ const StudentAssignments = () => {
         .from("enrollments")
         .select("course_id")
         .eq("user_id", user!.id);
-      const ids = (enrolls || []).map((e) => e.course_id);
+      const ids = Array.from(new Set((enrolls || []).map((e) => e.course_id)));
       if (!ids.length) return [] as Assignment[];
-      const { data, error } = await supabase
-        .from("assignments")
-        .select("*, courses(code, name)")
-        .in("course_id", ids)
-        .eq("is_published", true)
-        .order("due_at", { ascending: true });
+      const [{ data: aData, error }, { data: cData }] = await Promise.all([
+        supabase
+          .from("assignments")
+          .select("*")
+          .in("course_id", ids)
+          .eq("is_published", true)
+          .order("due_at", { ascending: true }),
+        supabase.from("courses").select("id, code, name").in("id", ids),
+      ]);
       if (error) throw error;
-      return (data || []) as Assignment[];
+      const cmap = new Map((cData || []).map((c) => [c.id, c]));
+      return (aData || []).map((a) => ({
+        ...a,
+        course_code: cmap.get(a.course_id)?.code,
+        course_name: cmap.get(a.course_id)?.name,
+      })) as Assignment[];
     },
     enabled: !!user,
   });
