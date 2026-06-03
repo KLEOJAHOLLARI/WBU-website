@@ -64,6 +64,8 @@ import ProfessorTranscripts from "./pages/professor/ProfessorTranscripts";
 import ChangePassword from "./pages/portal/ChangePassword";
 import StudentQuiz from "./pages/portal/StudentQuiz";
 import StudentExamSchedule from "./pages/portal/StudentExamSchedule";
+import StudentAssignments from "./pages/portal/StudentAssignments";
+import ProfessorAssignments from "./pages/professor/ProfessorAssignments";
 
 import FacultyProfile from "./pages/FacultyProfile";
 import AdminTuition from "./pages/admin/AdminTuition";
@@ -201,6 +203,8 @@ const App = () => (
             <Route path="/professor/id-card" element={<RouteGuard requireRole="professor"><ProfessorDigitalIDCard /></RouteGuard>} />
             <Route path="/professor/performance" element={<RouteGuard requireRole="professor"><ProfessorPerformance /></RouteGuard>} />
             <Route path="/portal/feedback" element={<RouteGuard requireRole="student"><StudentFeedback /></RouteGuard>} />
+            <Route path="/portal/assignments" element={<RouteGuard requireRole="student"><StudentAssignments /></RouteGuard>} />
+            <Route path="/professor/assignments" element={<RouteGuard requireRole="professor"><ProfessorAssignments /></RouteGuard>} />
             
             <Route path="*" element={<NotFound />} />
           </Routes>
