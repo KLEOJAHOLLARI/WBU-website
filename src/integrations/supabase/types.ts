@@ -240,6 +240,113 @@ export type Database = {
         }
         Relationships: []
       }
+      assignment_submissions: {
+        Row: {
+          assignment_id: string
+          content_type: string
+          created_at: string
+          feedback: string | null
+          file_name: string
+          file_path: string
+          file_size: number
+          graded_at: string | null
+          graded_by: string | null
+          id: string
+          note: string | null
+          score: number | null
+          status: string
+          submitted_at: string
+          updated_at: string
+          user_id: string
+        }
+        Insert: {
+          assignment_id: string
+          content_type?: string
+          created_at?: string
+          feedback?: string | null
+          file_name: string
+          file_path: string
+          file_size?: number
+          graded_at?: string | null
+          graded_by?: string | null
+          id?: string
+          note?: string | null
+          score?: number | null
+          status?: string
+          submitted_at?: string
+          updated_at?: string
+          user_id: string
+        }
+        Update: {
+          assignment_id?: string
+          content_type?: string
+          created_at?: string
+          feedback?: string | null
+          file_name?: string
+          file_path?: string
+          file_size?: number
+          graded_at?: string | null
+          graded_by?: string | null
+          id?: string
+          note?: string | null
+          score?: number | null
+          status?: string
+          submitted_at?: string
+          updated_at?: string
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "assignment_submissions_assignment_id_fkey"
+            columns: ["assignment_id"]
+            isOneToOne: false
+            referencedRelation: "assignments"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      assignments: {
+        Row: {
+          attachment_path: string | null
+          course_id: string
+          created_at: string
+          created_by: string
+          description: string
+          due_at: string
+          id: string
+          is_published: boolean
+          max_points: number
+          title: string
+          updated_at: string
+        }
+        Insert: {
+          attachment_path?: string | null
+          course_id: string
+          created_at?: string
+          created_by: string
+          description?: string
+          due_at: string
+          id?: string
+          is_published?: boolean
+          max_points?: number
+          title: string
+          updated_at?: string
+        }
+        Update: {
+          attachment_path?: string | null
+          course_id?: string
+          created_at?: string
+          created_by?: string
+          description?: string
+          due_at?: string
+          id?: string
+          is_published?: boolean
+          max_points?: number
+          title?: string
+          updated_at?: string
+        }
+        Relationships: []
+      }
       attendance_records: {
         Row: {
           created_at: string
