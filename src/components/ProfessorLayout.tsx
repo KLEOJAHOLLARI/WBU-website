@@ -19,6 +19,7 @@ const navGroups = [
     items: [
       { to: "/professor", label: "Dashboard", icon: LayoutDashboard },
       { to: "/professor/courses", label: "My Courses", icon: BookOpen },
+      { to: "/professor/assignments", label: "Assignments", icon: ClipboardCheck },
     ],
   },
   {
