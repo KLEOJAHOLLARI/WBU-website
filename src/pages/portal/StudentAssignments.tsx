@@ -160,7 +160,7 @@ const StudentAssignments = () => {
                 <div className="flex flex-wrap items-start justify-between gap-3">
                   <div className="min-w-0 flex-1">
                     <p className="text-xs font-semibold uppercase tracking-wider text-muted-foreground">
-                      {a.courses?.code} · {a.courses?.name}
+                      {a.course_code} · {a.course_name}
                     </p>
                     <h3 className="mt-1 font-display text-base font-semibold text-foreground">{a.title}</h3>
                     {a.description && (
