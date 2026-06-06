@@ -66,6 +66,8 @@ import StudentQuiz from "./pages/portal/StudentQuiz";
 import StudentExamSchedule from "./pages/portal/StudentExamSchedule";
 import StudentAssignments from "./pages/portal/StudentAssignments";
 import ProfessorAssignments from "./pages/professor/ProfessorAssignments";
+import ProfessorSeating from "./pages/professor/ProfessorSeating";
+import StudentSeating from "./pages/portal/StudentSeating";
 
 import FacultyProfile from "./pages/FacultyProfile";
 import AdminTuition from "./pages/admin/AdminTuition";
