@@ -1952,6 +1952,74 @@ export type Database = {
         }
         Relationships: []
       }
+      seat_assignments: {
+        Row: {
+          chart_id: string
+          col_index: number
+          created_at: string
+          id: string
+          row_index: number
+          user_id: string
+        }
+        Insert: {
+          chart_id: string
+          col_index: number
+          created_at?: string
+          id?: string
+          row_index: number
+          user_id: string
+        }
+        Update: {
+          chart_id?: string
+          col_index?: number
+          created_at?: string
+          id?: string
+          row_index?: number
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "seat_assignments_chart_id_fkey"
+            columns: ["chart_id"]
+            isOneToOne: false
+            referencedRelation: "seating_charts"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      seating_charts: {
+        Row: {
+          cols: number
+          course_id: string
+          created_at: string
+          created_by: string
+          id: string
+          label: string
+          rows: number
+          updated_at: string
+        }
+        Insert: {
+          cols?: number
+          course_id: string
+          created_at?: string
+          created_by: string
+          id?: string
+          label?: string
+          rows?: number
+          updated_at?: string
+        }
+        Update: {
+          cols?: number
+          course_id?: string
+          created_at?: string
+          created_by?: string
+          id?: string
+          label?: string
+          rows?: number
+          updated_at?: string
+        }
+        Relationships: []
+      }
       student_documents: {
         Row: {
           admin_note: string | null

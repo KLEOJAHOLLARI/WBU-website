@@ -66,6 +66,8 @@ import StudentQuiz from "./pages/portal/StudentQuiz";
 import StudentExamSchedule from "./pages/portal/StudentExamSchedule";
 import StudentAssignments from "./pages/portal/StudentAssignments";
 import ProfessorAssignments from "./pages/professor/ProfessorAssignments";
+import ProfessorSeating from "./pages/professor/ProfessorSeating";
+import StudentSeating from "./pages/portal/StudentSeating";
 
 import FacultyProfile from "./pages/FacultyProfile";
 import AdminTuition from "./pages/admin/AdminTuition";
@@ -205,6 +207,8 @@ const App = () => (
             <Route path="/portal/feedback" element={<RouteGuard requireRole="student"><StudentFeedback /></RouteGuard>} />
             <Route path="/portal/assignments" element={<RouteGuard requireRole="student"><StudentAssignments /></RouteGuard>} />
             <Route path="/professor/assignments" element={<RouteGuard requireRole="professor"><ProfessorAssignments /></RouteGuard>} />
+            <Route path="/professor/seating" element={<RouteGuard requireRole="professor"><ProfessorSeating /></RouteGuard>} />
+            <Route path="/portal/seating" element={<RouteGuard requireRole="student"><StudentSeating /></RouteGuard>} />
             
             <Route path="*" element={<NotFound />} />
           </Routes>
