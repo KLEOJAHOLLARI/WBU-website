@@ -21,6 +21,7 @@ const buildNavGroups = (registrationOpen: boolean) => [
       { to: "/portal", label: "Dashboard", icon: LayoutDashboard },
       { to: "/portal/courses", label: "My Courses", icon: BookOpen },
       { to: "/portal/assignments", label: "Assignments", icon: ClipboardCheck },
+      { to: "/portal/seating", label: "My Seating", icon: Armchair },
       ...(registrationOpen
         ? [
             { to: "/portal/registration", label: "Course Registration", icon: ClipboardEdit },
