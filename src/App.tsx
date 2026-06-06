@@ -205,6 +205,8 @@ const App = () => (
             <Route path="/portal/feedback" element={<RouteGuard requireRole="student"><StudentFeedback /></RouteGuard>} />
             <Route path="/portal/assignments" element={<RouteGuard requireRole="student"><StudentAssignments /></RouteGuard>} />
             <Route path="/professor/assignments" element={<RouteGuard requireRole="professor"><ProfessorAssignments /></RouteGuard>} />
+            <Route path="/professor/seating" element={<RouteGuard requireRole="professor"><ProfessorSeating /></RouteGuard>} />
+            <Route path="/portal/seating" element={<RouteGuard requireRole="student"><StudentSeating /></RouteGuard>} />
             
             <Route path="*" element={<NotFound />} />
           </Routes>
