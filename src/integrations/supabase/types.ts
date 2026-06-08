@@ -1295,6 +1295,80 @@ export type Database = {
         }
         Relationships: []
       }
+      office_hours_bookings: {
+        Row: {
+          created_at: string
+          id: string
+          reason: string | null
+          slot_id: string
+          status: string
+          student_id: string
+          updated_at: string
+        }
+        Insert: {
+          created_at?: string
+          id?: string
+          reason?: string | null
+          slot_id: string
+          status?: string
+          student_id: string
+          updated_at?: string
+        }
+        Update: {
+          created_at?: string
+          id?: string
+          reason?: string | null
+          slot_id?: string
+          status?: string
+          student_id?: string
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "office_hours_bookings_slot_id_fkey"
+            columns: ["slot_id"]
+            isOneToOne: false
+            referencedRelation: "office_hours_slots"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      office_hours_slots: {
+        Row: {
+          capacity: number
+          created_at: string
+          end_at: string
+          id: string
+          location: string | null
+          notes: string | null
+          professor_id: string
+          start_at: string
+          updated_at: string
+        }
+        Insert: {
+          capacity?: number
+          created_at?: string
+          end_at: string
+          id?: string
+          location?: string | null
+          notes?: string | null
+          professor_id: string
+          start_at: string
+          updated_at?: string
+        }
+        Update: {
+          capacity?: number
+          created_at?: string
+          end_at?: string
+          id?: string
+          location?: string | null
+          notes?: string | null
+          professor_id?: string
+          start_at?: string
+          updated_at?: string
+        }
+        Relationships: []
+      }
       professor_feedback: {
         Row: {
           comment: string | null
