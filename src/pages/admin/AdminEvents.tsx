@@ -21,6 +21,9 @@ interface CampusEvent {
   capacity: number;
   image_url: string | null;
   status: string;
+  ticket_price: number;
+  cancellation_deadline_hours: number;
+  refund_policy: string | null;
   created_at: string;
 }
 
@@ -30,6 +33,10 @@ interface TicketRow {
   status: string;
   checked_in_at: string | null;
   user_id: string;
+  cancelled_at: string | null;
+  cancellation_reason: string | null;
+  refund_status: string;
+  refunded_at: string | null;
   profile?: { full_name: string | null; email: string | null; student_id: string | null } | null;
 }
 
@@ -42,6 +49,9 @@ const empty = {
   capacity: 0,
   image_url: "",
   status: "published",
+  ticket_price: 0,
+  cancellation_deadline_hours: 24,
+  refund_policy: "",
 };
 
 const AdminEvents = () => {
@@ -65,7 +75,7 @@ const AdminEvents = () => {
   const loadTickets = async (eventId: string) => {
     const { data } = await supabase
       .from("event_tickets")
-      .select("id, ticket_code, status, checked_in_at, user_id")
+      .select("id, ticket_code, status, checked_in_at, user_id, cancelled_at, cancellation_reason, refund_status, refunded_at")
       .eq("event_id", eventId)
       .order("created_at", { ascending: false });
     const rows = (data || []) as TicketRow[];
@@ -96,6 +106,9 @@ const AdminEvents = () => {
       capacity: Number(form.capacity) || 0,
       image_url: form.image_url || null,
       status: form.status,
+      ticket_price: Number(form.ticket_price) || 0,
+      cancellation_deadline_hours: Number(form.cancellation_deadline_hours) || 0,
+      refund_policy: form.refund_policy || null,
     };
     let error;
     if (editing) {
@@ -127,6 +140,9 @@ const AdminEvents = () => {
       capacity: e.capacity,
       image_url: e.image_url || "",
       status: e.status,
+      ticket_price: e.ticket_price,
+      cancellation_deadline_hours: e.cancellation_deadline_hours,
+      refund_policy: e.refund_policy || "",
     });
     setOpen(true);
   };
@@ -150,6 +166,18 @@ const AdminEvents = () => {
       .eq("id", t.id);
     if (e2) toast.error(e2.message);
     else { toast.success("Checked in"); setScanCode(""); if (ticketEvent) loadTickets(ticketEvent.id); }
+  };
+
+  const approveRefund = async (ticketId: string) => {
+    const { error } = await supabase.from("event_tickets").update({ refund_status: "approved", refunded_at: new Date().toISOString() }).eq("id", ticketId);
+    if (error) toast.error(error.message);
+    else { toast.success("Refund approved"); if (ticketEvent) loadTickets(ticketEvent.id); }
+  };
+
+  const rejectRefund = async (ticketId: string) => {
+    const { error } = await supabase.from("event_tickets").update({ refund_status: "rejected" }).eq("id", ticketId);
+    if (error) toast.error(error.message);
+    else { toast.success("Refund rejected"); if (ticketEvent) loadTickets(ticketEvent.id); }
   };
 
   return (
@@ -183,6 +211,11 @@ const AdminEvents = () => {
                     </select>
                   </div>
                 </div>
+                <div className="grid grid-cols-2 gap-3">
+                  <div><Label>Ticket Price</Label><Input type="number" value={form.ticket_price} onChange={(e) => setForm({ ...form, ticket_price: Number(e.target.value) })} /></div>
+                  <div><Label>Cancel Deadline (hrs before)</Label><Input type="number" value={form.cancellation_deadline_hours} onChange={(e) => setForm({ ...form, cancellation_deadline_hours: Number(e.target.value) })} /></div>
+                </div>
+                <div><Label>Refund Policy</Label><Textarea placeholder="e.g. Full refund before 24h, 50% within 24h" value={form.refund_policy} onChange={(e) => setForm({ ...form, refund_policy: e.target.value })} /></div>
                 <div><Label>Image URL</Label><Input value={form.image_url} onChange={(e) => setForm({ ...form, image_url: e.target.value })} /></div>
               </div>
               <DialogFooter><Button onClick={save}>Save</Button></DialogFooter>
@@ -206,6 +239,9 @@ const AdminEvents = () => {
                   <div className="flex items-center gap-2"><CalendarDays className="h-4 w-4" /> {new Date(e.starts_at).toLocaleString()}</div>
                   {e.location && <div className="flex items-center gap-2"><MapPin className="h-4 w-4" /> {e.location}</div>}
                   <div className="flex items-center gap-2"><Users className="h-4 w-4" /> Capacity: {e.capacity || "Unlimited"}</div>
+                  <div className="flex items-center gap-2"><Banknote className="h-4 w-4" /> {e.ticket_price > 0 ? `$${e.ticket_price.toFixed(2)}` : "Free"}</div>
+                  <div className="flex items-center gap-2"><Clock className="h-4 w-4" /> Cancel up to {e.cancellation_deadline_hours}h before</div>
+                  {e.refund_policy && <p className="text-muted-foreground line-clamp-2">{e.refund_policy}</p>}
                   {e.description && <p className="text-muted-foreground line-clamp-2">{e.description}</p>}
                   <div className="flex gap-2 pt-2">
                     <Button size="sm" variant="outline" onClick={() => { setTicketEvent(e); loadTickets(e.id); }}><Ticket className="h-4 w-4 mr-1" /> Tickets</Button>
@@ -232,21 +268,43 @@ const AdminEvents = () => {
               <div className="space-y-2">
                 {tickets.map((t) => (
                   <div key={t.id} className="flex items-center justify-between rounded border p-2 text-sm">
-                    <div>
+                    <div className="min-w-0">
                       <div className="font-medium">{t.profile?.full_name || "—"}</div>
                       <div className="text-xs text-muted-foreground">{t.profile?.student_id || t.profile?.email} · {t.ticket_code}</div>
+                      {t.status === "cancelled" && (
+                        <div className="text-xs text-muted-foreground mt-1">
+                          Cancelled {t.cancelled_at ? new Date(t.cancelled_at).toLocaleString() : ""}
+                          {t.cancellation_reason ? ` · Reason: ${t.cancellation_reason}` : ""}
+                        </div>
+                      )}
                     </div>
-                    {t.status === "checked_in" ? (
-                      <Badge variant="default"><CheckCircle2 className="h-3 w-3 mr-1" /> In</Badge>
-                    ) : t.status === "cancelled" ? (
-                      <Badge variant="destructive"><XCircle className="h-3 w-3 mr-1" /> Cancelled</Badge>
-                    ) : (
-                      <Button size="sm" variant="outline" onClick={async () => {
-                        const { data: u } = await supabase.auth.getUser();
-                        await supabase.from("event_tickets").update({ status: "checked_in", checked_in_at: new Date().toISOString(), checked_in_by: u.user?.id }).eq("id", t.id);
-                        if (ticketEvent) loadTickets(ticketEvent.id);
-                      }}>Check in</Button>
-                    )}
+                    <div className="flex items-center gap-2">
+                      {t.status === "checked_in" ? (
+                        <Badge variant="default"><CheckCircle2 className="h-3 w-3 mr-1" /> In</Badge>
+                      ) : t.status === "cancelled" ? (
+                        <div className="flex items-center gap-2">
+                          <Badge variant="destructive"><XCircle className="h-3 w-3 mr-1" /> Cancelled</Badge>
+                          {ticketEvent && ticketEvent.ticket_price > 0 && t.refund_status === "pending" && (
+                            <>
+                              <Button size="sm" variant="outline" onClick={() => approveRefund(t.id)}>Approve Refund</Button>
+                              <Button size="sm" variant="ghost" onClick={() => rejectRefund(t.id)}>Reject</Button>
+                            </>
+                          )}
+                          {ticketEvent && ticketEvent.ticket_price > 0 && t.refund_status === "approved" && (
+                            <Badge variant="default" className="bg-green-600">Refunded</Badge>
+                          )}
+                          {ticketEvent && ticketEvent.ticket_price > 0 && t.refund_status === "rejected" && (
+                            <Badge variant="secondary">Refund Rejected</Badge>
+                          )}
+                        </div>
+                      ) : (
+                        <Button size="sm" variant="outline" onClick={async () => {
+                          const { data: u } = await supabase.auth.getUser();
+                          await supabase.from("event_tickets").update({ status: "checked_in", checked_in_at: new Date().toISOString(), checked_in_by: u.user?.id }).eq("id", t.id);
+                          if (ticketEvent) loadTickets(ticketEvent.id);
+                        }}>Check in</Button>
+                      )}
+                    </div>
                   </div>
                 ))}
                 {tickets.length === 0 && <p className="text-center text-muted-foreground py-6">No tickets yet.</p>}
