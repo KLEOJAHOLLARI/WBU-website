@@ -70,6 +70,8 @@ import ProfessorSeating from "./pages/professor/ProfessorSeating";
 import StudentSeating from "./pages/portal/StudentSeating";
 import ProfessorOfficeHours from "./pages/professor/ProfessorOfficeHours";
 import StudentOfficeHours from "./pages/portal/StudentOfficeHours";
+import AdminEvents from "./pages/admin/AdminEvents";
+import StudentEvents from "./pages/portal/StudentEvents";
 
 import FacultyProfile from "./pages/FacultyProfile";
 import AdminTuition from "./pages/admin/AdminTuition";
