@@ -480,6 +480,7 @@ export type Database = {
       }
       campus_events: {
         Row: {
+          cancellation_deadline_hours: number
           capacity: number
           created_at: string
           created_by: string
@@ -488,12 +489,15 @@ export type Database = {
           id: string
           image_url: string | null
           location: string | null
+          refund_policy: string | null
           starts_at: string
           status: string
+          ticket_price: number
           title: string
           updated_at: string
         }
         Insert: {
+          cancellation_deadline_hours?: number
           capacity?: number
           created_at?: string
           created_by: string
@@ -502,12 +506,15 @@ export type Database = {
           id?: string
           image_url?: string | null
           location?: string | null
+          refund_policy?: string | null
           starts_at: string
           status?: string
+          ticket_price?: number
           title: string
           updated_at?: string
         }
         Update: {
+          cancellation_deadline_hours?: number
           capacity?: number
           created_at?: string
           created_by?: string
@@ -516,8 +523,10 @@ export type Database = {
           id?: string
           image_url?: string | null
           location?: string | null
+          refund_policy?: string | null
           starts_at?: string
           status?: string
+          ticket_price?: number
           title?: string
           updated_at?: string
         }
@@ -1023,33 +1032,45 @@ export type Database = {
       }
       event_tickets: {
         Row: {
+          cancellation_reason: string | null
+          cancelled_at: string | null
           checked_in_at: string | null
           checked_in_by: string | null
           created_at: string
           event_id: string
           id: string
+          refund_status: string
+          refunded_at: string | null
           status: string
           ticket_code: string
           updated_at: string
           user_id: string
         }
         Insert: {
+          cancellation_reason?: string | null
+          cancelled_at?: string | null
           checked_in_at?: string | null
           checked_in_by?: string | null
           created_at?: string
           event_id: string
           id?: string
+          refund_status?: string
+          refunded_at?: string | null
           status?: string
           ticket_code?: string
           updated_at?: string
           user_id: string
         }
         Update: {
+          cancellation_reason?: string | null
+          cancelled_at?: string | null
           checked_in_at?: string | null
           checked_in_by?: string | null
           created_at?: string
           event_id?: string
           id?: string
+          refund_status?: string
+          refunded_at?: string | null
           status?: string
           ticket_code?: string
           updated_at?: string
