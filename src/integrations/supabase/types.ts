@@ -478,6 +478,51 @@ export type Database = {
         }
         Relationships: []
       }
+      campus_events: {
+        Row: {
+          capacity: number
+          created_at: string
+          created_by: string
+          description: string | null
+          ends_at: string | null
+          id: string
+          image_url: string | null
+          location: string | null
+          starts_at: string
+          status: string
+          title: string
+          updated_at: string
+        }
+        Insert: {
+          capacity?: number
+          created_at?: string
+          created_by: string
+          description?: string | null
+          ends_at?: string | null
+          id?: string
+          image_url?: string | null
+          location?: string | null
+          starts_at: string
+          status?: string
+          title: string
+          updated_at?: string
+        }
+        Update: {
+          capacity?: number
+          created_at?: string
+          created_by?: string
+          description?: string | null
+          ends_at?: string | null
+          id?: string
+          image_url?: string | null
+          location?: string | null
+          starts_at?: string
+          status?: string
+          title?: string
+          updated_at?: string
+        }
+        Relationships: []
+      }
       complaint_submissions: {
         Row: {
           admin_response: string | null
@@ -972,6 +1017,50 @@ export type Database = {
             columns: ["original_enrollment_id"]
             isOneToOne: false
             referencedRelation: "enrollments"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      event_tickets: {
+        Row: {
+          checked_in_at: string | null
+          checked_in_by: string | null
+          created_at: string
+          event_id: string
+          id: string
+          status: string
+          ticket_code: string
+          updated_at: string
+          user_id: string
+        }
+        Insert: {
+          checked_in_at?: string | null
+          checked_in_by?: string | null
+          created_at?: string
+          event_id: string
+          id?: string
+          status?: string
+          ticket_code?: string
+          updated_at?: string
+          user_id: string
+        }
+        Update: {
+          checked_in_at?: string | null
+          checked_in_by?: string | null
+          created_at?: string
+          event_id?: string
+          id?: string
+          status?: string
+          ticket_code?: string
+          updated_at?: string
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "event_tickets_event_id_fkey"
+            columns: ["event_id"]
+            isOneToOne: false
+            referencedRelation: "campus_events"
             referencedColumns: ["id"]
           },
         ]
