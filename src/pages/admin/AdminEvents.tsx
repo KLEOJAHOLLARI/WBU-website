@@ -298,11 +298,18 @@ const AdminEvents = () => {
                           )}
                         </div>
                       ) : (
-                        <Button size="sm" variant="outline" onClick={async () => {
-                          const { data: u } = await supabase.auth.getUser();
-                          await supabase.from("event_tickets").update({ status: "checked_in", checked_in_at: new Date().toISOString(), checked_in_by: u.user?.id }).eq("id", t.id);
-                          if (ticketEvent) loadTickets(ticketEvent.id);
-                        }}>Check in</Button>
+                        <div className="flex items-center gap-2">
+                          <Button size="sm" variant="outline" onClick={async () => {
+                            const { data: u } = await supabase.auth.getUser();
+                            await supabase.from("event_tickets").update({ status: "checked_in", checked_in_at: new Date().toISOString(), checked_in_by: u.user?.id }).eq("id", t.id);
+                            if (ticketEvent) loadTickets(ticketEvent.id);
+                          }}>Check in</Button>
+                          <Button size="sm" variant="ghost" onClick={async () => {
+                            if (!confirm("Cancel this ticket?")) return;
+                            await supabase.from("event_tickets").update({ status: "cancelled" }).eq("id", t.id);
+                            if (ticketEvent) loadTickets(ticketEvent.id);
+                          }}>Cancel</Button>
+                        </div>
                       )}
                     </div>
                   </div>
