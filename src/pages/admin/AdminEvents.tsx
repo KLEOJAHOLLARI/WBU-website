@@ -9,7 +9,7 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger, DialogFooter } from "@/components/ui/dialog";
 import { Badge } from "@/components/ui/badge";
 import { toast } from "sonner";
-import { CalendarDays, MapPin, Users, Ticket, Trash2, Pencil, CheckCircle2, XCircle } from "lucide-react";
+import { CalendarDays, MapPin, Users, Ticket, Trash2, Pencil, CheckCircle2, XCircle, Banknote, Clock } from "lucide-react";
 
 interface CampusEvent {
   id: string;
