@@ -69,6 +69,7 @@ const navGroups: { label: string; items: { to: string; label: string; icon: any;
       { to: "/admin/contacts", label: "Messages", icon: Mail },
       { to: "/admin/complaints", label: "Complaints", icon: MessageSquareWarning },
       { to: "/admin/push-notifications", label: "Push Notifications", icon: Bell },
+      { to: "/admin/events", label: "Campus Events", icon: CalendarDays },
     ],
   },
   {
