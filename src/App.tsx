@@ -218,7 +218,7 @@ const App = () => (
             <Route path="/portal/office-hours" element={<RouteGuard requireRole="student"><StudentOfficeHours /></RouteGuard>} />
             <Route path="/admin/events" element={<AdminEvents />} />
             <Route path="/portal/events" element={<RouteGuard requireRole="student"><StudentEvents /></RouteGuard>} />
-            <Route path="/admin/health" element={<RouteGuard requireRole="admin"><AdminHealth /></RouteGuard>} />
+            <Route path="/admin/health" element={<AdminHealth />} />
             
             <Route path="*" element={<NotFound />} />
           </Routes>
