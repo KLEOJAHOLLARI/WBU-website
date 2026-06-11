@@ -1336,6 +1336,116 @@ export type Database = {
           },
         ]
       }
+      health_appointments: {
+        Row: {
+          admin_notes: string | null
+          created_at: string
+          created_by: string | null
+          duration_minutes: number
+          id: string
+          location: string | null
+          provider_name: string | null
+          reason: string | null
+          scheduled_at: string
+          status: string
+          student_id: string
+          updated_at: string
+        }
+        Insert: {
+          admin_notes?: string | null
+          created_at?: string
+          created_by?: string | null
+          duration_minutes?: number
+          id?: string
+          location?: string | null
+          provider_name?: string | null
+          reason?: string | null
+          scheduled_at: string
+          status?: string
+          student_id: string
+          updated_at?: string
+        }
+        Update: {
+          admin_notes?: string | null
+          created_at?: string
+          created_by?: string | null
+          duration_minutes?: number
+          id?: string
+          location?: string | null
+          provider_name?: string | null
+          reason?: string | null
+          scheduled_at?: string
+          status?: string
+          student_id?: string
+          updated_at?: string
+        }
+        Relationships: []
+      }
+      health_visit_logs: {
+        Row: {
+          appointment_id: string | null
+          chief_complaint: string | null
+          created_at: string
+          created_by: string | null
+          diagnosis: string | null
+          follow_up_date: string | null
+          id: string
+          prescriptions: string | null
+          provider_name: string | null
+          student_id: string
+          student_summary: string | null
+          treatment: string | null
+          updated_at: string
+          visible_to_student: boolean
+          visit_date: string
+          vitals: Json | null
+        }
+        Insert: {
+          appointment_id?: string | null
+          chief_complaint?: string | null
+          created_at?: string
+          created_by?: string | null
+          diagnosis?: string | null
+          follow_up_date?: string | null
+          id?: string
+          prescriptions?: string | null
+          provider_name?: string | null
+          student_id: string
+          student_summary?: string | null
+          treatment?: string | null
+          updated_at?: string
+          visible_to_student?: boolean
+          visit_date?: string
+          vitals?: Json | null
+        }
+        Update: {
+          appointment_id?: string | null
+          chief_complaint?: string | null
+          created_at?: string
+          created_by?: string | null
+          diagnosis?: string | null
+          follow_up_date?: string | null
+          id?: string
+          prescriptions?: string | null
+          provider_name?: string | null
+          student_id?: string
+          student_summary?: string | null
+          treatment?: string | null
+          updated_at?: string
+          visible_to_student?: boolean
+          visit_date?: string
+          vitals?: Json | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "health_visit_logs_appointment_id_fkey"
+            columns: ["appointment_id"]
+            isOneToOne: false
+            referencedRelation: "health_appointments"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       message_templates: {
         Row: {
           body: string
