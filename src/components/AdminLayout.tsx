@@ -51,6 +51,7 @@ const navGroups: { label: string; items: { to: string; label: string; icon: any;
       { to: "/admin/semesters", label: "Semesters", icon: Calendar },
       { to: "/admin/calendar", label: "Academic Calendar", icon: CalendarDays },
       { to: "/admin/rooms", label: "Rooms & Bookings", icon: Building2 },
+      { to: "/admin/health", label: "Health Center", icon: HeartPulse },
       { to: "/admin/tuition", label: "Tuition", icon: CreditCard },
       { to: "/admin/scholarship-docs", label: "Scholarship Docs", icon: FileText },
       { to: "/admin/documents", label: "Document Generator", icon: FileSignature },
