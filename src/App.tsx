@@ -72,6 +72,7 @@ import ProfessorOfficeHours from "./pages/professor/ProfessorOfficeHours";
 import StudentOfficeHours from "./pages/portal/StudentOfficeHours";
 import AdminEvents from "./pages/admin/AdminEvents";
 import StudentEvents from "./pages/portal/StudentEvents";
+import AdminHealth from "./pages/admin/AdminHealth";
 
 import FacultyProfile from "./pages/FacultyProfile";
 import AdminTuition from "./pages/admin/AdminTuition";
