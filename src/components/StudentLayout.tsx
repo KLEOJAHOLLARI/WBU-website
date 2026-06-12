@@ -5,7 +5,7 @@ import { useQuery } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
 import {
   GraduationCap, LayoutDashboard, FileText, Upload, Mail, LogOut,
-  CalendarDays, BookOpen, UserCircle, Menu, ScrollText, ArrowLeft, ClipboardList, CreditCard, Calculator, ClipboardEdit, IdCard, History, Bell, RefreshCw, Star, ClipboardCheck, Armchair, Clock,
+  CalendarDays, BookOpen, UserCircle, Menu, ScrollText, ArrowLeft, ClipboardList, CreditCard, Calculator, ClipboardEdit, IdCard, History, Bell, RefreshCw, Star, ClipboardCheck, Armchair, Clock, Briefcase,
 } from "lucide-react";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Sheet, SheetContent, SheetTrigger } from "@/components/ui/sheet";
@@ -24,6 +24,7 @@ const buildNavGroups = (registrationOpen: boolean) => [
       { to: "/portal/seating", label: "My Seating", icon: Armchair },
       { to: "/portal/office-hours", label: "Office Hours", icon: Clock },
       { to: "/portal/events", label: "Events", icon: CalendarDays },
+      { to: "/portal/internships", label: "Internships", icon: Briefcase },
       ...(registrationOpen
         ? [
             { to: "/portal/registration", label: "Course Registration", icon: ClipboardEdit },
