@@ -1446,6 +1446,245 @@ export type Database = {
           },
         ]
       }
+      internship_applications: {
+        Row: {
+          admin_notes: string | null
+          cover_letter: string | null
+          created_at: string
+          id: string
+          position_id: string
+          resume_url: string | null
+          reviewed_at: string | null
+          reviewed_by: string | null
+          status: string
+          student_id: string
+          updated_at: string
+        }
+        Insert: {
+          admin_notes?: string | null
+          cover_letter?: string | null
+          created_at?: string
+          id?: string
+          position_id: string
+          resume_url?: string | null
+          reviewed_at?: string | null
+          reviewed_by?: string | null
+          status?: string
+          student_id: string
+          updated_at?: string
+        }
+        Update: {
+          admin_notes?: string | null
+          cover_letter?: string | null
+          created_at?: string
+          id?: string
+          position_id?: string
+          resume_url?: string | null
+          reviewed_at?: string | null
+          reviewed_by?: string | null
+          status?: string
+          student_id?: string
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "internship_applications_position_id_fkey"
+            columns: ["position_id"]
+            isOneToOne: false
+            referencedRelation: "internship_positions"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      internship_companies: {
+        Row: {
+          address: string | null
+          contact_email: string | null
+          contact_name: string | null
+          contact_phone: string | null
+          created_at: string
+          created_by: string | null
+          description: string | null
+          id: string
+          industry: string | null
+          logo_url: string | null
+          name: string
+          status: string
+          updated_at: string
+          website: string | null
+        }
+        Insert: {
+          address?: string | null
+          contact_email?: string | null
+          contact_name?: string | null
+          contact_phone?: string | null
+          created_at?: string
+          created_by?: string | null
+          description?: string | null
+          id?: string
+          industry?: string | null
+          logo_url?: string | null
+          name: string
+          status?: string
+          updated_at?: string
+          website?: string | null
+        }
+        Update: {
+          address?: string | null
+          contact_email?: string | null
+          contact_name?: string | null
+          contact_phone?: string | null
+          created_at?: string
+          created_by?: string | null
+          description?: string | null
+          id?: string
+          industry?: string | null
+          logo_url?: string | null
+          name?: string
+          status?: string
+          updated_at?: string
+          website?: string | null
+        }
+        Relationships: []
+      }
+      internship_placements: {
+        Row: {
+          application_id: string | null
+          company_id: string
+          created_at: string
+          end_date: string | null
+          evaluation_notes: string | null
+          evaluation_score: number | null
+          id: string
+          position_id: string
+          start_date: string | null
+          status: string
+          student_id: string
+          supervisor_email: string | null
+          supervisor_name: string | null
+          updated_at: string
+        }
+        Insert: {
+          application_id?: string | null
+          company_id: string
+          created_at?: string
+          end_date?: string | null
+          evaluation_notes?: string | null
+          evaluation_score?: number | null
+          id?: string
+          position_id: string
+          start_date?: string | null
+          status?: string
+          student_id: string
+          supervisor_email?: string | null
+          supervisor_name?: string | null
+          updated_at?: string
+        }
+        Update: {
+          application_id?: string | null
+          company_id?: string
+          created_at?: string
+          end_date?: string | null
+          evaluation_notes?: string | null
+          evaluation_score?: number | null
+          id?: string
+          position_id?: string
+          start_date?: string | null
+          status?: string
+          student_id?: string
+          supervisor_email?: string | null
+          supervisor_name?: string | null
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "internship_placements_application_id_fkey"
+            columns: ["application_id"]
+            isOneToOne: false
+            referencedRelation: "internship_applications"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "internship_placements_company_id_fkey"
+            columns: ["company_id"]
+            isOneToOne: false
+            referencedRelation: "internship_companies"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "internship_placements_position_id_fkey"
+            columns: ["position_id"]
+            isOneToOne: false
+            referencedRelation: "internship_positions"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      internship_positions: {
+        Row: {
+          application_deadline: string | null
+          capacity: number
+          company_id: string
+          created_at: string
+          description: string | null
+          duration: string | null
+          end_date: string | null
+          id: string
+          location: string | null
+          program: string | null
+          requirements: string | null
+          start_date: string | null
+          status: string
+          title: string
+          updated_at: string
+          work_type: string | null
+        }
+        Insert: {
+          application_deadline?: string | null
+          capacity?: number
+          company_id: string
+          created_at?: string
+          description?: string | null
+          duration?: string | null
+          end_date?: string | null
+          id?: string
+          location?: string | null
+          program?: string | null
+          requirements?: string | null
+          start_date?: string | null
+          status?: string
+          title: string
+          updated_at?: string
+          work_type?: string | null
+        }
+        Update: {
+          application_deadline?: string | null
+          capacity?: number
+          company_id?: string
+          created_at?: string
+          description?: string | null
+          duration?: string | null
+          end_date?: string | null
+          id?: string
+          location?: string | null
+          program?: string | null
+          requirements?: string | null
+          start_date?: string | null
+          status?: string
+          title?: string
+          updated_at?: string
+          work_type?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "internship_positions_company_id_fkey"
+            columns: ["company_id"]
+            isOneToOne: false
+            referencedRelation: "internship_companies"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       message_templates: {
         Row: {
           body: string
