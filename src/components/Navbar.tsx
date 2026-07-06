@@ -102,6 +102,7 @@ const Navbar = () => {
             initial={{ height: 0, opacity: 0 }}
             animate={{ height: "auto", opacity: 1 }}
             exit={{ height: 0, opacity: 0 }}
+            transition={{ duration: 0.25, ease: "easeOut" }}
             className="overflow-hidden border-t border-border bg-card lg:hidden"
           >
             <nav className="container flex flex-col gap-1 py-4">
