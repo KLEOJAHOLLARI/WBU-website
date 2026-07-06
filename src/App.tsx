@@ -75,6 +75,8 @@ import StudentEvents from "./pages/portal/StudentEvents";
 import AdminHealth from "./pages/admin/AdminHealth";
 import AdminInternships from "./pages/admin/AdminInternships";
 import StudentInternships from "./pages/portal/StudentInternships";
+import AdminPortalNav from "./pages/admin/AdminPortalNav";
+
 
 import FacultyProfile from "./pages/FacultyProfile";
 import AdminTuition from "./pages/admin/AdminTuition";
@@ -223,6 +225,9 @@ const App = () => (
             <Route path="/admin/health" element={<AdminHealth />} />
             <Route path="/admin/internships" element={<AdminInternships />} />
             <Route path="/portal/internships" element={<RouteGuard requireRole="student"><StudentInternships /></RouteGuard>} />
+            <Route path="/admin/portal-nav" element={<AdminPortalNav />} />
+            
+
             
             <Route path="*" element={<NotFound />} />
           </Routes>
