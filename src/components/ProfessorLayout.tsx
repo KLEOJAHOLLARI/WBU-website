@@ -12,6 +12,8 @@ import { Sheet, SheetContent, SheetTrigger } from "@/components/ui/sheet";
 
 import NotificationBell from "@/components/NotificationBell";
 import GlobalSearch from "@/components/GlobalSearch";
+import { usePortalNavVisibility } from "@/hooks/usePortalNavVisibility";
+
 
 const navGroups = [
   {
@@ -47,6 +49,11 @@ const ProfessorLayout = ({ children }: { children: ReactNode }) => {
   const { user, isProfessor, isAdmin, loading, signOut, profile } = useAuth();
   const location = useLocation();
   const [mobileOpen, setMobileOpen] = useState(false);
+  const isVisible = usePortalNavVisibility("professor");
+  const filteredGroups = navGroups
+    .map((g) => ({ ...g, items: g.items.filter((i) => i.to === "/professor" || isVisible(i.to)) }))
+    .filter((g) => g.items.length > 0);
+
 
   const { data: pendingCount = 0 } = useQuery({
     queryKey: ["pending-enrollment-count", user?.id],
