@@ -97,7 +97,7 @@ const ProfessorLayout = ({ children }: { children: ReactNode }) => {
       </div>
 
       <nav className="flex-1 overflow-auto px-3 py-4">
-        {navGroups.map((group, gi) => (
+        {filteredGroups.map((group, gi) => (
           <div key={group.label} className={gi > 0 ? "mt-6" : ""}>
             <p className="mb-1.5 px-3 text-[11px] font-semibold uppercase tracking-wider text-muted-foreground/70">
               {group.label}
