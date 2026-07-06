@@ -123,9 +123,9 @@ const Navbar = () => {
                 {t("nav.applyNow")}
               </Link>
             </nav>
-          </motion.div>
-        )}
-      </AnimatePresence>
+        </div>
+      )}
+
     </header>
   );
 };
