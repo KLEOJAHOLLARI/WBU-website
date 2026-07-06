@@ -52,7 +52,7 @@ const Index = () => {
     },
   });
 
-  const { data: heroMedia } = useQuery({
+  const { data: heroMedia, isLoading: heroLoading } = useQuery({
     queryKey: ["hero-media-public"],
     queryFn: async () => {
       const { data } = await supabase.from("system_settings").select("value").eq("key", "hero_media").maybeSingle();
@@ -60,8 +60,9 @@ const Index = () => {
     },
   });
 
-  const heroUrl = heroMedia?.url || "https://images.unsplash.com/photo-1562774053-701939374585?w=1920&q=80";
   const heroIsVideo = heroMedia?.type === "video" && !!heroMedia.url;
+  const heroIsImage = heroMedia?.type === "image" && !!heroMedia.url;
+  const fallbackImg = "https://images.unsplash.com/photo-1562774053-701939374585?w=1920&q=80";
 
   return (
     <Layout>
@@ -69,10 +70,10 @@ const Index = () => {
       {/* Hero — full-bleed with background image + dark overlay */}
       <section className="relative min-h-[100vh] flex items-center overflow-hidden">
         {/* Background image or video */}
-        <div className="absolute inset-0 w-full h-full overflow-hidden">
+        <div className="absolute inset-0 w-full h-full overflow-hidden bg-black">
           {heroIsVideo ? (
             <video
-              src={heroUrl}
+              src={heroMedia!.url}
               autoPlay
               muted
               loop
@@ -81,14 +82,14 @@ const Index = () => {
               aria-hidden="true"
               className="absolute inset-0 h-full w-full object-cover object-center min-h-full min-w-full"
             />
-          ) : (
+          ) : !heroLoading ? (
             <img
-              src={heroUrl}
+              src={heroIsImage ? heroMedia!.url : fallbackImg}
               alt=""
               aria-hidden="true"
               className="absolute inset-0 h-full w-full object-cover object-center"
             />
-          )}
+          ) : null}
         </div>
 
         {/* Dark gradient overlay for readability */}
