@@ -60,8 +60,10 @@ const Index = () => {
     },
   });
 
-  const heroIsVideo = heroMedia?.type === "video" && !!heroMedia.url;
+  const isMobile = typeof window !== "undefined" && window.matchMedia("(max-width: 768px)").matches;
+  const heroIsVideo = heroMedia?.type === "video" && !!heroMedia.url && !isMobile;
   const heroIsImage = heroMedia?.type === "image" && !!heroMedia.url;
+
   const fallbackImg = "https://images.unsplash.com/photo-1562774053-701939374585?w=1920&q=80";
 
   return (
