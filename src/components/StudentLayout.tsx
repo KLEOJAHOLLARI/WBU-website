@@ -10,7 +10,7 @@ import {
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Sheet, SheetContent, SheetTrigger } from "@/components/ui/sheet";
 import { useActiveSemester } from "@/hooks/useActiveSemester";
-import { usePortalNavVisibility } from "@/hooks/usePortalNavVisibility";
+import { usePortalNavVisibility, usePortalNavOrder } from "@/hooks/usePortalNavVisibility";
 
 
 import NotificationBell from "@/components/NotificationBell";
