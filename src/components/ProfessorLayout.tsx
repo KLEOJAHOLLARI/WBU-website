@@ -50,8 +50,14 @@ const ProfessorLayout = ({ children }: { children: ReactNode }) => {
   const location = useLocation();
   const [mobileOpen, setMobileOpen] = useState(false);
   const isVisible = usePortalNavVisibility("professor");
+  const sortByOrder = usePortalNavOrder("professor");
   const filteredGroups = navGroups
-    .map((g) => ({ ...g, items: g.items.filter((i) => i.to === "/professor" || isVisible(i.to)) }))
+    .map((g) => {
+      const filtered = g.items.filter((i) => i.to === "/professor" || isVisible(i.to));
+      const orderedPaths = sortByOrder(filtered.map((i) => i.to));
+      const byPath = new Map(filtered.map((i) => [i.to, i]));
+      return { ...g, items: orderedPaths.map((p) => byPath.get(p)!).filter(Boolean) };
+    })
     .filter((g) => g.items.length > 0);
 
 
