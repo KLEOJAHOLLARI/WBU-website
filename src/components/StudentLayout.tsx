@@ -67,9 +67,15 @@ const StudentLayout = ({ children }: { children: ReactNode }) => {
   const [mobileOpen, setMobileOpen] = useState(false);
   const { data: activeSemester } = useActiveSemester();
   const isVisible = usePortalNavVisibility("student");
+  const sortByOrder = usePortalNavOrder("student");
   const rawGroups = buildNavGroups(!!activeSemester?.enrollment_open);
   const navGroups = rawGroups
-    .map((g) => ({ ...g, items: g.items.filter((i) => i.to === "/portal" || isVisible(i.to)) }))
+    .map((g) => {
+      const filtered = g.items.filter((i) => i.to === "/portal" || isVisible(i.to));
+      const orderedPaths = sortByOrder(filtered.map((i) => i.to));
+      const byPath = new Map(filtered.map((i) => [i.to, i]));
+      return { ...g, items: orderedPaths.map((p) => byPath.get(p)!).filter(Boolean) };
+    })
     .filter((g) => g.items.length > 0);
 
 
