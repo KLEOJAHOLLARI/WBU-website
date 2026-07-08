@@ -5,7 +5,7 @@ import { useQuery } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
 import {
   GraduationCap, LayoutDashboard, BookOpen, LogOut, Megaphone, UserCircle,
-  UserCheck, Menu, ScrollText, ArrowLeft, CalendarDays, IdCard, Star, ClipboardCheck, Armchair, Clock,
+  UserCheck, Menu, ScrollText, ArrowLeft, CalendarDays, IdCard, Star, ClipboardCheck, Armchair, Clock, RefreshCw,
 } from "lucide-react";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Sheet, SheetContent, SheetTrigger } from "@/components/ui/sheet";
@@ -32,6 +32,7 @@ const navGroups = [
       { to: "/professor/advisor", label: "Advisor", icon: UserCheck, badgeKey: "advisor" as const },
       { to: "/professor/transcripts", label: "Transcripts", icon: ScrollText },
       { to: "/professor/exams", label: "Exam Schedule", icon: CalendarDays },
+      { to: "/professor/resits", label: "Resit Exams", icon: RefreshCw },
       { to: "/professor/announcements", label: "Announcements", icon: Megaphone },
       { to: "/professor/performance", label: "My Performance", icon: Star },
     ],
