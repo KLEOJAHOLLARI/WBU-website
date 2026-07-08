@@ -111,6 +111,8 @@ import AdminDeansList from "./pages/admin/AdminDeansList";
 import DeansList from "./pages/DeansList";
 import DeansListPreview from "./pages/DeansListPreview";
 import AIAssistant from "./components/AIAssistant";
+import StudentResits from "./pages/portal/StudentResits";
+import ProfessorResits from "./pages/professor/ProfessorResits";
 
 const queryClient = new QueryClient();
 
@@ -226,6 +228,8 @@ const App = () => (
             <Route path="/admin/internships" element={<AdminInternships />} />
             <Route path="/portal/internships" element={<RouteGuard requireRole="student"><StudentInternships /></RouteGuard>} />
             <Route path="/admin/portal-nav" element={<AdminPortalNav />} />
+            <Route path="/portal/resits" element={<RouteGuard requireRole="student"><StudentResits /></RouteGuard>} />
+            <Route path="/professor/resits" element={<RouteGuard requireRole="professor"><ProfessorResits /></RouteGuard>} />
             
 
             
