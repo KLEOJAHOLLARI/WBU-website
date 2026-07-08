@@ -2350,6 +2350,79 @@ export type Database = {
           },
         ]
       }
+      resit_exams: {
+        Row: {
+          course_id: string
+          created_at: string
+          enrollment_id: string
+          exam_date: string | null
+          final_grade: number | null
+          graded_at: string | null
+          graded_by: string | null
+          id: string
+          original_grade: number
+          resit_grade: number | null
+          semester_id: string | null
+          status: string
+          updated_at: string
+          user_id: string
+        }
+        Insert: {
+          course_id: string
+          created_at?: string
+          enrollment_id: string
+          exam_date?: string | null
+          final_grade?: number | null
+          graded_at?: string | null
+          graded_by?: string | null
+          id?: string
+          original_grade: number
+          resit_grade?: number | null
+          semester_id?: string | null
+          status?: string
+          updated_at?: string
+          user_id: string
+        }
+        Update: {
+          course_id?: string
+          created_at?: string
+          enrollment_id?: string
+          exam_date?: string | null
+          final_grade?: number | null
+          graded_at?: string | null
+          graded_by?: string | null
+          id?: string
+          original_grade?: number
+          resit_grade?: number | null
+          semester_id?: string | null
+          status?: string
+          updated_at?: string
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "resit_exams_course_id_fkey"
+            columns: ["course_id"]
+            isOneToOne: false
+            referencedRelation: "courses"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "resit_exams_enrollment_id_fkey"
+            columns: ["enrollment_id"]
+            isOneToOne: true
+            referencedRelation: "enrollments"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "resit_exams_semester_id_fkey"
+            columns: ["semester_id"]
+            isOneToOne: false
+            referencedRelation: "academic_semesters"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       room_bookings: {
         Row: {
           booking_date: string
@@ -2972,6 +3045,10 @@ export type Database = {
       [_ in never]: never
     }
     Functions: {
+      compute_enrollment_final_albanian: {
+        Args: { _enrollment_id: string }
+        Returns: number
+      }
       generate_deans_list: {
         Args: {
           _min_courses?: number
@@ -3012,6 +3089,21 @@ export type Database = {
           snapshot_id: string
         }[]
       }
+      get_my_resit_view: {
+        Args: never
+        Returns: {
+          course_code: string
+          course_id: string
+          course_name: string
+          enrollment_id: string
+          exam_date: string
+          final_grade: number
+          original_grade: number
+          resit_grade: number
+          resit_id: string
+          status: string
+        }[]
+      }
       get_professor_performance: {
         Args: { _professor_id: string; _semester_id?: string }
         Returns: Json
@@ -3026,6 +3118,15 @@ export type Database = {
           weighted_percent: number
         }[]
       }
+      get_user_resit_overrides: {
+        Args: { _user_id: string }
+        Returns: {
+          course_id: string
+          enrollment_id: string
+          final_grade: number
+          original_grade: number
+        }[]
+      }
       has_role: {
         Args: {
           _role: Database["public"]["Enums"]["app_role"]
@@ -3036,6 +3137,20 @@ export type Database = {
       has_submitted_feedback: {
         Args: { _course_id: string; _semester_id: string }
         Returns: boolean
+      }
+      list_course_resits: {
+        Args: { _course_id: string }
+        Returns: {
+          exam_date: string
+          final_grade: number
+          full_name: string
+          original_grade: number
+          resit_grade: number
+          resit_id: string
+          status: string
+          student_id: string
+          user_id: string
+        }[]
       }
       preview_deans_list: {
         Args: {
@@ -3056,6 +3171,7 @@ export type Database = {
         }
         Returns: Json
       }
+      register_for_resit: { Args: { _enrollment_id: string }; Returns: Json }
       send_enrollment_deadline_reminders: { Args: never; Returns: Json }
       submit_professor_feedback: {
         Args: {
@@ -3064,6 +3180,10 @@ export type Database = {
           _rating: number
           _semester_id: string
         }
+        Returns: Json
+      }
+      submit_resit_grade: {
+        Args: { _exam_date?: string; _grade: number; _resit_id: string }
         Returns: Json
       }
       system_admin_uid: { Args: never; Returns: string }
