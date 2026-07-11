@@ -6,7 +6,12 @@ import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { toast } from "sonner";
 import { PORTAL_NAV_KEY, NavVisibility } from "@/hooks/usePortalNavVisibility";
-import { GripVertical } from "lucide-react";
+import {
+  PORTAL_NAV_STYLE_KEY, DEFAULT_STYLE, ALL_ACCENTS, ACCENT_HEX,
+  type Accent, type IconStyle, type PortalNavStyle,
+} from "@/hooks/usePortalNavStyle";
+import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
+import { GripVertical, Check } from "lucide-react";
 import {
   DndContext,
   closestCenter,
