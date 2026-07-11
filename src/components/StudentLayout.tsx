@@ -11,6 +11,7 @@ import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Sheet, SheetContent, SheetTrigger } from "@/components/ui/sheet";
 import { useActiveSemester } from "@/hooks/useActiveSemester";
 import { usePortalNavVisibility, usePortalNavOrder } from "@/hooks/usePortalNavVisibility";
+import { usePortalNavStyle, NavIcon, DEFAULT_STYLE, type Accent } from "@/hooks/usePortalNavStyle";
 
 
 import NotificationBell from "@/components/NotificationBell";
