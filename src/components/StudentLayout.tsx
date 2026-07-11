@@ -142,19 +142,27 @@ const StudentLayout = ({ children }: { children: ReactNode }) => {
             <div className="space-y-0.5">
               {group.items.map((item) => {
                 const active = location.pathname === item.to;
+                const StatusIcon = item.statusIcon;
                 return (
                   <Link
                     key={item.to}
                     to={item.to}
                     onClick={() => setMobileOpen(false)}
-                    className={`group flex items-center gap-3 rounded-lg px-3 py-2 text-[13px] font-medium transition-all ${
+                    className={`group flex items-center gap-3 rounded-lg px-2.5 py-1.5 text-[13px] font-medium transition-all ${
                       active
                         ? "bg-primary/10 text-primary"
                         : "text-muted-foreground hover:bg-muted hover:text-foreground"
                     }`}
                   >
-                    <item.icon className={`h-4 w-4 shrink-0 ${active ? "text-primary" : "text-muted-foreground/70 group-hover:text-foreground"}`} />
+                    <span className={`flex h-7 w-7 shrink-0 items-center justify-center rounded-lg ring-1 ring-inset transition-transform group-hover:scale-105 ${accentClasses[item.accent]}`}>
+                      <item.icon className="h-3.5 w-3.5" />
+                    </span>
                     <span className="truncate">{item.label}</span>
+                    {StatusIcon && (
+                      <span className="ml-auto flex h-5 w-5 items-center justify-center rounded-full bg-emerald-500/15 text-emerald-500 ring-1 ring-emerald-500/40">
+                        <StatusIcon className="h-3 w-3" />
+                      </span>
+                    )}
                     {"badge" in item && item.badge && unreadCount > 0 && (
                       <span className="ml-auto inline-flex h-5 min-w-5 items-center justify-center rounded-full bg-primary px-1.5 text-[10px] font-bold text-primary-foreground">
                         {unreadCount}
