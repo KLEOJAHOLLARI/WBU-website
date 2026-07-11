@@ -13,6 +13,7 @@ import { Sheet, SheetContent, SheetTrigger } from "@/components/ui/sheet";
 import NotificationBell from "@/components/NotificationBell";
 import GlobalSearch from "@/components/GlobalSearch";
 import { usePortalNavVisibility, usePortalNavOrder } from "@/hooks/usePortalNavVisibility";
+import { usePortalNavStyle, NavIcon, DEFAULT_STYLE, type Accent } from "@/hooks/usePortalNavStyle";
 
 
 const navGroups = [
@@ -52,6 +53,10 @@ const ProfessorLayout = ({ children }: { children: ReactNode }) => {
   const [mobileOpen, setMobileOpen] = useState(false);
   const isVisible = usePortalNavVisibility("professor");
   const sortByOrder = usePortalNavOrder("professor");
+  const { data: styleCfg } = usePortalNavStyle();
+  const iconStyle = styleCfg?.iconStyle || DEFAULT_STYLE.iconStyle;
+  const accents = styleCfg?.professorAccents || DEFAULT_STYLE.professorAccents!;
+  const accentFor = (to: string): Accent => (accents[to] || "slate") as Accent;
   const filteredGroups = navGroups
     .map((g) => {
       const filtered = g.items.filter((i) => i.to === "/professor" || isVisible(i.to));
@@ -118,13 +123,13 @@ const ProfessorLayout = ({ children }: { children: ReactNode }) => {
                     key={item.to}
                     to={item.to}
                     onClick={() => setMobileOpen(false)}
-                    className={`group flex items-center gap-3 rounded-lg px-3 py-2 text-[13px] font-medium transition-all ${
+                    className={`group flex items-center gap-3 rounded-lg px-2.5 py-1.5 text-[13px] font-medium transition-all ${
                       active
                         ? "bg-primary/10 text-primary"
                         : "text-muted-foreground hover:bg-muted hover:text-foreground"
                     }`}
                   >
-                    <item.icon className={`h-4 w-4 shrink-0 ${active ? "text-primary" : "text-muted-foreground/70 group-hover:text-foreground"}`} />
+                    <NavIcon icon={item.icon} accent={accentFor(item.to)} style={iconStyle} active={active} />
                     <span className="truncate">{item.label}</span>
                     {hasBadge && (
                       <span className="ml-auto inline-flex h-5 min-w-5 items-center justify-center rounded-full bg-primary px-1.5 text-[10px] font-bold text-primary-foreground">

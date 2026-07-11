@@ -6,7 +6,12 @@ import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { toast } from "sonner";
 import { PORTAL_NAV_KEY, NavVisibility } from "@/hooks/usePortalNavVisibility";
-import { GripVertical } from "lucide-react";
+import {
+  PORTAL_NAV_STYLE_KEY, DEFAULT_STYLE, ALL_ACCENTS, ACCENT_HEX,
+  type Accent, type IconStyle, type PortalNavStyle,
+} from "@/hooks/usePortalNavStyle";
+import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
+import { GripVertical, Check } from "lucide-react";
 import {
   DndContext,
   closestCenter,
@@ -77,14 +82,47 @@ const applyOrder = (items: Item[], order?: string[]): Item[] => {
   return [...items].sort((a, b) => idx(a.to) - idx(b.to));
 };
 
+const ColorPicker = ({ value, onChange }: { value: Accent; onChange: (a: Accent) => void }) => (
+  <Popover>
+    <PopoverTrigger asChild>
+      <button
+        type="button"
+        className="h-6 w-6 shrink-0 rounded-md ring-1 ring-border transition hover:scale-110"
+        style={{ backgroundColor: ACCENT_HEX[value] }}
+        aria-label="Choose color"
+      />
+    </PopoverTrigger>
+    <PopoverContent className="w-auto p-2">
+      <div className="grid grid-cols-8 gap-1.5">
+        {ALL_ACCENTS.map((a) => (
+          <button
+            key={a}
+            type="button"
+            onClick={() => onChange(a)}
+            className="relative h-6 w-6 rounded-md ring-1 ring-border transition hover:scale-110"
+            style={{ backgroundColor: ACCENT_HEX[a] }}
+            aria-label={a}
+          >
+            {a === value && <Check className="absolute inset-0 m-auto h-4 w-4 text-white drop-shadow" />}
+          </button>
+        ))}
+      </div>
+    </PopoverContent>
+  </Popover>
+);
+
 const SortableRow = ({
   item,
   visible,
   onToggle,
+  accent,
+  onAccent,
 }: {
   item: Item;
   visible: boolean;
   onToggle: () => void;
+  accent: Accent;
+  onAccent: (a: Accent) => void;
 }) => {
   const { attributes, listeners, setNodeRef, transform, transition, isDragging } = useSortable({
     id: item.to,
@@ -112,6 +150,7 @@ const SortableRow = ({
       >
         <GripVertical className="h-4 w-4" />
       </button>
+      <ColorPicker value={accent} onChange={onAccent} />
       <div className="flex-1 min-w-0">
         <p className="text-sm font-medium text-foreground truncate">{item.label}</p>
         <p className="text-xs text-muted-foreground truncate">{item.to}</p>
@@ -121,9 +160,17 @@ const SortableRow = ({
   );
 };
 
+const ICON_STYLES: { value: IconStyle; label: string; desc: string }[] = [
+  { value: "tile", label: "Soft Tile", desc: "Rounded tinted square (default)" },
+  { value: "gradient", label: "Gradient", desc: "Vibrant gradient tile" },
+  { value: "outline", label: "Outline", desc: "Transparent with colored border" },
+  { value: "plain", label: "Plain", desc: "Colored icon only" },
+];
+
 const AdminPortalNav = () => {
   const qc = useQueryClient();
   const [value, setValue] = useState<NavVisibility>({ student: {}, professor: {} });
+  const [styleVal, setStyleVal] = useState<PortalNavStyle>(DEFAULT_STYLE);
   const [studentList, setStudentList] = useState<Item[]>(studentItems);
   const [professorList, setProfessorList] = useState<Item[]>(professorItems);
   const [saving, setSaving] = useState(false);
@@ -136,20 +183,27 @@ const AdminPortalNav = () => {
   const { data, isLoading } = useQuery({
     queryKey: ["admin-portal-nav-visibility"],
     queryFn: async () => {
-      const { data } = await supabase
-        .from("system_settings")
-        .select("value")
-        .eq("key", PORTAL_NAV_KEY)
-        .maybeSingle();
-      return (data?.value as NavVisibility | null) || { student: {}, professor: {} };
+      const [vis, sty] = await Promise.all([
+        supabase.from("system_settings").select("value").eq("key", PORTAL_NAV_KEY).maybeSingle(),
+        supabase.from("system_settings").select("value").eq("key", PORTAL_NAV_STYLE_KEY).maybeSingle(),
+      ]);
+      return {
+        vis: (vis.data?.value as NavVisibility | null) || { student: {}, professor: {} },
+        sty: (sty.data?.value as PortalNavStyle | null) || null,
+      };
     },
   });
 
   useEffect(() => {
     if (data) {
-      setValue(data);
-      setStudentList(applyOrder(studentItems, data.studentOrder));
-      setProfessorList(applyOrder(professorItems, data.professorOrder));
+      setValue(data.vis);
+      setStudentList(applyOrder(studentItems, data.vis.studentOrder));
+      setProfessorList(applyOrder(professorItems, data.vis.professorOrder));
+      setStyleVal({
+        iconStyle: data.sty?.iconStyle || DEFAULT_STYLE.iconStyle,
+        studentAccents: { ...DEFAULT_STYLE.studentAccents, ...(data.sty?.studentAccents || {}) },
+        professorAccents: { ...DEFAULT_STYLE.professorAccents, ...(data.sty?.professorAccents || {}) },
+      });
     }
   }, [data]);
 
@@ -160,6 +214,21 @@ const AdminPortalNav = () => {
     setValue((v) => ({
       ...v,
       [role]: { ...v[role], [to]: !isVisible(role, to) },
+    }));
+  };
+
+  const accentFor = (role: "student" | "professor", to: string): Accent => {
+    const map = role === "student" ? styleVal.studentAccents : styleVal.professorAccents;
+    return (map?.[to] as Accent) || "slate";
+  };
+
+  const setAccent = (role: "student" | "professor", to: string, a: Accent) => {
+    setStyleVal((s) => ({
+      ...s,
+      [role === "student" ? "studentAccents" : "professorAccents"]: {
+        ...(role === "student" ? s.studentAccents : s.professorAccents),
+        [to]: a,
+      },
     }));
   };
 
@@ -177,18 +246,20 @@ const AdminPortalNav = () => {
 
   const save = async () => {
     setSaving(true);
-    const payload: NavVisibility = {
+    const visPayload: NavVisibility = {
       ...value,
       studentOrder: studentList.map((i) => i.to),
       professorOrder: professorList.map((i) => i.to),
     };
-    const { error } = await supabase
-      .from("system_settings")
-      .upsert({ key: PORTAL_NAV_KEY, value: payload as any }, { onConflict: "key" });
+    const [r1, r2] = await Promise.all([
+      supabase.from("system_settings").upsert({ key: PORTAL_NAV_KEY, value: visPayload as any }, { onConflict: "key" }),
+      supabase.from("system_settings").upsert({ key: PORTAL_NAV_STYLE_KEY, value: styleVal as any }, { onConflict: "key" }),
+    ]);
     setSaving(false);
-    if (error) return toast.error(error.message);
+    if (r1.error || r2.error) return toast.error(r1.error?.message || r2.error?.message || "Save failed");
     toast.success("Portal navigation updated");
     qc.invalidateQueries({ queryKey: ["portal-nav-visibility"] });
+    qc.invalidateQueries({ queryKey: ["portal-nav-style"] });
     qc.invalidateQueries({ queryKey: ["admin-portal-nav-visibility"] });
   };
 
@@ -202,6 +273,8 @@ const AdminPortalNav = () => {
               item={item}
               visible={isVisible(role, item.to)}
               onToggle={() => !item.locked && toggle(role, item.to)}
+              accent={accentFor(role, item.to)}
+              onAccent={(a) => setAccent(role, item.to, a)}
             />
           ))}
         </div>
@@ -217,13 +290,39 @@ const AdminPortalNav = () => {
         <div>
           <h1 className="font-display text-2xl font-bold">Portal Navigation</h1>
           <p className="text-sm text-muted-foreground">
-            Toggle visibility and drag to reorder the Student and Professor portal links.
+            Choose icon style, pick per-link colors, toggle visibility, and reorder.
           </p>
         </div>
         <Button onClick={save} disabled={saving}>
           {saving ? "Saving..." : "Save Changes"}
         </Button>
       </div>
+
+      <Card>
+        <CardHeader>
+          <CardTitle>Icon Style</CardTitle>
+        </CardHeader>
+        <CardContent>
+          <div className="grid grid-cols-2 gap-3 md:grid-cols-4">
+            {ICON_STYLES.map((opt) => {
+              const selected = styleVal.iconStyle === opt.value;
+              return (
+                <button
+                  key={opt.value}
+                  type="button"
+                  onClick={() => setStyleVal((s) => ({ ...s, iconStyle: opt.value }))}
+                  className={`rounded-xl border p-3 text-left transition ${
+                    selected ? "border-primary bg-primary/5 ring-2 ring-primary/40" : "border-border hover:bg-muted"
+                  }`}
+                >
+                  <p className="text-sm font-semibold text-foreground">{opt.label}</p>
+                  <p className="mt-0.5 text-xs text-muted-foreground">{opt.desc}</p>
+                </button>
+              );
+            })}
+          </div>
+        </CardContent>
+      </Card>
 
       <div className="grid gap-6 md:grid-cols-2">
         <Card>
