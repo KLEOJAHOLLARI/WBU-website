@@ -53,6 +53,10 @@ const ProfessorLayout = ({ children }: { children: ReactNode }) => {
   const [mobileOpen, setMobileOpen] = useState(false);
   const isVisible = usePortalNavVisibility("professor");
   const sortByOrder = usePortalNavOrder("professor");
+  const { data: styleCfg } = usePortalNavStyle();
+  const iconStyle = styleCfg?.iconStyle || DEFAULT_STYLE.iconStyle;
+  const accents = styleCfg?.professorAccents || DEFAULT_STYLE.professorAccents!;
+  const accentFor = (to: string): Accent => (accents[to] || "slate") as Accent;
   const filteredGroups = navGroups
     .map((g) => {
       const filtered = g.items.filter((i) => i.to === "/professor" || isVisible(i.to));
