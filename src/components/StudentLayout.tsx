@@ -16,48 +16,69 @@ import { usePortalNavVisibility, usePortalNavOrder } from "@/hooks/usePortalNavV
 import NotificationBell from "@/components/NotificationBell";
 import GlobalSearch from "@/components/GlobalSearch";
 
-const buildNavGroups = (registrationOpen: boolean) => [
+type Accent =
+  | "emerald" | "sky" | "amber" | "violet" | "rose" | "cyan" | "indigo" | "orange" | "teal" | "pink" | "lime" | "fuchsia";
+
+const accentClasses: Record<Accent, string> = {
+  emerald: "bg-emerald-500/15 text-emerald-500 ring-emerald-500/30",
+  sky:     "bg-sky-500/15 text-sky-500 ring-sky-500/30",
+  amber:   "bg-amber-500/15 text-amber-500 ring-amber-500/30",
+  violet:  "bg-violet-500/15 text-violet-500 ring-violet-500/30",
+  rose:    "bg-rose-500/15 text-rose-500 ring-rose-500/30",
+  cyan:    "bg-cyan-500/15 text-cyan-500 ring-cyan-500/30",
+  indigo:  "bg-indigo-500/15 text-indigo-500 ring-indigo-500/30",
+  orange:  "bg-orange-500/15 text-orange-500 ring-orange-500/30",
+  teal:    "bg-teal-500/15 text-teal-500 ring-teal-500/30",
+  pink:    "bg-pink-500/15 text-pink-500 ring-pink-500/30",
+  lime:    "bg-lime-500/15 text-lime-500 ring-lime-500/30",
+  fuchsia: "bg-fuchsia-500/15 text-fuchsia-500 ring-fuchsia-500/30",
+};
+
+const buildNavGroups = (registrationOpen: boolean): Array<{
+  label: string;
+  items: Array<{ to: string; label: string; icon: any; accent: Accent; badge?: boolean; statusIcon?: any }>;
+}> => [
   {
     label: "Main",
     items: [
-      { to: "/portal", label: "Dashboard", icon: LayoutDashboard },
-      { to: "/portal/courses", label: "My Courses", icon: BookOpen },
-      { to: "/portal/assignments", label: "Assignments", icon: ClipboardCheck },
-      { to: "/portal/seating", label: "My Seating", icon: Armchair },
-      { to: "/portal/office-hours", label: "Office Hours", icon: Clock },
-      { to: "/portal/events", label: "Events", icon: CalendarDays },
-      { to: "/portal/internships", label: "Internships", icon: Briefcase },
+      { to: "/portal", label: "Dashboard", icon: LayoutDashboard, accent: "sky" },
+      { to: "/portal/courses", label: "My Courses", icon: BookOpen, accent: "violet" },
+      { to: "/portal/assignments", label: "Assignments", icon: ClipboardCheck, accent: "amber" },
+      { to: "/portal/seating", label: "My Seating", icon: Armchair, accent: "teal" },
+      { to: "/portal/office-hours", label: "Office Hours", icon: Clock, accent: "indigo" },
+      { to: "/portal/events", label: "Events", icon: CalendarDays, accent: "pink" },
+      { to: "/portal/internships", label: "Internships", icon: Briefcase, accent: "orange" },
       ...(registrationOpen
         ? [
-            { to: "/portal/registration", label: "Course Registration", icon: ClipboardEdit },
-            { to: "/portal/retake", label: "Retake Courses", icon: RefreshCw },
+            { to: "/portal/registration", label: "Course Registration", icon: ClipboardEdit, accent: "emerald" as Accent, statusIcon: Clock },
+            { to: "/portal/retake", label: "Retake Courses", icon: RefreshCw, accent: "rose" as Accent },
           ]
         : []),
-      { to: "/portal/resits", label: "Resit Exams", icon: RefreshCw },
+      { to: "/portal/resits", label: "Resit Exams", icon: RefreshCw, accent: "fuchsia" },
     ],
   },
   {
     label: "Academic",
     items: [
-      { to: "/portal/transcript", label: "Transcript", icon: ScrollText },
-      { to: "/portal/timetable", label: "Timetable", icon: CalendarDays },
-      { to: "/portal/exams", label: "Exam Schedule", icon: ClipboardList },
-      { to: "/portal/tuition", label: "Tuition", icon: CreditCard },
-      { to: "/portal/tuition/estimate", label: "Tuition Estimate", icon: Calculator },
-      { to: "/portal/documents", label: "Documents", icon: Upload },
+      { to: "/portal/transcript", label: "Transcript", icon: ScrollText, accent: "indigo" },
+      { to: "/portal/timetable", label: "Timetable", icon: CalendarDays, accent: "cyan" },
+      { to: "/portal/exams", label: "Exam Schedule", icon: ClipboardList, accent: "amber" },
+      { to: "/portal/tuition", label: "Tuition", icon: CreditCard, accent: "emerald" },
+      { to: "/portal/tuition/estimate", label: "Tuition Estimate", icon: Calculator, accent: "lime" },
+      { to: "/portal/documents", label: "Documents", icon: Upload, accent: "sky" },
       ...(registrationOpen
-        ? [{ to: "/portal/feedback", label: "Professor Feedback", icon: Star }]
+        ? [{ to: "/portal/feedback", label: "Professor Feedback", icon: Star, accent: "amber" as Accent }]
         : []),
     ],
   },
   {
     label: "Other",
     items: [
-      { to: "/portal/id-card", label: "Digital ID Card", icon: IdCard },
-      { to: "/portal/access-history", label: "Access History", icon: History },
-      { to: "/portal/messages", label: "Messages", icon: Mail, badge: true },
-      { to: "/portal/notifications", label: "Notifications", icon: Bell },
-      { to: "/portal/profile", label: "My Profile", icon: UserCircle },
+      { to: "/portal/id-card", label: "Digital ID Card", icon: IdCard, accent: "violet" },
+      { to: "/portal/access-history", label: "Access History", icon: History, accent: "teal" },
+      { to: "/portal/messages", label: "Messages", icon: Mail, accent: "rose", badge: true },
+      { to: "/portal/notifications", label: "Notifications", icon: Bell, accent: "orange" },
+      { to: "/portal/profile", label: "My Profile", icon: UserCircle, accent: "pink" },
     ],
   },
 ];
