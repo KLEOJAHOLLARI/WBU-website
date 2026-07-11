@@ -13,6 +13,7 @@ import { Sheet, SheetContent, SheetTrigger } from "@/components/ui/sheet";
 import NotificationBell from "@/components/NotificationBell";
 import GlobalSearch from "@/components/GlobalSearch";
 import { usePortalNavVisibility, usePortalNavOrder } from "@/hooks/usePortalNavVisibility";
+import { usePortalNavStyle, NavIcon, DEFAULT_STYLE, type Accent } from "@/hooks/usePortalNavStyle";
 
 
 const navGroups = [
