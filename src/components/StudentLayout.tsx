@@ -73,6 +73,10 @@ const StudentLayout = ({ children }: { children: ReactNode }) => {
   const { data: activeSemester } = useActiveSemester();
   const isVisible = usePortalNavVisibility("student");
   const sortByOrder = usePortalNavOrder("student");
+  const { data: styleCfg } = usePortalNavStyle();
+  const iconStyle = styleCfg?.iconStyle || DEFAULT_STYLE.iconStyle;
+  const accents = styleCfg?.studentAccents || DEFAULT_STYLE.studentAccents!;
+  const accentFor = (to: string): Accent => (accents[to] || "slate") as Accent;
   const rawGroups = buildNavGroups(!!activeSemester?.enrollment_open);
   const navGroups = rawGroups
     .map((g) => {
