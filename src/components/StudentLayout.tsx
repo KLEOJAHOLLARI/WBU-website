@@ -141,9 +141,7 @@ const StudentLayout = ({ children }: { children: ReactNode }) => {
                         : "text-muted-foreground hover:bg-muted hover:text-foreground"
                     }`}
                   >
-                    <span className={`flex h-7 w-7 shrink-0 items-center justify-center rounded-lg ring-1 ring-inset transition-transform group-hover:scale-105 ${accentClasses[item.accent]}`}>
-                      <item.icon className="h-3.5 w-3.5" />
-                    </span>
+                    <NavIcon icon={item.icon} accent={accentFor(item.to)} style={iconStyle} active={active} />
                     <span className="truncate">{item.label}</span>
                     {StatusIcon && (
                       <span className="ml-auto flex h-5 w-5 items-center justify-center rounded-full bg-emerald-500/15 text-emerald-500 ring-1 ring-emerald-500/40">
