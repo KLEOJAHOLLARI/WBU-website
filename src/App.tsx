@@ -76,6 +76,7 @@ import AdminHealth from "./pages/admin/AdminHealth";
 import AdminInternships from "./pages/admin/AdminInternships";
 import StudentInternships from "./pages/portal/StudentInternships";
 import AdminPortalNav from "./pages/admin/AdminPortalNav";
+import AdminLogo from "./pages/admin/AdminLogo";
 
 
 import FacultyProfile from "./pages/FacultyProfile";
@@ -228,6 +229,7 @@ const App = () => (
             <Route path="/admin/internships" element={<AdminInternships />} />
             <Route path="/portal/internships" element={<RouteGuard requireRole="student"><StudentInternships /></RouteGuard>} />
             <Route path="/admin/portal-nav" element={<AdminPortalNav />} />
+            <Route path="/admin/logo" element={<AdminLogo />} />
             <Route path="/portal/resits" element={<RouteGuard requireRole="student"><StudentResits /></RouteGuard>} />
             <Route path="/professor/resits" element={<RouteGuard requireRole="professor"><ProfessorResits /></RouteGuard>} />
             

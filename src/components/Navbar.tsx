@@ -4,7 +4,7 @@ import { Menu, X, ArrowRight } from "lucide-react";
 import { motion, AnimatePresence } from "framer-motion";
 import { useTranslation } from "react-i18next";
 import LanguageSwitcher from "./LanguageSwitcher";
-import wbuLogo from "@/assets/wbu-logo.png";
+import { useSiteLogo } from "@/hooks/useSiteLogo";
 
 const navKeys = [
   { to: "/", key: "nav.home" },
@@ -23,6 +23,7 @@ const Navbar = () => {
   const [scrolled, setScrolled] = useState(false);
   const location = useLocation();
   const { t } = useTranslation();
+  const wbuLogo = useSiteLogo();
   const isHome = location.pathname === "/";
 
   useEffect(() => {
