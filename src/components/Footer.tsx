@@ -1,10 +1,11 @@
 import { Link } from "react-router-dom";
 import { Mail, Phone, MapPin } from "lucide-react";
 import { useTranslation } from "react-i18next";
-import wbuLogo from "@/assets/wbu-logo.png";
+import { useSiteLogo } from "@/hooks/useSiteLogo";
 
 const Footer = () => {
   const { t } = useTranslation();
+  const wbuLogo = useSiteLogo();
 
   return (
     <footer className="border-t border-border bg-primary text-primary-foreground">
