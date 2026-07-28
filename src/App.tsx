@@ -77,6 +77,7 @@ import AdminInternships from "./pages/admin/AdminInternships";
 import StudentInternships from "./pages/portal/StudentInternships";
 import AdminPortalNav from "./pages/admin/AdminPortalNav";
 import AdminLogo from "./pages/admin/AdminLogo";
+import AdminEmergencyAlerts from "./pages/admin/AdminEmergencyAlerts";
 
 
 import FacultyProfile from "./pages/FacultyProfile";
