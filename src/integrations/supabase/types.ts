@@ -931,6 +931,51 @@ export type Database = {
         }
         Relationships: []
       }
+      emergency_alerts: {
+        Row: {
+          audience_program: string | null
+          audience_role: string
+          channels: string[]
+          created_at: string
+          delivery_stats: Json
+          id: string
+          is_active: boolean
+          message: string
+          sent_by: string
+          severity: string
+          title: string
+          updated_at: string
+        }
+        Insert: {
+          audience_program?: string | null
+          audience_role?: string
+          channels?: string[]
+          created_at?: string
+          delivery_stats?: Json
+          id?: string
+          is_active?: boolean
+          message: string
+          sent_by: string
+          severity?: string
+          title: string
+          updated_at?: string
+        }
+        Update: {
+          audience_program?: string | null
+          audience_role?: string
+          channels?: string[]
+          created_at?: string
+          delivery_stats?: Json
+          id?: string
+          is_active?: boolean
+          message?: string
+          sent_by?: string
+          severity?: string
+          title?: string
+          updated_at?: string
+        }
+        Relationships: []
+      }
       enrollment_reminder_log: {
         Row: {
           id: string
