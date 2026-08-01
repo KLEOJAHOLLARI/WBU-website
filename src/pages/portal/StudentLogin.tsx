@@ -1,5 +1,5 @@
 import { useState } from "react";
-import { Link, Navigate, useNavigate } from "react-router-dom";
+import { Link, Navigate, useNavigate, useSearchParams } from "react-router-dom";
 import { motion } from "framer-motion";
 import { GraduationCap, LogIn } from "lucide-react";
 import { useAuth } from "@/hooks/useAuth";
@@ -8,12 +8,16 @@ import { supabase } from "@/integrations/supabase/client";
 const StudentLogin = () => {
   const { user, isAdmin, isProfessor, loading, signIn, waitForRoles } = useAuth();
   const navigate = useNavigate();
+  const [params] = useSearchParams();
+  const rawNext = params.get("next");
+  const next = rawNext && rawNext.startsWith("/") && !rawNext.startsWith("//") ? rawNext : null;
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [error, setError] = useState("");
   const [submitting, setSubmitting] = useState(false);
 
   if (loading) return <div className="flex min-h-screen items-center justify-center bg-background text-muted-foreground">Loading...</div>;
+  if (user && next) return <Navigate to={next} replace />;
   if (user && isProfessor) return <Navigate to="/professor" replace />;
   if (user && isAdmin) return <Navigate to="/admin" replace />;
   if (user) return <Navigate to="/portal" replace />;
@@ -59,7 +63,9 @@ const StudentLogin = () => {
 
     setSubmitting(false);
 
-    if (roles.isAdmin) {
+    if (next) {
+      navigate(next, { replace: true });
+    } else if (roles.isAdmin) {
       navigate("/admin", { replace: true });
     } else if (roles.isProfessor) {
       navigate("/professor", { replace: true });

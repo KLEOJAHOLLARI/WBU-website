@@ -32,6 +32,7 @@ import NotFound from "./pages/NotFound";
 import RouteGuard from "./components/RouteGuard";
 import SmartWBU from "./pages/SmartWBU";
 import StudentLogin from "./pages/portal/StudentLogin";
+import OAuthConsent from "./pages/OAuthConsent";
 import StudentRegister from "./pages/portal/StudentRegister";
 import StudentDashboard from "./pages/portal/StudentDashboard";
 import StudentApplications from "./pages/portal/StudentApplications";
@@ -237,6 +238,7 @@ const App = () => (
             
 
             
+            <Route path="/.lovable/oauth/consent" element={<OAuthConsent />} />
             <Route path="*" element={<NotFound />} />
           </Routes>
           <AIAssistant />
