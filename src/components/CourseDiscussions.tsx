@@ -5,7 +5,7 @@ import { useAuth } from "@/hooks/useAuth";
 import { toast } from "@/hooks/use-toast";
 import {
   MessageSquare, Hash, Pin, PinOff, Lock, Unlock, ThumbsUp,
-  Send, Plus, ArrowLeft, Trash2, ChevronDown, Users, MessagesSquare, Search,
+  Send, Plus, ArrowLeft, Trash2, MessagesSquare,
 } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
