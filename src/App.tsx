@@ -116,6 +116,8 @@ import DeansListPreview from "./pages/DeansListPreview";
 import AIAssistant from "./components/AIAssistant";
 import StudentResits from "./pages/portal/StudentResits";
 import ProfessorResits from "./pages/professor/ProfessorResits";
+import StudentCourseChat from "./pages/portal/StudentCourseChat";
+import ProfessorCourseChat from "./pages/professor/ProfessorCourseChat";
 
 const queryClient = new QueryClient();
 
@@ -235,6 +237,8 @@ const App = () => (
             <Route path="/admin/emergency-alerts" element={<AdminEmergencyAlerts />} />
             <Route path="/portal/resits" element={<RouteGuard requireRole="student"><StudentResits /></RouteGuard>} />
             <Route path="/professor/resits" element={<RouteGuard requireRole="professor"><ProfessorResits /></RouteGuard>} />
+            <Route path="/portal/discussions" element={<RouteGuard requireRole="student"><StudentCourseChat /></RouteGuard>} />
+            <Route path="/professor/discussions" element={<RouteGuard requireRole="professor"><ProfessorCourseChat /></RouteGuard>} />
             
 
             
