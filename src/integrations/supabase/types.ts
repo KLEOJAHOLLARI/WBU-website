@@ -1052,6 +1052,146 @@ export type Database = {
         }
         Relationships: []
       }
+      employee_contracts: {
+        Row: {
+          contract_type: string
+          created_at: string
+          document_url: string | null
+          employee_id: string
+          end_date: string | null
+          hours_per_week: number | null
+          id: string
+          notes: string | null
+          salary: number | null
+          start_date: string | null
+          status: string
+          title: string | null
+          updated_at: string
+        }
+        Insert: {
+          contract_type?: string
+          created_at?: string
+          document_url?: string | null
+          employee_id: string
+          end_date?: string | null
+          hours_per_week?: number | null
+          id?: string
+          notes?: string | null
+          salary?: number | null
+          start_date?: string | null
+          status?: string
+          title?: string | null
+          updated_at?: string
+        }
+        Update: {
+          contract_type?: string
+          created_at?: string
+          document_url?: string | null
+          employee_id?: string
+          end_date?: string | null
+          hours_per_week?: number | null
+          id?: string
+          notes?: string | null
+          salary?: number | null
+          start_date?: string | null
+          status?: string
+          title?: string | null
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "employee_contracts_employee_id_fkey"
+            columns: ["employee_id"]
+            isOneToOne: false
+            referencedRelation: "employees"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      employees: {
+        Row: {
+          address: string | null
+          bank_account: string | null
+          created_at: string
+          currency: string
+          date_of_birth: string | null
+          department: string | null
+          email: string | null
+          emergency_contact: string | null
+          employee_code: string | null
+          employment_type: string
+          end_date: string | null
+          first_name: string
+          gender: string | null
+          hire_date: string | null
+          id: string
+          job_title: string | null
+          last_name: string
+          national_id: string | null
+          notes: string | null
+          pay_frequency: string
+          phone: string | null
+          salary: number | null
+          status: string
+          updated_at: string
+          user_id: string | null
+        }
+        Insert: {
+          address?: string | null
+          bank_account?: string | null
+          created_at?: string
+          currency?: string
+          date_of_birth?: string | null
+          department?: string | null
+          email?: string | null
+          emergency_contact?: string | null
+          employee_code?: string | null
+          employment_type?: string
+          end_date?: string | null
+          first_name: string
+          gender?: string | null
+          hire_date?: string | null
+          id?: string
+          job_title?: string | null
+          last_name: string
+          national_id?: string | null
+          notes?: string | null
+          pay_frequency?: string
+          phone?: string | null
+          salary?: number | null
+          status?: string
+          updated_at?: string
+          user_id?: string | null
+        }
+        Update: {
+          address?: string | null
+          bank_account?: string | null
+          created_at?: string
+          currency?: string
+          date_of_birth?: string | null
+          department?: string | null
+          email?: string | null
+          emergency_contact?: string | null
+          employee_code?: string | null
+          employment_type?: string
+          end_date?: string | null
+          first_name?: string
+          gender?: string | null
+          hire_date?: string | null
+          id?: string
+          job_title?: string | null
+          last_name?: string
+          national_id?: string | null
+          notes?: string | null
+          pay_frequency?: string
+          phone?: string | null
+          salary?: number | null
+          status?: string
+          updated_at?: string
+          user_id?: string | null
+        }
+        Relationships: []
+      }
       enrollment_reminder_log: {
         Row: {
           id: string
