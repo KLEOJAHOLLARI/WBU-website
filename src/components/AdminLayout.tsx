@@ -30,6 +30,7 @@ const navGroups: { label: string; items: { to: string; label: string; icon: any;
     label: "People",
     items: [
       { to: "/admin/accounts", label: "Accounts", icon: UserPlus },
+      { to: "/admin/employees", label: "Employees", icon: Briefcase },
       { to: "/admin/professors", label: "Professors", icon: Users },
       { to: "/admin/students", label: "Students", icon: Users },
       { to: "/admin/advisors", label: "Advisors", icon: UserCheck },
@@ -38,6 +39,7 @@ const navGroups: { label: string; items: { to: string; label: string; icon: any;
       { to: "/admin/gate-activity", label: "Gate Activity", icon: Activity },
     ],
   },
+
   {
     label: "Academic",
     items: [

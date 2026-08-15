@@ -237,6 +237,8 @@ const App = () => (
             <Route path="/admin/portal-nav" element={<AdminPortalNav />} />
             <Route path="/admin/logo" element={<AdminLogo />} />
             <Route path="/admin/emergency-alerts" element={<AdminEmergencyAlerts />} />
+            <Route path="/admin/employees" element={<AdminEmployees />} />
+
             <Route path="/portal/resits" element={<RouteGuard requireRole="student"><StudentResits /></RouteGuard>} />
             <Route path="/professor/resits" element={<RouteGuard requireRole="professor"><ProfessorResits /></RouteGuard>} />
             <Route path="/portal/discussions" element={<RouteGuard requireRole="student"><StudentCourseChat /></RouteGuard>} />
